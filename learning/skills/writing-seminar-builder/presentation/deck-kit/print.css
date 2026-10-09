@@ -1,0 +1,44 @@
+/* deck-kit/print.css - export any deck to PDF via headless Chromium.
+   Link it AFTER slides.css with media="print". Pair with:
+     chromium → page.pdf({ printBackground: true, preferCSSPageSize: true })
+   once the page hits networkidle (so the web fonts load). Each .slide becomes
+   one landscape page and every build step is revealed. */
+
+@media print {
+  /* one landscape page per slide, exactly the deck canvas */
+  @page { size: 1280px 720px; margin: 0; }
+
+  html, body { width: 1280px; height: auto; margin: 0; padding: 0; overflow: visible; background: #fff; }
+
+  /* keep brand colors + backgrounds in print - the #1 brand-killer fix */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;   /* Safari + older Chromium */
+    print-color-adjust: exact !important;
+  }
+
+  /* drop the on-screen fit-scale + centered stage */
+  :root { --scale: 1 !important; }
+  .deck { position: static !important; display: block !important; height: auto !important; transform: none !important; }
+
+  /* every slide prints as its own full-bleed landscape page, fully revealed */
+  .slide {
+    display: block !important;
+    position: relative !important;
+    top: auto !important; left: auto !important;
+    width: 1280px !important; height: 720px !important;
+    transform: none !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+    break-after: page; page-break-after: always;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .slide:last-child { break-after: auto; page-break-after: auto; }
+
+  /* reveal every build step + the element-level fade-ins that the presenter
+     normally gates behind a keypress */
+  [data-build] { opacity: 1 !important; transform: none !important; }
+  .m2-quad--win, .m2-dot, .w-arrow, .am-link, .it-node, .eaf [data-build] { opacity: 1 !important; }
+
+  /* hide screen-only chrome */
+  .khint, .scroll-nav, .deck-progress { display: none !important; }
+}

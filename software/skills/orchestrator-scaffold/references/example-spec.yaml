@@ -1,0 +1,89 @@
+# A worked example of an orchestrator spec (the keys are explained in the orchestrator-scaffold
+# skill). Acme Components is made up.
+name: acme-widget-review-orchestrator
+domain: widget-review
+department: projects
+title: Widget review
+purpose: Review each period's widget returns against the quality rules and record a verdict for every lot.
+standard: The standard is a verdict a quality lead would sign, with the lot, the defect count and the rule that decides it.
+not_for: Not for one lot's verdict by hand; use the widget-review-workstream skill.
+work: WIDGET-REVIEW
+periods: true
+
+inputs:
+  - name: period
+    label: Period
+    pattern: '(\d{4}-(0[1-9]|1[0-2]))?'
+    empty_means: the current period in the folder's STATUS.md
+    description: The period to review, yyyy-mm.
+  - name: instructions
+    label: Instructions
+    empty_means: none
+    description: Anything the owner adds for this session; it overrides the defaults here, never the rules file.
+
+record:
+  system: the widget returns register (read only)
+  folder:
+    param: review_folder
+    label: Review folder
+    description: The engagement's working folder, with the rules, the procedures and one folder per period.
+
+workers:
+  - name: widget-review-inspector
+    kind: workstream
+    model: opus
+    role: Inspects every returned lot of the period against the quality rules and proposes a verdict per lot with its evidence.
+    owns: Returned lots and their verdicts
+    skills: [widget-review-workstream]
+    tools: [widget-review-pull]
+  - name: widget-review-reviewer
+    kind: reviewer
+    model: opus
+    role: Checks each proposed lot verdict against the register pull and the rules, independently of the inspector.
+    tools: [widget-review-pull]
+  - name: widget-review-keeper
+    kind: keeper
+    model: sonnet
+    role: Sets up a review period, carries open lots forward and records a learned rule with its source.
+
+skills:
+  new:
+    - name: widget-review-workstream
+      description: What is specific to a widget-review workstream, on top of orchestration-workstream. The rules file first, already done? from the register pull, and the item tests and states the orchestrator records.
+  load: [comms-confirm]
+
+tools:
+  existing: []
+  new:
+    - name: widget-review-pull
+      description: Refresh the period's read-only pull of the widget returns register into work/source/.
+
+done:
+  check: widget-review-check
+  scope: review_folder
+  options: [period]
+  tests:
+    - name: lots
+      text: Every returned lot of the period has a verdict, reviewed and recorded.
+    - name: questions
+      text: Every question to a person is answered, or its effect on the verdicts is stated.
+
+authority:
+  level: dry-run-only
+  may: [read the register pull, draft verdict files in the period folder]
+  may_not: [change the register, contact a customer]
+
+triggers:
+  schedule: "30 7 * * 1-5"
+  tz: UTC
+  precheck: true
+  manual: true
+
+prepare:
+  - argv: [widget-review-pull, "{review_folder}", "--period={period}"]
+    skip_on_dry_run: true
+
+locks: [review_folder]
+network: online
+limits: {max_turns: 300, timeout_s: 7200}
+

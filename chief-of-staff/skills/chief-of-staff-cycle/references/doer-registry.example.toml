@@ -1,0 +1,39 @@
+# An example doer registry for chief-of-staff-cycle. Copy it outside the toolbox, edit it,
+# and name the copy in the owner settings: [chief-of-staff-cycle] doer_registry = "<path>".
+# Only the doers listed here can ever be dispatched by a cycle.
+
+[[doer]]
+name = "produce-work"
+route = "produce"
+purpose = "One private, review-ready draft (a reply, meeting material, a worked analysis) from one Portal record. No Portal writes, nothing sent."
+when = "A concrete draft would take work off the owner's plate."
+
+[[doer]]
+name = "meeting-prep"
+route = "skill"
+skill = "meeting-prep"
+worker = "chief-of-staff-meeting-prep-doer"
+args = "FOCUS"
+purpose = "A prep note for one meeting: a meeting title, attendee or company."
+when = "A meeting today or tomorrow has real stakes and thin prep."
+
+[[doer]]
+name = "person-brief"
+route = "agent"
+agent = "person-researcher"
+args = "FOCUS"
+purpose = "A read-only brief on one person, returned to the receipt."
+when = "Someone the owner meets soon needs context nobody has gathered."
+
+[[doer]]
+name = "domain-brief"
+route = "agent"
+agent = "domain-researcher"
+args = "FOCUS"
+purpose = "A read-only status picture of one domain, returned to the receipt."
+when = "One area is visibly drifting and nothing has surfaced why."
+
+# A doer that became an orchestrator is retired here and launched instead.
+[retired]
+relationship-check = "replaced by crm-relationship-tending-orchestrator; propose a launch of it"
+task-reconcile = "replaced by task-reconcile-orchestrator; propose a launch of it"

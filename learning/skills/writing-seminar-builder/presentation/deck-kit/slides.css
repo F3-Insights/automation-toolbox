@@ -1,0 +1,4863 @@
+/* ============================================================
+   F3 Insights - Slide-view layout
+   Activated by <body class="mode-slides">.
+   Each slide is a 16:9 design canvas (1280×720) scaled by JS
+   to fill the viewport. Projector-safe: high contrast, large
+   type, restrained use of grain/glow.
+   ============================================================ */
+
+body.mode-slides {
+  background: #0b1426;        /* dark backdrop around the slide stage */
+  overflow: hidden;
+  cursor: default;
+}
+
+/* ---- The stage ---- */
+.deck {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- One slide ---- */
+.slide {
+  position: absolute;
+  width: var(--slide-w);
+  height: var(--slide-h);
+  background: var(--white);
+  color: var(--ink);
+  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+  top: 50%; left: 50%;
+  overflow: hidden;
+  display: none;             /* JS toggles active */
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+}
+.slide.is-active { display: block; }
+
+/* Slide-view default chrome */
+.slide-chrome {
+  position: absolute;
+  bottom: 28px;
+  left: 56px;
+  right: 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.slide-chrome .num { color: var(--gold); }
+
+/* Default slide padding */
+.slide-pad {
+  padding: 56px 72px 60px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   Slide header (eyebrow + title + subtitle)
+   ============================================================ */
+.slide-head {
+  margin-bottom: 36px;
+}
+.slide-head .eyebrow { margin-bottom: 20px; }
+.slide-head h2 {
+  font-size: 58px;
+  line-height: 1.04;
+  color: var(--obsidian);
+  letter-spacing: -.025em;
+}
+.slide-head .sub {
+  margin-top: 16px;
+  font-size: 25px;
+  color: var(--muted);
+  font-weight: 400;
+  font-family: var(--serif);
+  font-style: italic;
+  letter-spacing: -.005em;
+}
+
+/* Assertion-evidence headline (meat slides): the title IS a full-sentence
+   takeaway, so it runs smaller than a short topic title and wraps to ~2 lines.
+   Used on the middle "meat" slides; setup/named-concept slides keep the big h2. */
+.slide-head--assert { margin-bottom: 26px; }
+.slide-head--assert h2 {
+  font-size: 38px;          /* action-title sentence; one line ideally, ~2 max */
+  line-height: 1.15;
+}
+.slide-head--assert .sub { font-size: 21.5px; margin-top: 12px; }
+
+/* Speaker notes - hidden on stage, shown via presenter window */
+.notes { display: none; }
+
+/* ============================================================
+   Build pattern (click-driven reveals)
+   - Any element with data-build="N" starts hidden.
+   - presenter.js adds .in once the slide reaches build N.
+   - In scroll mode, every build is visible (no staging).
+   - Respects prefers-reduced-motion.
+   ============================================================ */
+[data-build] {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .4s cubic-bezier(.16, 1, .3, 1),
+              transform .4s cubic-bezier(.16, 1, .3, 1);
+  pointer-events: none;
+}
+[data-build].in {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+/* Cascade a group of same-build items: give each an inline --stagger so a
+   whole row reveals on ONE press instead of one click per box. */
+[data-build] { transition-delay: var(--stagger, 0s); }
+body.mode-scroll [data-build] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-build] { transition: none; }
+}
+
+/* ============================================================
+   SVG path-trace primitive
+   Markup pattern:
+     <svg class="trace" data-build="3">
+       <path pathLength="1" d="..." />
+     </svg>
+   The path draws itself in once .in is set on the wrapper.
+   ============================================================ */
+.trace path,
+.trace line,
+.trace polyline,
+.trace circle {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset .9s cubic-bezier(.4, 0, .2, 1);
+}
+.trace.in path,
+.trace.in line,
+.trace.in polyline,
+.trace.in circle,
+[data-build].in .trace path,
+[data-build].in .trace line,
+[data-build].in .trace polyline,
+[data-build].in .trace circle { stroke-dashoffset: 0; }
+body.mode-scroll .trace path,
+body.mode-scroll .trace line,
+body.mode-scroll .trace polyline,
+body.mode-scroll .trace circle { stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .trace path, .trace line, .trace polyline, .trace circle {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Icon primitive
+   ============================================================ */
+.icon {
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.icon--lg { width: 56px; height: 56px; }
+.icon--xl { width: 88px; height: 88px; }
+
+/* ============================================================
+   Layout: Title slide (Slide 1)
+   Full-bleed navy with blueprint grid + bronze accent stripe
+   ============================================================ */
+.slide--title {
+  background: var(--navy);
+  color: var(--white);
+}
+.slide--title .blueprint { opacity: .35; }
+.slide--title .glow { top: -200px; right: -160px; }
+.slide--title .glow.glow--gold { bottom: -260px; left: -200px; top: auto; right: auto; }
+
+.slide--title .slide-pad {
+  position: relative;
+  z-index: 2;
+  padding: 80px 88px;
+  justify-content: center;
+}
+.slide--title .kicker-line {
+  font-family: var(--mono);
+  font-size: 14.5px;
+  letter-spacing: .4em;
+  text-transform: uppercase;
+  color: var(--mist);
+  margin-bottom: 36px;
+}
+.slide--title h1 {
+  font-family: var(--grotesk);
+  font-weight: 900;
+  font-size: 94px;
+  line-height: .94;
+  letter-spacing: -.04em;
+  color: var(--white);
+  max-width: 14ch;
+}
+.slide--title h1 .ins {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: -.02em;
+  color: var(--gold-foil);
+}
+.slide--title .tagline {
+  margin-top: 28px;
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: 32px;
+  font-style: italic;
+  color: var(--gold-foil);
+  letter-spacing: -.005em;
+}
+.slide--title .promise {
+  margin-top: 56px;
+  font-size: 22.5px;
+  color: rgba(255,255,255,.78);
+  line-height: 1.55;
+  max-width: 64ch;
+}
+.slide--title .bronze-rule {
+  position: absolute;
+  left: 88px;
+  right: 88px;
+  bottom: 88px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold-foil), transparent 70%);
+}
+.slide--title .colophon {
+  position: absolute;
+  left: 88px;
+  bottom: 50px;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+}
+
+/* ============================================================
+   Layout: Assumptions (Slide 2) - clean checklist
+   ============================================================ */
+.checklist {
+  display: grid;
+  gap: 22px;
+  margin-top: 12px;
+  list-style: none;
+}
+.checklist li {
+  position: relative;
+  padding-left: 44px;
+  font-size: 25px;
+  color: var(--obsidian);
+  line-height: 1.45;
+  list-style: none;
+}
+.checklist li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 11px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--gold) 0 4px, transparent 4px);
+}
+.note {
+  margin-top: auto;
+  padding: 22px 26px;
+  border-left: 3px solid var(--gold);
+  background: var(--paper-warm);
+  font-size: 19px;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--obsidian);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   Layout: Business AI Picture (Slide 3) - quadrant diagram
+   ============================================================ */
+/* The BAP slide is content-dense; tighten the head so the credit + punchline
+   clear the footer chrome instead of overrunning the slide edge. */
+[data-layout="bap"] .slide-head { margin-bottom: 16px; }
+/* The EAF hero + its focus-line + credit must clear the footer chrome (~673).
+   At a full 460px the credit overruns into the chrome row, so on the bap layout
+   the figure runs a touch smaller and the wrap stacks tighter. Still the
+   dominant element; keeps the whole stack inside the 720 canvas. */
+[data-layout="bap"] .eaf { max-height: 404px; }
+[data-layout="bap"] .eaf-wrap { gap: 6px; margin-top: 0; }
+
+.bap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 32px;
+}
+.bap .people-band {
+  width: 68%;
+  background: var(--gold-foil);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 14.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  padding: 12px 18px;
+  text-align: center;
+  font-weight: 600;
+}
+.bap .harness {
+  width: 86%;
+  background: var(--gold);
+  color: var(--white);
+  padding: 14px 18px 14px;
+  position: relative;
+}
+.bap .harness .label {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 14px;
+  opacity: .92;
+}
+.bap .quads {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.bap .quad {
+  background: var(--navy);
+  color: var(--white);
+  padding: 12px 18px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.bap .quad .quad-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-foil);
+  margin-bottom: 4px;
+}
+.bap .quad .quad-icon .icon { width: 32px; height: 32px; }
+.bap .quad.is-active {
+  background: var(--gold-foil);
+  color: var(--obsidian);
+}
+.bap .quad.is-active .quad-icon { color: var(--navy); }
+.bap .quad h4 {
+  font-size: 22.5px;
+  letter-spacing: .04em;
+  margin-bottom: 4px;
+  color: inherit;
+}
+.bap .quad .sub {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  opacity: .85;
+}
+.bap .quad.is-active .sub { font-weight: 600; opacity: 1; }
+
+/* Quad sequential fade-in. The harness wrapper holds data-build="2"
+   so when build 2 fires, the wrapper becomes opacity 1 and the quads
+   inside cascade in with staggered delays via --quad-delay. */
+.bap .quad--anim {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .4s cubic-bezier(.16, 1, .3, 1) var(--quad-delay, 0s),
+              transform .4s cubic-bezier(.16, 1, .3, 1) var(--quad-delay, 0s);
+}
+.harness.in .quad--anim,
+[data-build].in .bap .quad--anim {
+  opacity: 1;
+  transform: none;
+}
+body.mode-scroll .bap .quad--anim { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .bap .quad--anim { transition: none; }
+}
+.bap .credit {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  color: var(--muted);
+  text-align: center;
+}
+.bap .punchline {
+  margin-top: 6px;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--gold);
+  font-size: 19px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ============================================================
+   Effective Agentic Framework - the reusable signature figure.
+   Four working parts (Model · Prompt · Context · Tools) form the
+   core circle; the Harness ring binds them; People engage from
+   outside, through the Harness. The focused element lights gold
+   via the data-focus attribute, so every slide reuses one figure.
+   ============================================================ */
+.eaf-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+.eaf {
+  width: 100%;
+  max-width: 1080px;
+  height: auto;
+  max-height: 460px;
+  display: block;
+}
+.eaf [data-build] { transform: none; }          /* opacity-only fade on SVG nodes */
+/* thin-stroke engineering aesthetic (matches the architecture deck) */
+.eaf-ring { fill: rgba(30, 58, 110, .05); stroke: var(--navy); stroke-width: 1.5; }
+.eaf-core { fill: #fff; stroke: var(--navy); stroke-width: 1.5; }
+.eaf-div  { stroke: var(--navy); stroke-width: 1; opacity: .14; }
+.eaf-sector { fill: transparent; }
+.eaf-mask { fill: #fff; }
+.eaf-arrow-line { stroke: var(--navy); stroke-width: 1.5; opacity: .55; }
+.eaf-ring-lbl {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .26em;
+  fill: var(--gold);
+  font-weight: 600;
+}
+.eaf-people-lbl {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: .18em;
+  fill: var(--navy);
+  font-weight: 600;
+}
+.eaf-q-lbl {
+  font-family: var(--mono);
+  font-size: 15.5px;
+  letter-spacing: .12em;
+  fill: var(--navy);
+  font-weight: 600;
+}
+.eaf-ico { color: var(--navy); }
+.eaf-ico--focus { color: var(--gold); }
+.eaf-q-lbl--focus { fill: var(--gold); }
+/* focus - change data-focus to light a different element (subtle gold wash) */
+.eaf[data-focus="tools"]   .eaf-sector--tools   { fill: rgba(143, 107, 46, .15); }
+.eaf[data-focus="model"]   .eaf-sector--model   { fill: rgba(143, 107, 46, .15); }
+.eaf[data-focus="prompt"]  .eaf-sector--prompt  { fill: rgba(143, 107, 46, .15); }
+.eaf[data-focus="context"] .eaf-sector--context { fill: rgba(143, 107, 46, .15); }
+/* "all" - the whole picture lights (an agent is the entire framework, running) */
+.eaf[data-focus="all"] .eaf-sector { fill: rgba(143, 107, 46, .15); }
+
+.eaf-focus-line {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 20.5px;
+  color: var(--gold);
+  font-weight: 600;
+  text-align: center;
+}
+.eaf-credit {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ============================================================
+   Layout: Call diagram (Slide 4)
+   Brain icon → arrow → Tool card → arrow → systems stack;
+   curved return arrow below.
+   ============================================================ */
+.call {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  margin-top: 2px;
+}
+.call-def {
+  background: var(--navy);
+  color: var(--white);
+  padding: 16px 28px;
+  text-align: center;
+}
+.call-def .big {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: -.01em;
+}
+.call-def .small {
+  margin-top: 6px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--gold-foil);
+}
+
+.call-diagram {
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    minmax(140px, 1fr)        /* MODEL */
+    minmax(120px, 1.2fr)      /* connector 1 */
+    minmax(140px, 1fr)        /* TOOL */
+    minmax(120px, 1.2fr)      /* connector 2 */
+    minmax(140px, 1fr);       /* CONTEXT */
+  align-items: start;         /* cells top-align so the icon-wraps line up; the connector then matches via fixed height */
+  column-gap: 8px;
+  padding: 18px 24px 56px;    /* bottom padding holds the straight return line + label */
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.call-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.call-node .icon-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border: 2.5px solid var(--navy);
+  color: var(--navy);
+}
+.call-node .icon-wrap .icon { width: 48px; height: 48px; }
+.call-node--tool .icon-wrap {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--white);
+}
+/* MODEL and CONTEXT share the outline treatment; TOOL is the filled protagonist. */
+
+.call-node .label {
+  font-family: var(--mono);
+  font-size: 14.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--navy);
+  font-weight: 600;
+  margin-top: 4px;
+  line-height: 1;
+}
+.call-node .annotation {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--muted);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+/* ---- HTML connector (straight gold arrow between icon columns).
+       Label sits at top of cell; line sits just below the label, near the top
+       of the icon circles - leaving the bottom of the diagram free for the
+       gray return arrow, so the whole thing reads as a clockwise loop. ---- */
+.call-connector {
+  position: relative;
+  z-index: 2;
+  display: block;
+  padding: 0 8px;
+  height: 88px;
+}
+.call-connector .arrow-label {
+  position: absolute;
+  top: 0;                              /* at the top of the cell */
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 500;
+  line-height: 1;
+  opacity: 0;                          /* hidden until the line finishes tracing */
+  transition: opacity .2s ease-in;
+}
+.call-connector.in .arrow-label { opacity: 1; }
+.call-connector .arrow-line {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 18px;                           /* just below the label, at the top of the icon row */
+  height: 2.5px;
+  background: var(--gold);
+  border-radius: 1px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .85s cubic-bezier(.4, 0, .2, 1);
+}
+.call-connector .arrow-line::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  transform: translate(0, -50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid var(--gold);
+  border-top: 6.5px solid transparent;
+  border-bottom: 6.5px solid transparent;
+  opacity: 0;
+  transition: opacity .15s ease-in .7s;
+}
+.call-connector.in .arrow-line { transform: scaleX(1); }
+.call-connector.in .arrow-line::after { opacity: 1; }
+
+/* Sequential trace timing on build 3:
+   1) FUNCTION CALL fires immediately
+   2) INVOKES starts after FUNCTION CALL completes (~0.9s in)
+   3) RETURNS RESULT starts after INVOKES completes (~1.8s in)
+   Each gold arrowhead pop matches its line completing, and each text label
+   fades in only AFTER its line has finished tracing. */
+.call-connector--func .arrow-label { transition: opacity .2s ease-in 0.85s; }
+.call-connector--inv  .arrow-line  { transition-delay: 0.9s; }
+.call-connector--inv  .arrow-line::after { transition-delay: 1.6s; }
+.call-connector--inv  .arrow-label { transition: opacity .2s ease-in 1.75s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .call-connector .arrow-line { transition: none; }
+  .call-connector .arrow-line::after { transition: none; }
+}
+
+/* ---- Stepped return path (right-angle "flowchart" style).
+       Vertical drop from CONTEXT side, horizontal across the bottom,
+       vertical rise to MODEL with arrowhead pointing UP.
+       Label sits BELOW the SVG so it doesn't blend with the "TOOL / the hands"
+       text above the diagram bottom. ---- */
+.call-return {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 14px;
+  height: 28px;     /* line (2.5px) + label below; absolutely positioned children */
+  pointer-events: none;
+  z-index: 3;
+}
+/* ---- Straight gray return arrow (same treatment as the gold forward arrows).
+       Spans MODEL column center (9%) to CONTEXT column center (91%). Traces
+       from RIGHT to LEFT (transform-origin: right) after the two forward
+       arrows finish - see .ret-line transition-delay below. The whole layout
+       reads as a clockwise loop: gold across the top of the icons,
+       gray returning across the bottom under the call-node text. ---- */
+.ret-line {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  top: 0;
+  height: 2.5px;
+  background: var(--muted);
+  border-radius: 1px;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform .85s cubic-bezier(.4, 0, .2, 1) 1.8s;  /* 1.8s = waits for FUNCTION CALL + INVOKES */
+}
+.ret-line::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-right: 10px solid var(--muted);
+  border-top: 6.5px solid transparent;
+  border-bottom: 6.5px solid transparent;
+  opacity: 0;
+  transition: opacity .15s ease-in 2.55s;
+}
+.call-return.in .ret-line { transform: scaleX(1); }
+.call-return.in .ret-line::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .ret-line { transition: none; }
+  .ret-line::after { transition: none; }
+}
+
+.call-return .return-label {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  line-height: 1;
+  opacity: 0;                                              /* hidden until the gray line finishes tracing */
+  transition: opacity .2s ease-in 2.65s;                   /* 1.8s delay + 0.85s line duration */
+}
+.call-return.in .return-label { opacity: 1; }
+
+.call-chips {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 0;
+}
+.call-chips .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  background: var(--white);
+  border: 1px solid var(--gold);
+  color: var(--navy);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.call-chips .chip b { color: var(--gold); margin-right: 4px; }
+.call-chips .chip .desc {
+  font-family: var(--sans);
+  font-size: 14.5px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+/* ============================================================
+   Layout: Definition block + two columns (Slide 4 - legacy)
+   ============================================================ */
+.def-block {
+  background: var(--navy);
+  color: var(--white);
+  padding: 26px 32px;
+  text-align: center;
+}
+.def-block .big {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: -.01em;
+}
+.def-block .small {
+  margin-top: 10px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
+  color: var(--gold-foil);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-top: 28px;
+}
+.two-col .col {
+  background: var(--paper);
+  border-top: 4px solid var(--gold);
+  padding: 22px 26px 26px;
+}
+.two-col .col .label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+  display: block;
+}
+.two-col .col ul { list-style: none; }
+.two-col .col li {
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--ink);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.two-col .col li:last-child { border: 0; }
+.two-col .col li b { color: var(--gold); font-weight: 700; }
+
+.foot-note {
+  margin-top: 14px;
+  padding-top: 4px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .14em;
+  color: var(--muted);
+}
+.foot-line {
+  margin-top: 8px;
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 20.5px;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Layout: Analogy table (Slide 5)
+   ============================================================ */
+.analogy {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+}
+.analogy .head {
+  padding: 14px 22px;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--white);
+  font-weight: 600;
+}
+.analogy .head.left  { background: var(--obsidian); }
+.analogy .head.right { background: var(--gold); }
+.analogy .cell {
+  padding: 18px 22px;
+  font-size: 20.5px;
+  color: var(--ink);
+  line-height: 1.4;
+  border-top: 1px solid var(--line-soft);
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+}
+.analogy .cell.alt { background: var(--white); }
+
+.analogy-punch {
+  margin-top: 22px;
+  text-align: center;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 30px;
+  color: var(--gold);
+  letter-spacing: -.01em;
+}
+.analogy-sub {
+  margin-top: 8px;
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
+  color: var(--muted);
+}
+
+/* ---- Slide 5 rebuild: mirrored anatomy (brain→hands ≈ model→tools).
+   Two rows with identical column grids so the analogy aligns vertically:
+   HUMAN brain↔AI model (deciders) · HUMAN hands↔AI tools (executors). ---- */
+.anatomy {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 6px;
+}
+.anat-head,
+.anat-row {
+  display: grid;
+  grid-template-columns: 84px 156px 76px 156px 1fr;
+  align-items: center;
+  column-gap: 16px;
+}
+.anat-head { padding: 0 22px; }
+.anat-head .h {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+.anat-head .h.decider { grid-column: 2; }
+.anat-head .h.executor { grid-column: 4; }
+
+.anat-row {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 16px 22px;
+}
+.anat-tag {
+  font-family: var(--mono);
+  font-size: 16px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--navy);
+  font-weight: 600;
+}
+/* compact the shared call-node circle for this two-row layout */
+.anat-row .call-node { gap: 5px; }
+.anat-row .call-node .icon-wrap { width: 62px; height: 62px; border-width: 2px; }
+.anat-row .call-node .icon-wrap .icon { width: 32px; height: 32px; }
+.anat-row .call-node .label { font-size: 13.5px; letter-spacing: .2em; margin-top: 2px; }
+.anat-row .call-node .annotation { font-size: 14.5px; }
+
+/* gold forward arrow, vertically centered on the circle row */
+.anat-arrow {
+  align-self: start;
+  height: 62px;
+  background: no-repeat center / 56px 14px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 14'%3E%3Cline x1='1' y1='7' x2='44' y2='7' stroke='%238F6B2E' stroke-width='2.5'/%3E%3Cpath d='M42 1.5 L52 7 L42 12.5 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+}
+.anat-result {
+  font-size: 19px;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.anat-result em {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 20.5px;
+}
+
+/* ============================================================
+   Layout: Three-column calibration (Slide 6, Slide 9, Slide 11)
+   ============================================================ */
+.tri {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 18px;
+}
+/* Calibration slide has only the header + boxes, so center the boxes in the
+   leftover height instead of letting them cling to the top. */
+[data-layout="calibration"] .tri { margin-block: auto; }
+
+/* Vertical balance + consistent gold foot-line placement (DESIGN-PRINCIPLES
+   §1A): the header stays at the top, the body floats below it, and the trailing
+   gold foot-line is centered in the band between the body's bottom and the
+   footer chrome. Three equal auto-margin gaps do it (header->body, body->foot,
+   foot->footer). Every single-foot-line content layout shares this rule, so the
+   gold line lands in the SAME place across the deck instead of riding tight
+   under one body and dropping to the footer on another. */
+[data-layout="failure-modes"] .tri,
+[data-layout="surfaces"]      .tri,
+[data-layout="shipped"]       .shipped-flow,
+[data-layout="six-tools"]     .grid-6,
+[data-layout="decide"]        .two-col,
+[data-layout="lifecycle"]     .lifecycle { margin-top: auto; margin-bottom: 0; }
+[data-layout="failure-modes"] .foot-note,
+[data-layout="surfaces"]      .foot-line,
+[data-layout="shipped"]       .foot-line,
+[data-layout="six-tools"]     .foot-line,
+[data-layout="decide"]        .foot-line,
+[data-layout="lifecycle"]     .foot-line { margin-top: auto; margin-bottom: auto; }
+
+/* call-diagram: the .call block is short, so centre it rather than letting it
+   cling to the head. With a trailing .foot-line the three auto gaps (head→body,
+   body→foot, foot→chrome) come out even; without one the block simply centres. */
+[data-layout="call-diagram"] .call      { margin-block: auto; }
+[data-layout="call-diagram"] .foot-line { margin-bottom: auto; }
+.tri .col {
+  border-top: 4px solid var(--navy);
+  background: var(--paper);
+  padding: 22px 22px 24px;
+  display: flex;
+  flex-direction: column;
+}
+.tri .col.green { border-top-color: var(--green); }
+.tri .col.gray  { border-top-color: var(--muted); }
+.tri .col.gold  { border-top-color: var(--gold); }
+.tri .col .label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.tri .col h3 {
+  font-size: 21.5px;
+  margin-bottom: 14px;
+  color: var(--obsidian);
+}
+.tri .col .surface-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  color: var(--gold);
+}
+.tri .col .surface-icon .icon { width: 44px; height: 44px; }
+.tri .col .audience {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--muted);
+  margin-top: -10px;
+  margin-bottom: 14px;
+}
+.tri .col ul { list-style: none; flex: 1; }
+.tri .col li {
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--ink);
+  padding: 6px 0 6px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  position: relative;
+}
+.tri .col li::before {
+  content: "·";
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 25px;
+  line-height: 1;
+  top: 6px;
+}
+.tri .col li:last-child { border: 0; }
+
+/* Strategic shift callout - used on Slide 6 */
+.callout-strip {
+  margin-top: 16px;
+  background: var(--navy);
+  color: var(--white);
+  padding: 14px 22px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 22px;
+  align-items: center;
+}
+.callout-strip .label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold-foil);
+  white-space: nowrap;
+}
+.callout-strip .text {
+  font-size: 19px;
+  line-height: 1.45;
+}
+
+/* ============================================================
+   Layout: "What's shipped" two-up (Slide 7)
+   ============================================================ */
+.split {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 20px;
+}
+.split .left,
+.split .right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.catlist {
+  background: var(--paper);
+  border-top: 4px solid var(--navy);
+  padding: 20px 24px 22px;
+  flex: 1;
+}
+.catlist .label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+.catlist dl {
+  display: grid;
+  grid-template-columns: 165px 1fr;
+  row-gap: 12px;
+  column-gap: 18px;
+}
+.catlist dt {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--navy);
+}
+.catlist dd {
+  font-size: 17px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.tile {
+  background: var(--paper);
+  padding: 18px 22px 20px;
+  border-top: 4px solid var(--green);
+}
+.tile.tile--gold { border-top-color: var(--gold); }
+.tile .label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 10px;
+}
+.tile.tile--gold .label { color: var(--gold); }
+.tile h4 { font-size: 19px; margin-bottom: 8px; }
+.tile p { font-size: 16px; color: var(--ink); line-height: 1.45; }
+.tile p + p { margin-top: 6px; }
+
+/* ---- Slide 7 rebuild: AI → MCP hub → tool categories connectivity flow.
+   One open standard sits between the AI and everything it can reach. ---- */
+.shipped-flow {
+  display: grid;
+  grid-template-columns: 184px 46px 200px 46px 1fr;
+  align-items: center;
+  column-gap: 14px;
+  margin-top: 2px;
+}
+
+/* Paired transformation cards: a quiet navy "Chat prompt" card BECOMES the
+   gold "Skill" card. Same footprint + same shape so the eye reads one thing
+   turning into another (fixes the old circle-vs-box mismatch). */
+.sf-prompt {
+  align-self: center;
+  background: var(--navy);
+  color: var(--white);
+  padding: 18px 16px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+.sf-prompt .icon-wrap {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, .12);
+  color: var(--white);
+}
+.sf-prompt .icon-wrap .icon { width: 24px; height: 24px; }
+.sf-prompt .label {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 23px;
+  letter-spacing: -.01em;
+  color: var(--white);
+}
+.sf-prompt .annotation {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13.5px;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, .82);
+}
+.sf-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.sf-node .icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border: 2.5px solid var(--navy);
+  color: var(--navy);
+}
+.sf-node .icon-wrap .icon { width: 38px; height: 38px; }
+.sf-node .label {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .22em;
+  color: var(--navy);
+  font-weight: 600;
+}
+.sf-node .annotation {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.25;
+}
+.sf-arrow {
+  align-self: center;
+  height: 14px;
+  background: no-repeat center / 42px 14px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 42 14'%3E%3Cline x1='1' y1='7' x2='30' y2='7' stroke='%238F6B2E' stroke-width='2.5'/%3E%3Cpath d='M28 1.5 L38 7 L28 12.5 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+}
+.sf-hub {
+  align-self: center;
+  background: var(--gold);
+  color: var(--white);
+  padding: 16px 18px;
+  text-align: center;
+}
+.sf-hub .hub-tag {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .85);
+}
+.sf-hub h4 { font-size: 34px; color: var(--white); margin: 4px 0 0; letter-spacing: .02em; }
+.sf-hub p { font-size: 14px; color: rgba(255, 255, 255, .92); }
+.sf-hub .hub-note {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, .82);
+  border-top: 1px solid rgba(255, 255, 255, .28);
+  padding-top: 9px;
+}
+.sf-cats { display: flex; flex-direction: column; gap: 6px; }
+.sf-cats .cats-label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 2px;
+}
+.sf-cats .cat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--paper);
+  border-left: 3px solid var(--navy);
+  padding: 7px 12px;
+  font-size: 15.5px;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.sf-cats .cat .icon { width: 18px; height: 18px; color: var(--gold); flex-shrink: 0; }
+.sf-cats .cat b { color: var(--navy); font-weight: 700; }
+
+/* ============================================================
+   Layout: Six-card grid (Slide 8)
+   ============================================================ */
+.grid-6 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+  margin-top: 4px;
+  flex: 1;
+}
+/* 4-across variant (e.g. the four model vendors): a single row of cards.
+   Keeps every .grid-6 .item rule; only the track count changes. */
+.grid-6--quad { grid-template-columns: repeat(4, 1fr); grid-template-rows: auto; align-content: center; }
+
+/* ---- .stack: a bottom-up layered stack (the power-user stack). Each layer is
+   a full-width bar: mono layer number, bold name, one-line description. The two
+   foundation layers carry the gold accent (where the value starts). Render the
+   bottom layer last so the visual reads foundation-at-the-bottom. ---- */
+.stack { display: flex; flex-direction: column; gap: 9px; margin-block: auto; }
+.stack-layer {
+  display: flex; align-items: center; gap: 18px;
+  background: var(--paper);
+  border-left: 4px solid var(--navy);
+  padding: 13px 22px;
+}
+.stack-layer--key { border-left-color: var(--gold); background: color-mix(in srgb, var(--gold) 6%, transparent); }
+.stack-layer .sl-num {
+  font-family: var(--mono); font-size: 13px; letter-spacing: .2em;
+  color: var(--muted); width: 96px; flex-shrink: 0; white-space: nowrap;
+}
+.stack-layer .sl-name {
+  font-family: var(--grotesk); font-weight: 700; font-size: 20px;
+  color: var(--obsidian); width: 210px; flex-shrink: 0; letter-spacing: -.01em;
+}
+.stack-layer .sl-desc { font-size: 16px; color: var(--ink); line-height: 1.3; }
+
+/* ---- .ratio-bar: a single split bar for an 80/20-style comparison. ---- */
+.ratio-bar { display: flex; width: 100%; height: 110px; overflow: hidden; margin-block: auto; }
+.ratio-bar .rb-seg { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--white); text-align: center; padding: 0 14px; }
+.ratio-bar .rb-people { background: var(--navy); }
+.ratio-bar .rb-tech { background: var(--muted); }
+.ratio-bar .rb-pct { font-family: var(--grotesk); font-weight: 800; font-size: 42px; line-height: 1; letter-spacing: -.02em; }
+.ratio-bar .rb-lbl { font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; margin-top: 8px; opacity: .92; }
+
+.grid-6 .item {
+  background: var(--paper);
+  padding: 18px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  border-top: 3px solid var(--navy);
+}
+.grid-6 .item--value { border-top-color: var(--gold); }
+.grid-6 .item .item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.grid-6 .item .item-head .icon {
+  width: 24px;
+  height: 24px;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+.grid-6 .item .item-head h4 {
+  font-size: 20.5px;
+  margin-bottom: 0;
+  color: var(--obsidian);
+}
+.grid-6 .item h4 {
+  font-size: 20.5px;
+  margin-bottom: 8px;
+  color: var(--obsidian);
+}
+.grid-6 .item p {
+  font-size: 16px;
+  color: var(--ink);
+  line-height: 1.45;
+  flex: 1;
+}
+.grid-6 .item .win {
+  margin-top: 12px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Layout: Lifecycle horizontal flow (Slide 10)
+   ============================================================ */
+.lifecycle {
+  margin-top: 4px;
+}
+.lifecycle .stages {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 40px;                 /* gap holds the gold connector arrow */
+  position: relative;
+}
+/* Shorter flows: match the column count to the true stage count so the row
+   fills the slide width instead of hugging the left. */
+.lifecycle .stages--3 { grid-template-columns: repeat(3, 1fr); }
+.lifecycle .stages--4 { grid-template-columns: repeat(4, 1fr); }
+.lifecycle .stage {
+  background: var(--navy);
+  color: var(--white);
+  padding: 22px 16px;
+  text-align: center;
+  position: relative;
+}
+/* Gold forward connector sitting in the gap between stages - reads the row
+   as a left→right process flow (architecture-deck style). The arrow is part
+   of its stage, so it fades in with the stage during the cascade. */
+.lifecycle .stage:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: -40px;              /* spans exactly the 40px grid gap */
+  top: 50%;
+  width: 40px;
+  height: 14px;
+  transform: translateY(-50%);
+  background: no-repeat center/30px 12px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 14'%3E%3Cline x1='1' y1='7' x2='30' y2='7' stroke='%238F6B2E' stroke-width='2.5'/%3E%3Cpath d='M28 1.5 L38 7 L28 12.5 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 2;
+}
+.lifecycle .stage.gate {
+  background: var(--green);
+  outline: 3px solid rgba(47, 125, 94, .25);
+  outline-offset: 4px;
+}
+.lifecycle .stage.gate .badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;          /* stay one line so it sits clear of the level/stage label */
+  background: var(--white);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .2em;
+  padding: 4px 10px;
+  border: 1px solid var(--green);
+}
+/* "You are here" locator stage: gold, for level/ladder rows where the
+   highlighted stage is a position, not a HITL gate (green stays gate-only). */
+.lifecycle .stage.here {
+  background: var(--gold);
+  outline: 3px solid rgba(143, 107, 46, .25);
+  outline-offset: 4px;
+}
+.lifecycle .stage.here .badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: var(--white);
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .2em;
+  padding: 4px 10px;
+  border: 1px solid var(--gold);
+}
+.lifecycle .stage .num {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .2em;
+  opacity: .75;
+}
+.lifecycle .stage h4 {
+  font-size: 19px;
+  margin-top: 6px;
+  color: inherit;
+}
+.lifecycle .stage .sub {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14.5px;
+  margin-top: 6px;
+  opacity: .9;
+}
+.lifecycle .arrow {
+  display: block;
+  text-align: center;
+  font-family: var(--mono);
+  color: var(--gold);
+  font-size: 25px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.lifecycle .loopback {
+  margin-top: 30px;
+  padding: 14px 24px;
+  background: var(--paper-warm);
+  border: 1px dashed var(--gold);
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--gold);
+  font-size: 17px;
+}
+
+/* ============================================================
+   Layout: Send-off (Slide 12) - full-bleed navy
+   ============================================================ */
+.slide--sendoff {
+  background: var(--navy);
+  color: var(--white);
+}
+.slide--sendoff .blueprint { opacity: .25; }
+.slide--sendoff .slide-pad {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.slide--sendoff .stop {
+  font-family: var(--grotesk);
+  font-weight: 400;
+  font-size: 56px;
+  letter-spacing: -.025em;
+  color: rgba(255, 255, 255, .82);
+}
+.slide--sendoff .start {
+  font-family: var(--grotesk);
+  font-weight: 900;
+  font-size: 96px;
+  letter-spacing: -.04em;
+  color: var(--gold-foil);
+  margin-top: 4px;
+}
+.slide--sendoff .start .ins {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-style: italic;
+}
+.slide--sendoff .stripe {
+  height: 2px;
+  width: 220px;
+  background: linear-gradient(90deg, transparent, var(--gold-foil), transparent);
+  margin: 42px auto 36px;
+}
+.slide--sendoff .epilogue {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 24px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, .88);
+  max-width: 50ch;
+}
+
+/* ============================================================
+   Layout: Offer slide (Slide 13)
+   ============================================================ */
+.offers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+.offer {
+  background: var(--paper);
+  border-top: 6px solid var(--gold);
+  padding: 18px 26px 15px;
+  display: flex;
+  flex-direction: column;
+}
+.offer .offer-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  color: var(--gold);
+}
+.offer .offer-icon .icon { width: 44px; height: 44px; }
+.offer.offer--alt .offer-icon { color: var(--navy); }
+.offer.offer--alt { border-top-color: var(--navy); }
+.offer .label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+.offer.offer--alt .label { color: var(--navy); }
+.offer h3 { font-size: 26px; line-height: 1.1; margin-bottom: 10px; }
+.offer .what {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--muted);
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+.offer ul { list-style: none; margin-bottom: 10px; }
+.offer li {
+  font-size: 17px;
+  color: var(--ink);
+  padding: 6px 0 6px 18px;
+  position: relative;
+  line-height: 1.4;
+}
+.offer li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-weight: 700;
+}
+.offer.offer--alt li::before { color: var(--navy); }
+.offer .out {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--obsidian);
+}
+
+.cta-strip {
+  margin-top: 10px;
+  background: var(--obsidian);
+  color: var(--white);
+  padding: 13px 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+.cta-strip .lead-text {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 22.5px;
+}
+.cta-strip .next {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold-foil);
+}
+
+/* ============================================================
+   View-toggle button (always visible in slide mode)
+   ============================================================ */
+.view-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .6);
+  background: rgba(15, 23, 42, .55);
+  border: 1px solid rgba(255, 255, 255, .12);
+  padding: 8px 12px;
+  backdrop-filter: blur(8px);
+  transition: color .2s, background .2s, border-color .2s;
+}
+.view-toggle:hover {
+  color: var(--white);
+  background: rgba(15, 23, 42, .85);
+  border-color: rgba(255, 255, 255, .3);
+}
+body.mode-scroll .view-toggle {
+  color: var(--muted);
+  background: rgba(255, 255, 255, .82);
+  border-color: var(--line);
+}
+body.mode-scroll .view-toggle:hover {
+  color: var(--navy);
+  background: var(--white);
+  border-color: var(--navy);
+}
+
+/* ============================================================
+   Keyboard hint - subtle, fixed bottom-center on the dark stage
+   (borrowed from the CMO/architecture reference decks). Lives on the
+   backdrop outside the slide canvas, so it never touches content.
+   Hidden in scroll mode, where the user just scrolls.
+   ============================================================ */
+.khint {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .4);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+.khint .k {
+  color: var(--gold-foil);
+  margin: 0 2px;
+}
+body.mode-scroll .khint { display: none; }
+
+/* Progress bar in slide mode */
+.deck-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--mist), var(--gold-foil));
+  width: 0;
+  z-index: 100;
+  transition: width .35s cubic-bezier(.4, 0, .2, 1);
+  pointer-events: none;
+}
+body.mode-scroll .deck-progress { display: none; }
+
+/* Slide counter - redundant with .slide-chrome on most slides;
+   keep the class for JS hooks but visually hidden. */
+.deck-counter { display: none; }
+
+
+/* ============================================================
+   First-wave element additions (concept-with-analogy, before-after,
+   misconception, worked-example, big-number, relevance-hook)
+   ============================================================ */
+
+/* ---- concept-with-analogy ---- */
+/* ============================================================
+   Element: Concept-with-analogy (analogy-map)
+   Two labeled panels, a familiar SOURCE (left) and the unfamiliar
+   TARGET (right), with one correspondence connector per trait row
+   between them, and a muted caption naming where the analogy breaks.
+   Source stays quiet navy; the single gold accent rides the connectors
+   and the target icon, so the eye reads the mapping itself.
+   ============================================================ */
+.analogy-map {
+  margin-block: auto;                 /* vertical balance: float the body to optical center */
+  display: grid;
+  grid-template-columns: 1fr 64px 1fr;
+  align-items: stretch;
+  gap: 0;
+}
+
+/* ---- the two panels ---- */
+.am-panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 22px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.am-panel--source { border-top: 4px solid var(--navy); }
+.am-panel--target { border-top: 4px solid var(--gold); }
+
+.am-role {
+  font-family: var(--mono);
+  font-size: 25px;          /* emphasis word: ~2x the supporting labels (§3.2) */
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--muted);
+}
+.am-panel--target .am-role { color: var(--gold); }
+
+/* ---- node: icon circle + label, mirrors the .call-node treatment ---- */
+.am-node {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.am-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border: 2.5px solid var(--navy);
+  color: var(--navy);
+  flex-shrink: 0;
+}
+.am-icon .icon { width: 40px; height: 40px; }
+.am-panel--target .am-icon { border-color: var(--gold); color: var(--gold); }
+.am-label {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 23.5px;
+  line-height: 1.12;
+  letter-spacing: -.015em;
+  color: var(--obsidian);
+}
+
+/* ---- trait chips: one row per correspondence, equal height so the
+       connectors land level across both panels ---- */
+.am-traits {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.am-traits li {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--white);
+  border: 1px solid var(--line-soft);
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.am-panel--target .am-traits li { border-left: 3px solid var(--gold); }
+
+/* ---- the mapping column: one gold connector per trait row ---- */
+.am-links {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;          /* align the link stack to the trait rows below the nodes */
+  gap: 12px;
+  padding-bottom: 24px;               /* clears the panel's bottom padding so links sit on the rows */
+}
+.am-link {
+  height: 52px;                        /* matches a trait row, so each connector is centered on its pair */
+  background: no-repeat center / 60px 12px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 12'%3E%3Cline x1='1' y1='6' x2='48' y2='6' stroke='%238F6B2E' stroke-width='2.5'/%3E%3Cpath d='M46 1 L56 6 L46 11 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+  /* real per-connector cascade: each link fades in on its own --stagger once the
+     parent .am-links reaches its build (the global [data-build] --stagger only
+     applies to build elements, so the children carry their own here). */
+  opacity: 0;
+  transition: opacity .4s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.am-links.in .am-link { opacity: 1; }
+body.mode-scroll .am-link { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .am-link { transition: none; } }
+
+/* ---- breaks-caption: the honest close ---- */
+.am-breaks {
+  margin-top: 18px;
+  padding: 14px 22px;
+  border-left: 3px solid var(--muted);
+  background: var(--paper-warm);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.am-breaks b { font-style: normal; font-weight: 600; color: var(--obsidian); }
+
+/* ---- before-after ---- */
+/* ============================================================
+   Layout: Before / after (mirrored two-column delta)
+   Two columns with one shared row spine, so the eye reads across
+   each row and only the differences pop. Today is quiet navy; the
+   with-change column carries the single gold accent. Optional
+   per-row metric-delta chip makes the lift concrete.
+   ============================================================ */
+.before-after {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-block: auto;        /* center the body group in the leftover height */
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+/* shared grid for the head row and every body row: spine label, then the two
+   mirrored state columns. Identical template keeps the columns aligned. */
+.ba-headrow,
+.ba-row {
+  display: grid;
+  grid-template-columns: 188px 1fr 1fr;
+  align-items: stretch;
+}
+.ba-headrow {
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.ba-spine-lbl { display: block; }
+.ba-head {
+  padding: 13px 22px;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--white);
+}
+.ba-head--today { background: var(--navy); }
+.ba-head--with  { background: var(--gold); }
+
+/* spine label: the shared row name, sitting between the two states */
+.ba-row { border-top: 1px solid var(--line-soft); }
+.ba-row:first-of-type { border-top: 0; }
+.ba-spine {
+  display: flex;
+  align-items: center;
+  padding: 16px 22px;
+  background: var(--paper);
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* the two mirrored cells: identical box, so only the words and the accent
+   differ. Today is quiet; with-change carries the gold left rule + delta. */
+.ba-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 22px;
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.ba-cell--today {
+  background: var(--white);
+  color: var(--muted);       /* status quo stated quietly, never blamed */
+  border-left: 3px solid var(--navy);
+}
+.ba-cell--with {
+  background: rgba(143, 107, 46, .06);
+  border-left: 3px solid var(--gold);
+}
+
+/* metric-delta chip: <from> gold-arrow <to>, the concrete lift for the row */
+.ba-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .04em;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+.ba-arr {
+  width: 26px;
+  height: 12px;
+  flex-shrink: 0;
+  background: no-repeat center / 26px 12px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 12'%3E%3Cline x1='1' y1='6' x2='17' y2='6' stroke='%238F6B2E' stroke-width='2.5'/%3E%3Cpath d='M15 1 L24 6 L15 11 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+}
+
+/* punch line: the takeaway, gold serif, on its own beat (build 3) */
+.ba-punch {
+  margin-top: 18px;
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 22.5px;
+  color: var(--gold);
+  letter-spacing: -.01em;
+}
+
+/* ---- misconception ---- */
+/* ============================================================
+   Layout: Misconception (myth vs reality), Reframe & check
+   Two stacked rows: "Easy to assume" (myth, muted, quiet) over
+   "What is actually true" (reality, gold-emphasized, the weight).
+   Additive voice: the myth is a reasonable assumption, never an
+   error. The single gold accent lives on the reality row.
+   ============================================================ */
+.myth-reality {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+/* Body is shorter than the canvas: float the pair to the optical center
+   (same vertical-balance move as the calibration layout). */
+[data-layout="misconception"] .myth-reality { margin-block: auto; }
+
+.myth-reality .mr-row {
+  padding: 26px 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* Myth: quiet paper card, muted ink, a flat neutral top rule. Reads as the
+   reasonable-but-incomplete starting point. */
+.myth-reality .mr-row--myth {
+  background: var(--paper);
+  border-top: 4px solid var(--line);
+}
+/* Reality: warm card carrying the one gold accent and the visual weight. */
+.myth-reality .mr-row--reality {
+  background: var(--paper-warm);
+  border-top: 4px solid var(--gold);
+}
+
+.myth-reality .mr-label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+}
+.myth-reality .mr-row--myth .mr-label { color: var(--muted); }
+.myth-reality .mr-row--reality .mr-label { color: var(--gold); }
+
+.myth-reality .mr-text {
+  font-size: 23.5px;
+  line-height: 1.45;
+}
+/* The myth sits back: muted color, plain weight. */
+.myth-reality .mr-row--myth .mr-text { color: var(--muted); }
+/* The reality leans in: full ink, with the key phrase carried in gold. */
+.myth-reality .mr-row--reality .mr-text { color: var(--obsidian); }
+.myth-reality .mr-row--reality .mr-text b { color: var(--gold); font-weight: 700; }
+
+/* Bridge glyph between the rows: a short downward gold arrow that signals the
+   reframe arriving (additive move, not a strike-through). Drawn as a CSS
+   background so it needs no icon sprite, and carries the slide's gold accent. */
+.myth-reality .mr-bridge {
+  height: 26px;
+  margin: 6px auto;
+  width: 22px;
+  background: no-repeat center / 16px 22px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 22'%3E%3Cline x1='8' y1='1' x2='8' y2='15' stroke='%238F6B2E' stroke-width='2.5'/%3E%3Cpath d='M2.5 13 L8 21 L13.5 13 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+}
+
+/* Side-by-side variant: use only when both sides are short label phrases. */
+.myth-reality--cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+.myth-reality--cols .mr-bridge { display: none; }
+
+/* ---- worked-example ---- */
+/* ============================================================
+   Layout: Worked example (.worked), a fully solved instance
+   with the reasoning shown. Navy problem frame at top, numbered
+   reasoning steps revealed one per press, gold result last.
+   ============================================================ */
+.worked {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-block: auto;        /* the stack is shorter than the canvas; center it */
+}
+.worked-problem { padding: 18px 30px; }
+.worked-problem .small { color: var(--gold-foil); }
+
+.worked-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.worked-step {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: start;
+  column-gap: 18px;
+  background: var(--paper);
+  border-left: 3px solid var(--line);
+  padding: 11px 22px 11px 18px;
+}
+/* CSS-numbered mono badge, the one gold accent on the step rail */
+.worked-steps { counter-reset: worked; }
+.worked-num {
+  counter-increment: worked;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  color: var(--gold);
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.worked-num::before { content: counter(worked); }
+.worked-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.worked-act {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 20.5px;
+  color: var(--obsidian);
+  letter-spacing: -.01em;
+  line-height: 1.2;
+}
+.worked-why {
+  font-size: 17px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Result row, highlighted last, gold-accented to close the reasoning */
+.worked-result {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 22px;
+  background: var(--navy);
+  color: var(--white);
+  border-left: 3px solid var(--gold-foil);
+  padding: 16px 24px;
+}
+.worked-result-label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold-foil);
+  white-space: nowrap;
+}
+.worked-result-text {
+  font-size: 20.5px;
+  line-height: 1.4;
+  color: var(--white);
+}
+
+/* ---- big-number ---- */
+/* ============================================================
+   Layout: Big-number / stat (Prove)
+   One striking figure IS the slide. The protagonist number sits
+   in the optical center; a context line names it; a muted source
+   makes it traceable. One gold accent: the figure.
+   ============================================================ */
+/* Center the block in the leftover height and keep the source line clear of the
+   footer chrome (~673), so the figure can run large without overrunning. */
+[data-layout="bignum"] .bignum { margin-block: auto; }
+
+.bignum {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+}
+.bignum-figure {
+  font-family: var(--grotesk);
+  font-weight: 900;
+  font-size: 188px;
+  line-height: .9;
+  letter-spacing: -.045em;
+  color: var(--gold);
+}
+.bignum-unit {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-style: italic;
+  font-size: .5em;
+  color: var(--gold-foil);
+  letter-spacing: 0;
+  margin-left: .04em;
+}
+.bignum-context {
+  font-size: 24px;
+  line-height: 1.4;
+  color: var(--obsidian);
+  font-weight: 400;
+  max-width: 30ch;
+}
+.bignum-support {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 21.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.bignum-source {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .14em;
+  color: var(--muted);
+}
+
+/* ---- relevance-hook ---- */
+/* ============================================================
+   Element: Relevance hook (Orient), establish the business
+   stake before teaching. One sharp statement on the left,
+   anchored by a single striking attributed figure on the right.
+   The statement leads; the figure is the gold accent that
+   supports it. Shares the oversized-numeral treatment with
+   big-number, but the emphasis here is the stake, not the stat.
+   ============================================================ */
+.relevance {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 56px;
+  align-items: center;
+  margin-block: auto;          /* center the body in the leftover height */
+}
+/* keep the whole body clear of the footer chrome (~673) */
+[data-layout="relevance"] .relevance { max-height: 470px; }
+
+.relevance-stake {
+  border-left: 4px solid var(--gold);
+  padding-left: 30px;
+}
+.relevance-statement {
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 36px;
+  line-height: 1.16;
+  letter-spacing: -.02em;
+  color: var(--obsidian);
+}
+.relevance-context {
+  margin-top: 20px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 300;
+  font-size: 22.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 42ch;
+}
+
+.relevance-stat {
+  text-align: center;
+  padding: 0 8px;
+}
+.relevance-figure {
+  font-family: var(--grotesk);
+  font-weight: 900;
+  font-size: 116px;
+  line-height: .92;
+  letter-spacing: -.045em;
+  color: var(--gold);
+}
+.relevance-unit {
+  /* shared oversized-numeral unit treatment with .bignum-unit: serif italic, gold-foil */
+  font-family: var(--serif);
+  font-weight: 300;
+  font-style: italic;
+  font-size: 34px;
+  letter-spacing: 0;
+  color: var(--gold-foil);
+  vertical-align: baseline;
+}
+.relevance-unit--pre {
+  font-size: 52px;
+  margin-right: 2px;
+}
+.relevance-figure-label {
+  margin-top: 18px;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--ink);
+  max-width: 30ch;
+  margin-inline: auto;
+}
+.relevance-source {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+
+/* ============================================================
+   Wave 2: data + framework visuals (issue-tree, matrix-2x2,
+   comparison-table, waterfall, trend-line, ranking-bar,
+   composition, maturity-heatmap, value-chain, roadmap-timeline)
+   ============================================================ */
+
+/* ---- issue-tree ---- */
+/* ============================================================
+   Layout: Issue / driver tree (MECE decomposition)
+   Root claim on the left fans into 2 to 4 MECE children on the
+   right. Connectors are static inline SVG (uniform scale, no text
+   inside, so no distortion per DESIGN-PRINCIPLES §5.5). Gold marks
+   the one focal element: the root claim under examination.
+   ============================================================ */
+.it-tree {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 120px minmax(300px, 1.1fr);
+  align-items: center;
+  column-gap: 0;
+}
+/* Shorter trees float to the optical center instead of clinging up top. */
+[data-layout="issue-tree"] .it-tree { margin-block: auto; }
+
+/* ---- ROOT: the claim being decomposed (the single gold focal node) ---- */
+.it-root {
+  background: var(--navy);
+  color: var(--white);
+  border-left: 4px solid var(--gold);
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.it-root-tag {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold-foil);
+}
+.it-root-val {
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: var(--white);
+}
+.it-root-note {
+  font-size: 14.5px;
+  color: rgba(255, 255, 255, .78);
+  line-height: 1.35;
+}
+
+/* ---- CONNECTOR FAN: root to children, static SVG, navy thin strokes ---- */
+.it-links {
+  width: 120px;
+  height: 300px;
+  align-self: stretch;
+}
+.it-link {
+  fill: none;
+  stroke: var(--navy);
+  stroke-width: 2;
+  opacity: .42;
+}
+
+/* ---- CHILDREN: the MECE parts, quiet navy, stacked ---- */
+.it-children {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.it-node {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--navy);
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 16px;
+  align-items: baseline;
+  /* per-child cascade: each node fades in on its own --stagger once the parent
+     .it-children reaches its build (the global [data-build] --stagger only
+     applies to build elements, so the children carry their own here). */
+  opacity: 0;
+  transition: opacity .4s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.it-children.in .it-node { opacity: 1; }
+body.mode-scroll .it-node { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .it-node { transition: none; } }
+
+.it-node-name {
+  grid-column: 1;
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 19px;
+  color: var(--navy);
+  letter-spacing: -.01em;
+}
+.it-node-desc {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 15.5px;
+  color: var(--muted);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+.it-share {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 19px;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+/* ---- second-level drill (optional): one child opens into sub-parts ---- */
+.it-children--sub {
+  gap: 10px;
+}
+.it-children--sub .it-node {
+  border-left-color: var(--line);
+  padding: 11px 16px;
+}
+.it-children--sub .it-node-name { font-size: 17px; }
+
+/* ---- matrix-2x2 ---- */
+/* ============================================================
+   Layout: 2×2 matrix (matrix-2x2), Compare & decide
+   A square plot, two mono axes (low to high), four named
+   quadrants, options plotted as small labeled dots, and the
+   recommended quadrant lit gold. Pure CSS so it scales clean.
+   ============================================================ */
+.m2 {
+  position: relative;
+  margin: 6px auto auto;     /* center horizontally; small gap under the head */
+  width: 452px;
+  aspect-ratio: 1 / 1;
+}
+[data-layout="matrix"] .m2 { margin-top: auto; }   /* float toward optical center */
+
+/* the four-cell board */
+.m2-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.m2-quad {
+  position: relative;
+  border: 1px dashed var(--line-soft);
+}
+.m2-quad-lbl {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  right: 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1.3;
+}
+.m2-quad--tr .m2-quad-lbl { text-align: right; }
+.m2-quad--br .m2-quad-lbl { top: auto; bottom: 12px; text-align: right; }
+.m2-quad--bl .m2-quad-lbl { top: auto; bottom: 12px; }
+
+/* the recommended quadrant: faint gold wash + gold ring, fades in on its build */
+.m2-quad--win {
+  background: color-mix(in srgb, var(--gold) 6%, transparent);
+  outline: 1.5px solid color-mix(in srgb, var(--gold) 38%, transparent);
+  outline-offset: -1.5px;
+  opacity: 0;
+  transition: opacity .45s cubic-bezier(.16, 1, .3, 1);
+}
+.m2-quad--win.in { opacity: 1; }
+body.mode-scroll .m2-quad--win { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .m2-quad--win { transition: none; } }
+.m2-quad--win .m2-quad-lbl { color: var(--gold); font-weight: 600; }
+
+/* the center cross, drawn over the quad borders in quiet navy */
+.m2-axis-x, .m2-axis-y { position: absolute; background: var(--navy); opacity: .5; }
+.m2-axis-x { left: 0; right: 0; top: 50%; height: 1.5px; transform: translateY(-.75px); }
+.m2-axis-y { top: 0; bottom: 0; left: 50%; width: 1.5px; transform: translateX(-.75px); }
+
+/* axis low/high endpoints (mono) and axis names */
+.m2-axlbl {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.m2-axis-name {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--navy);
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* x axis: name centered below the plot, low at left, high at right */
+.m2-x-name { left: 0; right: 0; bottom: -38px; text-align: center; }
+.m2-x-lo { left: 0; bottom: -20px; }
+.m2-x-hi { right: 0; bottom: -20px; }
+/* y axis: name rotated outside the left edge, low at bottom, high at top */
+.m2-y-name {
+  top: 50%; left: -102px;
+  width: 144px; text-align: center;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: center;
+}
+.m2-y-lo { left: -16px; bottom: 0; transform: rotate(-90deg); transform-origin: left bottom; }
+.m2-y-hi { left: -16px; top: 0; transform: rotate(-90deg) translateX(-100%); transform-origin: left top; }
+
+/* plotted items: a small dot + its label, positioned by inline left/top % */
+.m2-plot { position: absolute; inset: 0; pointer-events: none; }
+.m2-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* real per-child cascade: each dot fades on its own --stagger once .m2-plot
+     reaches its build (the global [data-build] --stagger only applies to build
+     elements, so the non-build children carry their own transition here). */
+  opacity: 0;
+  transition: opacity .4s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.m2-plot.in .m2-dot { opacity: 1; }
+body.mode-scroll .m2-dot { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .m2-dot { transition: none; } }
+.m2-dot .m2-pt {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--navy);
+  border: 2px solid var(--paper);
+  box-shadow: 0 0 0 1px var(--navy);
+  flex-shrink: 0;
+}
+.m2-dot .m2-ptlbl {
+  font-family: var(--sans);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  background: rgba(246, 247, 249, .82);   /* faint plate so labels stay legible over the wash */
+  padding: 1px 4px;
+}
+/* the one focal item: gold dot + gold label, lives in the winning quadrant */
+.m2-dot--focus .m2-pt { background: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.m2-dot--focus .m2-ptlbl { color: var(--gold); }
+/* labels that would run off the right edge flip to sit left of the dot */
+.m2-dot--left { flex-direction: row-reverse; }
+
+/* the takeaway clears the x-axis name that sits below the plot */
+[data-layout="matrix"] .foot-line { margin-top: 52px; }
+
+/* ============================================================
+   Layout: Wiring - a real, multi-step Skill drawn as a small system.
+   The Skill's own files flow into the gold Skill core (its numbered
+   steps) and out to the result. Architecture-deck idiom in pure
+   HTML/CSS: thin navy nodes, dashed "your files", a gold core, gold
+   connectors, mono stage labels. Scales with the uniform slide scale.
+   ============================================================ */
+[data-layout="wiring"] .wiring    { margin-top: auto; margin-bottom: 0; }
+[data-layout="wiring"] .eaf-ref   { margin-top: 22px; }
+[data-layout="wiring"] .foot-line { margin-top: 12px; margin-bottom: auto; }
+
+.wiring { display: flex; align-items: stretch; width: 100%; }
+.wiring .w-col { display: flex; flex-direction: column; }
+.w-col--in    { flex: 1 1 0; }
+.w-col--skill { flex: 1.3 1 0; }
+.w-col--out   { flex: 1 1 0; }
+.w-stage-lbl {
+  flex: 0 0 auto;
+  font-family: var(--mono); font-size: 12.5px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--gold);
+  text-align: center; margin-bottom: 13px;
+}
+/* labels pin to a common top row; each column's nodes center in the space
+   below, so cards align with the gold core and the connectors hit center */
+.w-body { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+
+/* source / result nodes */
+.w-node { border: 1.4px solid var(--navy); border-radius: 8px; background: #fff; padding: 12px 15px; }
+.w-node + .w-node { margin-top: 12px; }
+.w-node--file { border-style: dashed; }   /* dashed = your own file */
+.wn-head { display: flex; align-items: center; gap: 9px; }
+.wn-head .icon { width: 21px; height: 21px; color: var(--navy); flex-shrink: 0; }
+.wn-name { font-family: var(--grotesk); font-weight: 700; font-size: 17px; color: var(--ink); }
+.wn-name .f { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--navy); }
+.wn-role { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.35; }
+
+/* the gold Skill core, carrying its own numbered steps */
+.w-skill {
+  border: 1.8px solid var(--gold); border-radius: 10px;
+  background: color-mix(in srgb, var(--gold) 7%, #fff); padding: 15px 19px 17px;
+}
+.ws-tag  { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+.ws-name { font-family: var(--grotesk); font-weight: 800; font-size: 20px; color: var(--navy); margin-top: 1px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* EAF category chip on a node (Context / Tool / Prompt), tying the slide back
+   to the Effective Agentic Framework from the opening */
+.wn-tag {
+  margin-left: auto; flex-shrink: 0;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; white-space: nowrap;
+}
+.wn-tag--prompt { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 42%, transparent); }
+
+/* the framework call-back line above the takeaway */
+.eaf-ref {
+  font-family: var(--sans); font-size: 14px; color: var(--muted);
+  text-align: center; line-height: 1.5; max-width: 96ch; margin-inline: auto;
+}
+.eaf-ref b  { color: var(--navy); font-weight: 600; }
+.eaf-ref em { font-style: italic; color: var(--ink); }
+.w-skill ol { list-style: none; counter-reset: wstep; margin-top: 11px; }
+.w-skill li {
+  counter-increment: wstep; position: relative; padding: 7px 0 7px 33px;
+  font-size: 14.5px; color: var(--ink); line-height: 1.38; border-top: 1px solid var(--line-soft);
+}
+.w-skill li:first-child { border-top: 0; }
+.w-skill li::before {
+  content: counter(wstep); position: absolute; left: 0; top: 6px;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--navy); color: #fff;
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+.w-skill li b { color: var(--gold); font-weight: 700; }
+
+/* result node bullets */
+.wo-name { font-family: var(--grotesk); font-weight: 700; font-size: 17px; color: var(--ink); }
+.w-out ul { list-style: none; margin-top: 10px; }
+.w-out li { position: relative; padding: 5px 0 5px 16px; font-size: 13.5px; color: var(--ink); line-height: 1.35; }
+.w-out li::before { content: ""; position: absolute; left: 0; top: 11px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+/* gold forward connector between zones (same engine as .lifecycle / .sf-arrow) */
+.w-arrow {
+  flex: 0 0 52px; align-self: stretch; margin-top: 30px;
+  background: no-repeat center/42px 14px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 14'%3E%3Cline x1='1' y1='7' x2='30' y2='7' stroke='%238F6B2E' stroke-width='2.5'/%3E%3Cpath d='M28 1.5 L38 7 L28 12.5 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+  opacity: 0; transition: opacity .45s cubic-bezier(.16, 1, .3, 1);
+}
+.w-arrow.in { opacity: 1; }
+body.mode-scroll .w-arrow { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .w-arrow { transition: none; } }
+
+/* ============================================================
+   Layout: Swimlane - an agentic workflow across actor lanes.
+   Three horizontal lanes (Human / Agents / Sources), an orchestrator
+   bar that delegates to sub-agent nodes, dashed .md artifact chips
+   passed between steps, source cards, and numbered gold connectors - 
+   the f3 clean-stroke take on a swimlane flowchart. Bespoke SVG per
+   deck (geometry differs); these classes style the shared vocabulary.
+   ============================================================ */
+[data-layout="swimlane"] .slide-head--assert { margin-bottom: 14px; }
+.swim { width: 100%; margin-block: auto; }
+.swim svg { width: 100%; height: auto; max-height: 506px; display: block; }
+
+/* lanes + their left labels */
+.sl-lane     { fill: var(--paper); }
+.sl-lane--alt{ fill: #fff; }
+.sl-lane-box { fill: none; stroke: var(--line); stroke-width: 1; }
+.sl-lane-lbl { font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; fill: var(--gold); font-weight: 500; }
+
+/* the orchestrator bar */
+.sl-orch     { fill: color-mix(in srgb, var(--gold) 12%, #fff); stroke: var(--gold); stroke-width: 1.6; }
+.sl-orch-lbl { font-family: var(--grotesk); font-weight: 800; font-size: 15.5px; fill: var(--navy); }
+.sl-orch-tag { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; fill: var(--gold); }
+
+/* nodes: human gates + sub-agent diamonds */
+.sl-gate     { fill: #fff; stroke: var(--navy); stroke-width: 1.4; }
+.sl-diamond  { fill: #fff; stroke: var(--navy); stroke-width: 1.5; }
+.sl-node-lbl { font-family: var(--grotesk); font-weight: 700; font-size: 14px; fill: var(--ink); }
+.sl-node-sub { font-family: var(--sans); font-size: 11px; fill: var(--muted); }
+
+/* artifacts (.md / .html / .pdf) - dashed green chips, the "your file" convention */
+.sl-art      { fill: color-mix(in srgb, var(--green) 8%, #fff); stroke: var(--green); stroke-width: 1.3; stroke-dasharray: 5 3; }
+.sl-art-lbl  { font-family: var(--mono); font-size: 11.5px; fill: var(--green); font-weight: 500; }
+
+/* source / data cards */
+.sl-src      { fill: var(--paper-warm, #F3EFE7); stroke: var(--line); stroke-width: 1.2; }
+.sl-src-lbl  { font-family: var(--sans); font-size: 12.5px; font-weight: 600; fill: var(--ink); }
+
+/* connectors + numbered step badges */
+.sl-conn       { stroke: var(--gold); stroke-width: 1.8; fill: none; }
+.sl-conn--dash { stroke-dasharray: 5 4; opacity: .75; }
+.sl-num        { fill: var(--navy); }
+.sl-num-txt    { fill: #fff; font-family: var(--mono); font-size: 10.5px; font-weight: 600; }
+
+/* build reveal: SVG groups fade in via the global [data-build] hook */
+.swim [data-build] { opacity: 0; transition: opacity .45s cubic-bezier(.16,1,.3,1) var(--stagger,0s); }
+.swim [data-build].in { opacity: 1; }
+body.mode-scroll .swim [data-build] { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .swim [data-build] { transition: none; } }
+
+/* ---- comparison-table ---- */
+/* ============================================================
+   Element: Comparison table (Harvey balls / RAG scored grid)
+   Options are columns, criteria are rows, every cell carries a
+   score: a five-step Harvey ball (judgment ratings) or a RAG dot
+   (threshold criteria). One option is the recommendation, its
+   column lit gold; every other option stays quiet navy. A legend
+   names the scale. Reads as a defensible one-page decision.
+   ============================================================ */
+.ct {
+  margin-block: auto;                 /* vertical balance: float the body to optical center */
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.ct-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* ---- header row: criterion corner + one cell per option ---- */
+.ct-grid thead th {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-align: center;
+  padding: 14px 16px;
+  vertical-align: bottom;
+}
+.ct-corner {
+  text-align: left !important;
+  color: var(--muted);
+  width: 26%;
+}
+.ct-opt {
+  color: var(--navy);
+  border-bottom: 3px solid var(--navy);
+  background: var(--paper);
+}
+/* the recommended option header: quiet by default, the tag is muted until build 3 */
+.ct-opt.ct-rec {
+  border-bottom-color: var(--gold);
+  position: relative;
+}
+.ct-rec-tag {
+  display: block;
+  font-size: 11.5px;
+  letter-spacing: .22em;
+  color: var(--muted);
+  margin-bottom: 6px;
+  transition: color .35s ease;
+}
+
+/* ---- body: criterion label + score cells ---- */
+.ct-crit {
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink);
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.ct-grid tbody td {
+  text-align: center;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: middle;
+}
+.ct-grid tbody tr:last-child td,
+.ct-grid tbody tr:last-child .ct-crit { border-bottom: 0; }
+
+/* recommended column carries a faint navy backing always, gold wash on build 3 */
+.ct-opt.ct-rec,
+.ct-grid tbody td.ct-rec {
+  background: color-mix(in srgb, var(--navy) 4%, transparent);
+  transition: background .4s ease;
+}
+
+/* ---- score-cell cascade: each row fades its cells in on its own --stagger
+       once the row reaches build 2 (the global [data-build] --stagger only
+       applies to the build element, so the inner cells carry their own). ---- */
+.ct-row td .ct-ball,
+.ct-row td .ct-rag {
+  opacity: 0;
+  transition: opacity .4s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.ct-row.in td .ct-ball,
+.ct-row.in td .ct-rag { opacity: 1; }
+body.mode-scroll .ct-row td .ct-ball,
+body.mode-scroll .ct-row td .ct-rag { opacity: 1; }
+
+/* ---- Harvey ball: navy ring + conic fill clipped to a circle.
+       Five steps via the fill stop: empty, quarter, half, three-quarter, full.
+       The fill starts at top (0deg) and sweeps clockwise. ---- */
+.ct-ball {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--navy);
+  background:
+    conic-gradient(var(--navy) 0 var(--ct-fill, 0deg), transparent 0 360deg);
+  vertical-align: middle;
+}
+.ct-b0 { --ct-fill: 0deg; }
+.ct-b1 { --ct-fill: 90deg; }
+.ct-b2 { --ct-fill: 180deg; }
+.ct-b3 { --ct-fill: 270deg; }
+.ct-b4 { --ct-fill: 360deg; }
+/* recommended column balls render in gold so the focal column reads as one piece */
+.ct-rec .ct-ball {
+  border-color: var(--gold);
+  background:
+    conic-gradient(var(--gold) 0 var(--ct-fill, 0deg), transparent 0 360deg);
+}
+
+/* ---- RAG dot: a labeled chip so cells are never color-only ---- */
+.ct-rag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink);
+}
+.ct-rag::before {
+  content: "";
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ct-g { color: var(--green); }
+.ct-g::before { background: var(--green); }
+.ct-a { color: var(--gold); }
+.ct-a::before { background: var(--gold-foil); }
+.ct-r { color: var(--red); }
+.ct-r::before { background: var(--red); }
+
+/* ---- build 3: recommended column lights gold (presenter adds .build-3
+       on the slide once the third build fires). The cell backing washes
+       gold and the Recommended tag goes solid gold. ---- */
+[data-layout="comparison-table"].build-3 .ct-opt.ct-rec,
+[data-layout="comparison-table"].build-3 .ct-grid tbody td.ct-rec {
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+[data-layout="comparison-table"].build-3 .ct-rec-tag { color: var(--gold); }
+body.mode-scroll .ct-opt.ct-rec,
+body.mode-scroll .ct-grid tbody td.ct-rec { background: color-mix(in srgb, var(--gold) 12%, transparent); }
+body.mode-scroll .ct-rec-tag { color: var(--gold); }
+
+/* ---- legend ---- */
+.ct-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 26px;
+  padding-top: 4px;
+}
+.ct-legend-scale { display: inline-flex; align-items: center; gap: 5px; }
+.ct-legend-scale .ct-ball { width: 16px; height: 16px; }
+.ct-legend-cap,
+.ct-legend-src {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+.ct-legend-cap { margin-left: 8px; }
+.ct-legend-rag { display: inline-flex; align-items: center; gap: 18px; }
+.ct-legend-src { margin-left: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-row td .ct-ball,
+  .ct-row td .ct-rag,
+  .ct-rec-tag,
+  .ct-opt.ct-rec,
+  .ct-grid tbody td.ct-rec { transition: none; }
+}
+
+/* ---- waterfall ---- */
+/* ---- waterfall ---- */
+/* ============================================================
+   Element: Waterfall / bridge
+   A start anchor, floating signed driver steps, and an end anchor
+   explain a delta left to right. Positive steps take a quiet green
+   tone, negative steps a quiet navy tone, and exactly one focal
+   step lights gold. Connector ticks carry the running total from
+   each step to the next. Bars are bespoke CSS positioned by a
+   per-column --base (foot, % of plot height from bottom) and
+   --size (height, % of plot height). The plot floats to the
+   optical center so the chart never clings to the top.
+   ============================================================ */
+.wf {
+  margin-block: auto;                 /* vertical balance: float the chart to optical center */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.wf-plot {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  column-gap: 26px;
+  align-items: end;
+  height: 360px;
+  padding: 30px 8px 0;                /* top room for the value label above the tallest bar */
+  border-bottom: 1.5px solid var(--line);   /* the baseline axis, visible from entry */
+}
+
+/* one driver/anchor column: a fixed-height track the bar floats inside */
+.wf-col {
+  position: relative;
+  height: 100%;
+}
+
+/* the floating bar, placed by --base (foot) and --size (height) */
+.wf-bar {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: var(--base, 0%);
+  height: var(--size, 0%);
+  background: var(--navy);
+  display: block;
+}
+/* signed-step tones, both quiet so the one gold step owns the eye */
+.wf-col--down .wf-bar { background: var(--navy); }
+.wf-col--up   .wf-bar { background: var(--green); opacity: .7; }
+/* anchors: the start/end totals, grounded at zero, a touch lighter than a down step */
+.wf-col--anchor .wf-bar,
+.wf-col--total  .wf-bar { background: var(--muted); }
+/* the single focal driver, gold (one accent per slide) */
+.wf-col--focus .wf-bar { background: var(--gold); opacity: 1; }
+
+/* connector tick: a thin line at the foot of a step reaching back to the
+   previous step's running total, so the eye follows the cascade */
+.wf-tick {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: 26px;                        /* spans roughly the column gap */
+  height: 0;
+  border-top: 1px dashed var(--line);
+}
+
+/* signed value label above each bar */
+.wf-val {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--base, 0%) + var(--size, 0%) + 6px);
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--navy);
+  line-height: 1;
+}
+.wf-col--up   .wf-val { color: var(--green); }
+.wf-col--focus .wf-val { color: var(--gold); }
+.wf-col--anchor .wf-val,
+.wf-col--total  .wf-val { color: var(--obsidian); font-weight: 700; }
+
+/* driver name below the baseline */
+.wf-label {
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: calc(100% + 9px);
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1.2;
+}
+.wf-col--anchor .wf-label,
+.wf-col--total  .wf-label { color: var(--navy); font-weight: 600; }
+
+/* net-swing callout under the chart */
+.wf-net {
+  margin-top: 22px;
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--gold);
+}
+.wf-source {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+
+/* per-step left-to-right cascade: each step fades in on its own --stagger once
+   it reaches build 2. The global [data-build] --stagger covers the build
+   elements here, but the bar grows from its base too for a settled finish. */
+.wf-col[data-build] .wf-bar {
+  transform: scaleY(.001);
+  transform-origin: bottom;
+  transition: transform .5s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.wf-col[data-build].in .wf-bar { transform: scaleY(1); }
+body.mode-scroll .wf-col .wf-bar { transform: scaleY(1); }
+@media (prefers-reduced-motion: reduce) {
+  .wf-col[data-build] .wf-bar { transition: none; transform: scaleY(1); }
+}
+
+/* ---- trend-line ---- */
+/* ---- trend-line ---- */
+/* ============================================================
+   Element: Trend line (time-series chart, Prove)
+   A line chart in inline SVG: x is time, one focal series in gold,
+   an optional muted comparator, and the one inflection point that
+   carries the message marked with a small callout. Clean axes,
+   sparse gridlines, label only what matters (data-ink discipline).
+   The single gold accent rides the focal line, its dots, and the
+   callout; the comparator and axes stay quiet navy/gray.
+   ============================================================ */
+/* Center the chart card in the leftover height and keep the source line
+   clear of the footer chrome (~673), so the chart can run large. */
+[data-layout="trend"] .trend { margin-block: auto; }
+
+.trend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 20px 28px 22px;
+  position: relative;
+}
+
+/* legend: focal first (gold), comparator second (muted) */
+.trend-legend {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+.trend-key {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  line-height: 1;
+}
+.trend-key::before {
+  content: "";
+  width: 26px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--muted);
+}
+.trend-key--focal { color: var(--gold); }
+.trend-key--focal::before { background: var(--gold); }
+.trend-key--comp::before {
+  height: 0;
+  border-top: 2px dashed var(--muted);
+  background: none;
+}
+
+/* the chart svg: static geometry, scales with the uniform slide scale */
+.trend-chart {
+  width: 100%;
+  height: auto;
+  max-height: 338px;
+  display: block;
+  overflow: visible;
+}
+
+/* axes + sparse gridlines: quiet, minimal data-ink */
+.trend-axis { stroke: var(--navy); stroke-width: 1.5; opacity: .55; }
+.trend-grid { stroke: var(--navy); stroke-width: 1; opacity: .08; }
+
+/* comparator: muted navy, dashed, no fill */
+.trend-comparator {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* focal series: the one gold line, traced in via the .trace primitive */
+.trend-focal {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* dots: end-of-line and the annotated inflection, both gold */
+.trend-dot { fill: var(--gold); }
+.trend-dot--infl {
+  fill: var(--white);
+  stroke: var(--gold);
+  stroke-width: 3;
+}
+
+/* x labels: HTML row so no SVG text distorts; aligned to the plot band */
+.trend-xaxis {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  padding: 0 0 0 7%;          /* clears the y-axis gutter, matching the svg x=70 origin */
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .08em;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* inflection callout: the so-what, gold-accented, on the third beat */
+.trend-callout {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--gold) 7%, transparent);
+  border-left: 3px solid var(--gold);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.trend-callout-tag {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+.trend-callout-val {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
+  color: var(--obsidian);
+  line-height: 1.25;
+}
+
+.trend-source {
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+
+/* ---- ranking-bar ---- */
+/* ---- ranking-bar ---- */
+/* ============================================================
+   Element: Ranking (bar), Prove
+   A sorted horizontal bar chart ranking discrete items by one
+   magnitude, descending. Every bar is quiet navy; the one focal
+   bar carries the single gold accent. Tracks and labels are
+   present from entry; the fills scale in top to bottom on build 1
+   (per-row --stagger), then the focal bar lights gold on build 2.
+   Bespoke CSS bars (no SVG, no Mermaid); the bar geometry is data,
+   set per row with the --pct custom property.
+   ============================================================ */
+/* Body is shorter than the canvas: float the chart to the optical center and
+   keep the source line clear of the footer chrome (~673). */
+[data-layout="ranking"] .rank { margin-block: auto; }
+
+.rank {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.rank-bars {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+/* one row: label, then the track (which holds the scaling fill), then value.
+   The label column is fixed so every track starts at the same left edge, the
+   baseline that lets the eye rank the bar lengths honestly. */
+.rank-row {
+  display: grid;
+  grid-template-columns: 224px 1fr auto;
+  align-items: center;
+  column-gap: 18px;
+}
+.rank-label {
+  font-family: var(--sans);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--obsidian);
+  line-height: 1.2;
+  text-align: right;
+}
+/* the track is the full-width frame (visible from entry); the fill is the data */
+.rank-track {
+  position: relative;
+  height: 30px;
+  display: flex;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line-soft);
+}
+.rank-fill {
+  /* the bar length encodes the magnitude; --pct is set per row inline */
+  width: var(--pct, 0%);
+  background: var(--navy);
+  border-radius: 0 2px 2px 0;
+  /* per-child cascade: each fill scales from zero on its own --stagger once the
+     parent .rank-bars reaches build 1 (the global [data-build] --stagger only
+     applies to build elements, so the rows carry their own transition here). */
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .7s cubic-bezier(.4, 0, .2, 1) var(--stagger, 0s),
+              background .35s ease;
+}
+.rank-bars.in .rank-fill { transform: scaleX(1); }
+body.mode-scroll .rank-fill { transform: scaleX(1); }
+@media (prefers-reduced-motion: reduce) {
+  .rank-fill { transition: background .35s ease; transform: scaleX(1); }
+}
+
+/* value label at the bar end: digits dominant, unit quieter */
+.rank-value {
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 21.5px;
+  color: var(--obsidian);
+  letter-spacing: -.01em;
+  line-height: 1;
+  white-space: nowrap;
+  /* fades in with its row's fill on the same --stagger */
+  opacity: 0;
+  transition: opacity .4s ease var(--stagger, 0s);
+}
+.rank-bars.in .rank-value { opacity: 1; }
+body.mode-scroll .rank-value { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .rank-value { transition: none; } }
+.rank-unit {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+/* focal row: the one bar that carries the message resolves to gold on build 2.
+   Quiet navy until then, so the cascade reads as a neutral ranking first and the
+   gold call-out lands as its own beat. */
+.rank-row.rank-bar--focal .rank-label { color: var(--gold); }
+.rank-row.rank-bar--focal .rank-value { color: var(--gold); }
+.rank-row.rank-bar--focal .rank-unit  { color: var(--gold-foil); }
+/* the gold fill resolves on the second press: tie it to the foot-line's build so
+   navy holds through the build-1 cascade, then turns gold with the takeaway. */
+.rank .foot-line { transition: opacity .4s ease, transform .4s ease; }
+
+.rank-source {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+
+/* ---- composition ---- */
+/* ============================================================
+   Element: Composition (100% stacked bar), data-layout="composition"
+   A part-to-whole bar split into CSS segments that sum to 100%.
+   One focal segment is gold; the rest are muted navy. Optional
+   second bar compares the mix across two groups on a shared baseline.
+   Widths come from inline --share so the segments sum to a true 100%.
+   ============================================================ */
+.comp {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-block: auto;          /* center the bar block in the leftover height */
+  width: 100%;
+}
+.comp-row {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  align-items: center;
+  gap: 20px;
+}
+.comp-rail {
+  font-family: var(--mono);
+  font-size: 14.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+}
+.comp-bar {
+  display: flex;
+  width: 100%;
+  height: 88px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.comp-seg {
+  flex: var(--share);          /* shares sum to 100, so widths sum to the full bar */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 16px;
+  color: var(--white);
+  background: var(--navy);
+  border-right: 1px solid rgba(255, 255, 255, .16);
+  overflow: hidden;
+}
+.comp-seg:last-child { border-right: 0; }
+/* Muted, non-focal segments step down in value so the four navies stay
+   distinct without introducing a second hue. */
+.comp-seg:nth-child(2) { background: color-mix(in srgb, var(--navy) 76%, var(--paper)); }
+.comp-seg:nth-child(3) { background: color-mix(in srgb, var(--navy) 58%, var(--paper)); }
+.comp-seg:nth-child(4) { background: color-mix(in srgb, var(--navy) 40%, var(--paper)); }
+.comp-seg:nth-child(n+3) { color: var(--ink); }
+.comp-seg b {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.15;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.comp-seg .comp-share {
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 25px;
+  line-height: 1;
+}
+/* The one focal segment: gold, overriding any muted step above. */
+.comp-seg--focus {
+  background: var(--gold);
+  color: var(--white);
+}
+.comp-seg--focus b,
+.comp-seg--focus .comp-share { color: var(--white); }
+.comp-source {
+  margin-top: 2px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+/* Optional callout for a sliver too thin to hold its own label. */
+.comp-callout {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* ---- maturity-heatmap ---- */
+/* ============================================================
+   Element: Maturity heatmap (Prove)
+   Items (rows) x dimensions (columns) of graduated Harvey-ball
+   cells with a stage legend and one focal "you are here" row.
+   One gold accent = the focal row; everything else quiet navy.
+   ============================================================ */
+.mh {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Legend: keys ball fills to named stages */
+.mh-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 28px;
+}
+.mh-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* The matrix grid: one label column + N dimension columns */
+.mh-grid {
+  display: grid;
+  grid-template-columns: 184px repeat(4, 1fr);
+  align-items: stretch;
+  border: 1px solid var(--line);
+  background: var(--white);
+}
+.mh-corner { background: var(--paper); }
+.mh-colhead {
+  padding: 12px 8px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--navy);
+  background: var(--paper);
+  border-left: 1px solid var(--line-soft);
+}
+.mh-rowhead {
+  padding: 16px 18px;
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--navy);
+  background: var(--paper);
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mh-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 8px;
+  border-top: 1px solid var(--line-soft);
+  border-left: 1px solid var(--line-soft);
+}
+
+/* Focal "you are here" row: the ONE gold accent on the slide */
+.mh-rowhead--focus {
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  color: var(--gold);
+}
+.mh-cell--focus { background: color-mix(in srgb, var(--gold) 7%, transparent); }
+.mh-here {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--gold);
+  padding: 3px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Harvey ball: neutral navy fill; gold inside the focal row */
+.mh-ball { width: 26px; height: 26px; }
+.mh-ball-bg {
+  fill: none;
+  stroke: var(--navy);
+  stroke-width: 1.4;
+  opacity: .55;
+}
+.mh-ball-fill { fill: var(--navy); }
+.mh-cell--focus .mh-ball-bg { stroke: var(--gold); opacity: .8; }
+.mh-cell--focus .mh-ball-fill { fill: var(--gold); }
+
+/* Five graduated levels: empty, quarter, half, three-quarter, full.
+   The semicircle path covers the left half; the right overlay completes
+   the fill for levels 3 and 4, and a mask trims level 1 to a quarter. */
+.mh-ball[data-level="0"] .mh-ball-fill { display: none; }
+.mh-ball[data-level="1"] .mh-ball-fill { clip-path: inset(50% 0 0 0); }   /* lower-left quarter */
+.mh-ball[data-level="2"] .mh-ball-fill { }                                 /* left half */
+.mh-ball[data-level="3"] .mh-ball-fill { clip-path: inset(0 0 50% 0);
+  d: path("M11 2 A9 9 0 0 0 11 20 L11 11 Z"); }
+.mh-ball[data-level="3"] { }
+.mh-ball[data-level="4"] .mh-ball-fill {
+  d: path("M11 2 A9 9 0 0 1 11 20 A9 9 0 0 1 11 2 Z");
+}
+
+/* Graduated-tint variant: same data-level, swatch instead of ball */
+.mh-cell--tint { padding: 0; }
+.mh-cell--tint[data-level] { background: var(--paper); }
+.mh-cell--tint[data-level="1"] { background: color-mix(in srgb, var(--navy) 12%, transparent); }
+.mh-cell--tint[data-level="2"] { background: color-mix(in srgb, var(--navy) 26%, transparent); }
+.mh-cell--tint[data-level="3"] { background: color-mix(in srgb, var(--navy) 42%, transparent); }
+.mh-cell--tint[data-level="4"] { background: color-mix(in srgb, var(--navy) 60%, transparent); }
+.mh-cell--tint.mh-cell--focus[data-level="2"] { background: color-mix(in srgb, var(--gold) 30%, transparent); }
+.mh-cell--tint.mh-cell--focus[data-level="3"] { background: color-mix(in srgb, var(--gold) 46%, transparent); }
+
+.mh-source {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+
+/* Layout cap: float the matrix to optical center, clear the footer chrome */
+[data-layout="heatmap"] .mh { margin-block: auto; }
+[data-layout="heatmap"] .slide-head--assert { margin-bottom: 20px; }
+
+/* ---- value-chain ---- */
+/* ============================================================
+   Layout: Value chain, horizontal end-to-end activity map
+   4 to 6 named stages, thin gold connectors in the gap, one
+   focal stage in gold carrying a metric or annotation.
+   Reuses the .sf-arrow / .lifecycle gold connector data-URI.
+   ============================================================ */
+.vchain {
+  margin-block: auto;          /* center the shorter body; clears footer chrome */
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+.vchain-row {
+  display: grid;
+  grid-template-columns: repeat(var(--vc-n, 5), 1fr);
+  gap: 40px;                   /* gap holds the gold connector arrow */
+  align-items: stretch;
+  position: relative;
+}
+.vchain[data-stages="4"] .vchain-row { --vc-n: 4; }
+.vchain[data-stages="5"] .vchain-row { --vc-n: 5; }
+.vchain[data-stages="6"] .vchain-row { --vc-n: 6; gap: 32px; }
+
+.vchain-stage {
+  background: var(--navy);
+  color: var(--white);
+  padding: 20px 16px 22px;
+  text-align: center;
+  position: relative;
+}
+/* Gold forward connector in the grid gap, same engine as the lifecycle row,
+   so the value chain reads as one left-to-right process. Part of the stage,
+   so it cascades in with its block. */
+.vchain-stage:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  width: 40px;
+  height: 14px;
+  transform: translateY(-50%);
+  background: no-repeat center/30px 12px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 14'%3E%3Cline x1='1' y1='7' x2='30' y2='7' stroke='%238F6B2E' stroke-width='2.5'/%3E%3Cpath d='M28 1.5 L38 7 L28 12.5 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 2;
+}
+.vchain[data-stages="6"] .vchain-stage:not(:last-child)::after {
+  right: -32px;
+  width: 32px;
+}
+.vchain-stage .vchain-num {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .2em;
+  opacity: .7;
+}
+.vchain-stage h4 {
+  font-size: 20.5px;
+  margin-top: 6px;
+  color: inherit;
+}
+.vchain-stage .vchain-desc {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14.5px;
+  margin-top: 8px;
+  line-height: 1.35;
+  opacity: .9;
+}
+
+/* The one focal stage: gold surface, the single accent on the slide. */
+.vchain-stage--focus {
+  background: var(--gold);
+  outline: 3px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  outline-offset: 4px;
+}
+.vchain-stage--focus .vchain-num { opacity: .9; }
+
+/* Focal callout: metric + annotation pinned under the chain. */
+.vchain-callout {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  justify-content: center;
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+.vchain-metric {
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 52px;
+  line-height: 1;
+  color: var(--gold);
+  letter-spacing: -.02em;
+  flex-shrink: 0;
+}
+.vchain-note {
+  font-size: 19px;
+  color: var(--ink);
+  line-height: 1.45;
+  max-width: 58ch;
+}
+.vchain-note .vchain-src {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---- roadmap-timeline ---- */
+/* ============================================================
+   Element: roadmap-timeline (.rtl)
+   A phased roadmap: 2 to 4 workstream rows across a shared time
+   axis, duration bars spanning periods, milestone diamonds, faint
+   phase bands. One mono time header. One gold accent = focal track.
+   Borrows the gold data-URI convention from .sf-arrow / .lifecycle
+   and the per-child --stagger idiom from .am-links. New classes only.
+   ============================================================ */
+.rtl {
+  --rtl-cols: 3;
+  --rtl-track-h: 56px;
+  margin-block: auto;        /* center the shorter body, clear the chrome */
+  width: 100%;
+  position: relative;
+}
+/* Shared grid template: a label column plus N equal period columns.
+   The label column is wide enough to hold the workstream name. */
+.rtl-head,
+.rtl-bands,
+.rtl-track,
+.rtl-miles {
+  display: grid;
+  grid-template-columns: 156px repeat(var(--rtl-cols), 1fr);
+  align-items: center;
+}
+.rtl-corner { display: block; }   /* spacer under the label column */
+
+/* ---- mono time header (visible from entry) ---- */
+.rtl-head {
+  margin-bottom: 10px;
+}
+.rtl-head > span:not(.rtl-corner) {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* ---- faint phase bands (visible from entry, behind the rows) ---- */
+.rtl-bands {
+  position: absolute;
+  inset: 34px 0 auto 0;      /* sits below the header, spans the row block */
+  height: calc(var(--rtl-track-h) * 3 + 24px);
+  z-index: 0;
+  pointer-events: none;
+}
+.rtl-band {
+  height: 100%;
+  background: var(--paper);
+  border-left: 1px solid var(--line-soft);
+}
+.rtl-band:last-child { border-right: 1px solid var(--line-soft); }
+.rtl-band--lit { background: var(--paper-warm); }
+
+/* ---- workstream rows ---- */
+.rtl-rows {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rtl-track { height: var(--rtl-track-h); }
+.rtl-label {
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  padding-right: 16px;
+}
+
+/* duration bar: spans periods via inline grid-column. Quiet navy by default;
+   per-child fade keyed to --stagger, activated when .rtl-rows gets .in
+   (the global [data-build] stagger only applies to build elements). */
+.rtl-bar {
+  align-self: center;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  margin: 0 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--navy) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--navy) 22%, transparent);
+  color: var(--navy);
+  font-size: 15.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity .45s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.rtl-rows.in .rtl-bar { opacity: 1; }
+/* the ONE focal track lights gold; everything else stays quiet navy */
+.rtl-track--focus .rtl-bar {
+  background: color-mix(in srgb, var(--gold) 14%, transparent);
+  border-color: var(--gold);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* ---- milestone diamonds (own build) ---- */
+.rtl-miles {
+  position: relative;
+  z-index: 2;
+  margin-top: 14px;
+}
+.rtl-ms {
+  justify-self: center;      /* sit on the grid-line boundary the inline grid-column picks */
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity .45s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.rtl-miles.in .rtl-ms { opacity: 1; }
+/* the diamond glyph: a small rotated square in the gold data-URI palette,
+   muted navy by default, gold for the focal payoff milestone */
+.rtl-ms::before {
+  content: "";
+  width: 13px;
+  height: 13px;
+  background: var(--navy);
+  transform: rotate(45deg);
+}
+.rtl-ms b {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.rtl-ms--focus::before { background: var(--gold); }
+.rtl-ms--focus b { color: var(--gold); }
+
+body.mode-scroll .rtl-bar,
+body.mode-scroll .rtl-ms { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .rtl-bar, .rtl-ms { transition: none; }
+}
+
+
+/* ============================================================
+   Wave 3: structural + explanatory (agenda-roadmap, section-divider,
+   executive-summary, spectrum, knowledge-check, recommendation-summary,
+   next-steps)
+   ============================================================ */
+
+/* ---- agenda-roadmap ---- */
+/* ============================================================
+   Element: Agenda / roadmap (agenda-roadmap)
+   The talk's scaffold: 3 to 5 numbered stops on a single path,
+   each a 2 to 4 word section name. Doubles as a returning section
+   anchor; the agenda-stop--here variant lights the current stop
+   gold ("you are here"). Stops cascade on one press via the
+   per-child --stagger idiom (from .am-links); the inter-stop links
+   use the gold CSS-arrow data-URI convention (from .sf-arrow).
+   One gold accent: the active stop and the links. New classes only.
+   ============================================================ */
+[data-layout="agenda"] .agenda { margin-block: auto; }   /* float the route to the optical center */
+
+.agenda { width: 100%; }
+.agenda-path {
+  list-style: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0;
+}
+
+/* ---- one stop: numbered marker over a short section label ---- */
+.agenda-stop {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 0 8px;
+  /* per-child cascade: each stop fades in on its own --stagger once the parent
+     .agenda reaches its build. The global [data-build] --stagger only fires on
+     build elements, so the children carry their own (the .am-links idiom). */
+  opacity: 0;
+  transition: opacity .4s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.agenda.in .agenda-stop { opacity: 1; }
+body.mode-scroll .agenda-stop { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .agenda-stop { transition: none; } }
+
+/* ---- the gold link between stops (gold CSS-arrow data-URI, the .sf-arrow
+       convention). Sits at the marker's vertical center, spans the gap to the
+       next stop. Visible from entry so the route reads as one shape. ---- */
+.agenda-stop:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 30px;                          /* centers on the 60px marker */
+  left: calc(50% + 42px);             /* clears the marker, starts past its edge */
+  right: calc(-50% + 42px);           /* reaches the next marker's edge */
+  height: 14px;
+  transform: translateY(-50%);
+  background: no-repeat center / 100% 12px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 12' preserveAspectRatio='none'%3E%3Cline x1='1' y1='6' x2='50' y2='6' stroke='%238F6B2E' stroke-width='2.5' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M48 1.5 L58 6 L48 10.5 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ---- the numbered marker ---- */
+.agenda-num {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border: 2.5px solid var(--navy);
+  color: var(--navy);
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -.02em;
+  position: relative;
+  z-index: 2;
+}
+.agenda-label {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 21.5px;
+  line-height: 1.18;
+  letter-spacing: -.015em;
+  color: var(--obsidian);
+  max-width: 14ch;
+}
+
+/* ---- "you are here": the one current stop lights gold (single accent) ---- */
+.agenda-stop--here .agenda-num {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--white);
+}
+.agenda-stop--here .agenda-label { color: var(--gold); }
+.agenda-here-tag {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* ---- a covered stop: quiet, with a checked marker (optional, anchor only) -- */
+.agenda-stop--done .agenda-num {
+  background: color-mix(in srgb, var(--navy) 8%, transparent);
+  border-color: color-mix(in srgb, var(--navy) 30%, transparent);
+  color: var(--muted);
+  font-size: 0;                        /* hide the numeral, show a check glyph */
+}
+.agenda-stop--done .agenda-num::before {
+  content: "";
+  width: 22px;
+  height: 12px;
+  border-left: 2.5px solid var(--muted);
+  border-bottom: 2.5px solid var(--muted);
+  transform: translateY(-3px) rotate(-45deg);
+}
+.agenda-stop--done .agenda-label { color: var(--muted); }
+
+/* ---- vertical variant: stack the stops down a rail, links run top to bottom -- */
+.agenda--vertical .agenda-path {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+}
+.agenda--vertical .agenda-stop {
+  flex-direction: row;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+}
+.agenda--vertical .agenda-label { max-width: none; }
+.agenda--vertical .agenda-stop:not(:last-child)::after {
+  top: calc(100% + 11px);
+  left: 30px;                          /* centers under the marker */
+  right: auto;
+  bottom: auto;
+  width: 14px;
+  height: 22px;
+  transform: translateX(-50%) rotate(90deg);
+}
+.agenda--vertical .agenda-here-tag {
+  top: 50%;
+  left: auto;
+  right: -8px;
+  transform: translate(100%, -50%);
+}
+
+/* ---- section-divider ---- */
+/* ============================================================
+   Element: Section divider (Orient)
+   A near-empty topic-boundary slide that resets attention at the
+   seam between two major parts of a talk. One large section title,
+   a single gold rule, and an optional "stop N of M" progress cue,
+   centered in a full-bleed canvas. Reuses the .slide--sendoff hero
+   instinct; navy (default) or warm for contrast against the white
+   teaching slides on either side.
+   ============================================================ */
+[data-layout="divider"] .slide-pad {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+/* Mood: full-bleed navy (default) vs warm editorial pause */
+[data-layout="divider"][data-mood="navy"] { background: var(--navy); color: var(--white); }
+[data-layout="divider"][data-mood="navy"] .blueprint { opacity: .25; }
+[data-layout="divider"][data-mood="warm"] { background: var(--paper-warm); color: var(--obsidian); }
+
+.divider-block {
+  margin-block: auto;                 /* float the whole group to the optical center */
+  max-width: 56ch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.divider-num {
+  font-family: var(--mono);
+  font-size: 14.5px;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+[data-layout="divider"][data-mood="navy"] .divider-num { color: var(--gold-foil); }
+[data-layout="divider"][data-mood="warm"] .divider-num { color: var(--gold); }
+
+.divider-title {
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 64px;
+  line-height: 1.02;
+  letter-spacing: -.03em;
+  margin-top: 18px;
+}
+[data-layout="divider"][data-mood="navy"] .divider-title { color: var(--white); }
+[data-layout="divider"][data-mood="warm"] .divider-title { color: var(--obsidian); }
+
+/* the one gold accent: a short rule under the title */
+.divider-rule {
+  height: 2px;
+  width: 200px;
+  margin-top: 32px;
+  background: linear-gradient(90deg, transparent, var(--gold-foil), transparent);
+}
+[data-layout="divider"][data-mood="warm"] .divider-rule {
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* optional "stop N of M" progress cue that echoes the agenda */
+.divider-progress {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin-top: 34px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.divider-pip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+[data-layout="divider"][data-mood="navy"] .divider-pip { color: var(--muted-on-navy); }
+[data-layout="divider"][data-mood="warm"] .divider-pip { color: var(--muted); }
+.divider-pip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1.5px solid currentColor;
+}
+/* the stop the audience is entering lights gold */
+.divider-pip--here { color: var(--gold-foil); font-weight: 600; }
+[data-layout="divider"][data-mood="warm"] .divider-pip--here { color: var(--gold); }
+.divider-pip--here .divider-pip-dot {
+  background: var(--gold-foil);
+  border-color: var(--gold-foil);
+}
+[data-layout="divider"][data-mood="warm"] .divider-pip--here .divider-pip-dot {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+/* ---- executive-summary ---- */
+/* ---- executive-summary ---- */
+/* ============================================================
+   Element: Executive summary (SCR / pyramid stack), Recommend & close
+   The whole argument on one page, answer-first: a navy governing-thought
+   block (the recommendation) over three to five bold-lead supports, with
+   one optional anchor figure. Built to stand alone. One gold accent rides
+   the governing rule and the figure; supports stay quiet navy ink.
+   ============================================================ */
+.exsum {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+/* Body is shorter than the canvas: float the stack to the optical center
+   and cap it above the footer chrome (same vertical-balance move as the
+   calibration and misconception layouts). */
+[data-layout="executive-summary"] .exsum { margin-block: auto; }
+
+/* ---- governing thought: the recommendation, stated as the conclusion ---- */
+.exsum-govern {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
+  gap: 0;
+  background: var(--navy);
+  color: var(--white);
+  border-left: 5px solid var(--gold);   /* the single gold accent on the rule */
+}
+.exsum-thought {
+  padding: 22px 28px;
+}
+.exsum-govern-tag {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold-foil);
+  margin-bottom: 10px;
+}
+.exsum-thought p {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 25px;
+  line-height: 1.32;
+  letter-spacing: -.01em;
+  color: var(--white);
+}
+/* optional anchor figure: one numeral + one-line label, oversized-numeral
+   register shared with big-number / relevance-hook. Sits inside the navy
+   block on the right, divided by a faint rule. */
+.exsum-figure {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: right;
+  padding: 22px 28px;
+  border-left: 1px solid rgba(255, 255, 255, .16);
+  min-width: 196px;
+}
+.exsum-figure-num {
+  font-family: var(--grotesk);
+  font-weight: 900;
+  font-size: 52px;
+  line-height: .96;
+  letter-spacing: -.03em;
+  color: var(--gold-foil);
+}
+.exsum-figure-label {
+  margin-top: 8px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, .82);
+}
+
+/* ---- supports: 3 to 5 bold-lead points, the branches of the argument ---- */
+.exsum-supports {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.exsum-support {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  align-items: baseline;
+  gap: 24px;
+  padding: 14px 8px 14px 22px;
+  border-top: 1px solid var(--line-soft);
+  position: relative;
+}
+.exsum-support:first-child { border-top: 0; }
+/* a quiet navy tick keeps the bold leads reading as one MECE column */
+.exsum-support::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 20px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--navy);
+}
+.exsum-lead {
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 21.5px;
+  line-height: 1.25;
+  letter-spacing: -.01em;
+  color: var(--obsidian);
+}
+.exsum-detail {
+  font-size: 18px;
+  line-height: 1.42;
+  color: var(--ink);
+}
+
+/* ---- non-build cascade: the supports are peers revealed on ONE press.
+   Each <li> is a NON-build child; it starts hidden and transitions in when
+   the parent .exsum-supports gets .in, stepped by its inline --stagger
+   (do NOT rely on the global [data-build] --stagger for these children). ---- */
+.exsum-supports .exsum-support {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .4s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s),
+              transform .4s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.exsum-supports.in .exsum-support {
+  opacity: 1;
+  transform: none;
+}
+body.mode-scroll .exsum-supports .exsum-support {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .exsum-supports .exsum-support { transition: none; }
+}
+
+/* ---- spectrum ---- */
+/* ---- spectrum ---- */
+/* ============================================================
+   Element: Spectrum / continuum (.spectrum), Explain
+   A horizontal axis bar that replaces a false binary with a
+   graded range. Two labeled poles anchor the ends, a faint
+   navy-to-gold gradient runs the length, 2 to 4 named positions
+   sit at their real points, and an optional gold you-are-here
+   marker lands the personal read. The bar + poles are quiet navy
+   structure; the single gold accent rides the you-are-here
+   marker (or the one focal position), so the eye reads placement.
+   ============================================================ */
+.spectrum {
+  display: flex;
+  flex-direction: column;
+}
+/* Body is shorter than the canvas: float the bar group to the optical center
+   (same vertical-balance move as the calibration / value-chain layouts),
+   keeping the whole stack clear of the footer chrome (~673). */
+[data-layout="spectrum"] .spectrum { margin-block: auto; }
+
+/* ---- the track: relative frame the bar, poles and marks are pinned into ---- */
+.spectrum-track {
+  position: relative;
+  margin: 92px 64px;          /* top/bottom room for the alternating up/down labels */
+  height: 12px;
+}
+
+/* ---- the bar itself: a faint navy-to-gold gradient, the quiet structure ---- */
+.spectrum-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--navy) 18%, transparent),
+    color-mix(in srgb, var(--gold) 22%, transparent));
+  border: 1px solid var(--line);
+}
+
+/* ---- poles: the two labeled ends of the axis, navy structure ---- */
+.spectrum-pole {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 200px;
+}
+.spectrum-pole--lo { left: 0;  transform: translate(-50%, -50%); text-align: center; }
+.spectrum-pole--hi { left: 100%; transform: translate(-50%, -50%); text-align: center; }
+/* the end-cap dot anchoring each pole on the bar */
+.spectrum-pole::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 2.5px solid var(--navy);
+  transform: translate(-50%, -50%);
+}
+.spectrum-pole-lbl {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--navy);
+  font-weight: 600;
+  margin-top: 34px;           /* clears the end-cap dot */
+  line-height: 1.2;
+}
+.spectrum-pole-sub {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14.5px;
+  color: var(--muted);
+  line-height: 1.25;
+}
+
+/* ---- marked positions: a tick on the bar + a label card above or below.
+        Placed by an inline left:% on each mark; cascade in on ONE press via
+        the global [data-build] --stagger hook (each mark is a build element). ---- */
+.spectrum-mark {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 156px;
+  transform: translateX(-50%);
+}
+/* the tick: a short navy stem rising from / dropping to the bar */
+.spectrum-mark::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 2px;
+  height: 22px;
+  background: var(--navy);
+  opacity: .55;
+  transform: translateX(-50%);
+}
+/* the node dot sitting on the bar at the tick base */
+.spectrum-mark::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 2px solid var(--navy);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+/* up: label above the bar; down: label below the bar */
+.spectrum-mark--up   { bottom: 50%; top: auto; transform: translate(-50%, -10px); }
+.spectrum-mark--up::before { bottom: -22px; top: auto; }
+.spectrum-mark--down { top: 50%; transform: translate(-50%, calc(10px + 22px)); }
+.spectrum-mark--down::before { top: -22px; }
+
+.spectrum-mark-name {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 20.5px;
+  letter-spacing: -.01em;
+  color: var(--obsidian);
+  line-height: 1.1;
+}
+.spectrum-mark-desc {
+  font-size: 15.5px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+/* the one focal position variant (used when there is no you-are-here marker):
+   carries the single gold accent so the read still has a protagonist. */
+.spectrum-mark--focus .spectrum-mark-name { color: var(--gold); }
+.spectrum-mark--focus::after { border-color: var(--gold); background: var(--gold); }
+.spectrum-mark--focus::before { background: var(--gold); opacity: .8; }
+
+/* per-mark cascade: each mark fades in on its own --stagger when it reaches its
+   build. Each .spectrum-mark IS a build element, so the global
+   [data-build] { transition-delay: var(--stagger) } hook drives the stagger;
+   we only restore the transform the kit's [data-build] base would otherwise
+   override, keeping the up/down offset intact during the fade. */
+.spectrum-mark[data-build] { transform: translateX(-50%) translateY(10px); }
+.spectrum-mark--up[data-build]   { transform: translate(-50%, 0); }
+.spectrum-mark--down[data-build] { transform: translate(-50%, calc(10px + 22px + 10px)); }
+.spectrum-mark[data-build].in        { transform: translate(-50%, -10px); }
+.spectrum-mark--up[data-build].in    { transform: translate(-50%, -10px); }
+.spectrum-mark--down[data-build].in  { transform: translate(-50%, calc(10px + 22px)); }
+
+/* ---- you-are-here: the one gold accent, an upward gold pointer + label ---- */
+.spectrum-here {
+  position: absolute;
+  top: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220px;
+  z-index: 3;
+  margin-top: 30px;           /* drop the marker below the bar, clear of down-marks */
+}
+/* a small gold up-arrow pointing at the bar (gold CSS data-URI convention) */
+.spectrum-here::before {
+  content: "";
+  width: 18px;
+  height: 16px;
+  margin-bottom: 4px;
+  background: no-repeat center / 18px 16px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 16'%3E%3Cline x1='9' y1='15' x2='9' y2='5' stroke='%238F6B2E' stroke-width='2.5'/%3E%3Cpath d='M3.5 6 L9 0 L14.5 6 Z' fill='%238F6B2E'/%3E%3C/svg%3E");
+}
+.spectrum-here-lbl {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--gold);
+  text-align: center;
+  line-height: 1.3;
+  padding: 6px 14px;
+  background: color-mix(in srgb, var(--gold) 8%, var(--white));
+  border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spectrum-mark[data-build] { transition: none; }
+}
+
+/* ---- knowledge-check ---- */
+/* ---- knowledge-check ---- */
+/* ============================================================
+   Layout: Knowledge-check (question with adjacent reveal), Reframe & check
+   One question (in the assertion head), a column of lettered options
+   on the left, and the answer + one-line reason revealed on the RIGHT
+   on the same slide (spatial contiguity, never a later slide). On the
+   reveal the correct option lights gold and the navy why-panel appears
+   beside it. Single gold accent: the correct option + the why-panel.
+   ============================================================ */
+.knowledge-check {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: stretch;
+  gap: 28px;
+}
+/* Body is shorter than the canvas: float the pair to the optical center
+   (same vertical-balance move as the calibration / misconception layouts). */
+[data-layout="knowledge-check"] .knowledge-check { margin-block: auto; }
+
+/* ---- the options column ---- */
+.knowledge-check .kc-options {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.knowledge-check .kc-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--navy);
+  font-size: 19px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.knowledge-check .kc-key {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--navy);
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--navy);
+}
+.knowledge-check .kc-opt-text { flex: 1; }
+
+/* Correct option: lights gold only once the parent build reaches .in (build 2),
+   so the highlight pops on the reveal rather than fading with the entrance.
+   Keyed off .in, not the global --stagger, per the non-build-child cascade rule. */
+.knowledge-check .kc-option--correct {
+  position: relative;
+  border-left-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 6%, transparent);
+  transition: background .35s ease, border-color .35s ease;
+}
+.knowledge-check .kc-option--correct .kc-key {
+  transition: color .35s ease, border-color .35s ease, background .35s ease;
+}
+.knowledge-check .kc-options.in .kc-option--correct {
+  border-left-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+.knowledge-check .kc-options.in .kc-option--correct .kc-key {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--white);
+}
+/* gold check glyph appears on the correct row when the answer is revealed */
+.knowledge-check .kc-option--correct::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
+  background: no-repeat center / 20px 20px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4 10.5 L8.5 15 L16 5' fill='none' stroke='%238F6B2E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+.knowledge-check .kc-options.in .kc-option--correct::after { opacity: 1; }
+body.mode-scroll .knowledge-check .kc-option--correct::after { opacity: 1; }
+body.mode-scroll .knowledge-check .kc-option--correct { background: color-mix(in srgb, var(--gold) 12%, transparent); }
+body.mode-scroll .knowledge-check .kc-option--correct .kc-key {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--white);
+}
+@media (prefers-reduced-motion: reduce) {
+  .knowledge-check .kc-option--correct,
+  .knowledge-check .kc-option--correct .kc-key,
+  .knowledge-check .kc-option--correct::after { transition: none; }
+}
+
+/* ---- the reveal panel: answer + one-line why, adjacent to the options ---- */
+.knowledge-check .kc-reveal {
+  background: var(--navy);
+  color: var(--white);
+  padding: 26px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+.knowledge-check .kc-reveal-label {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--gold-foil);
+}
+.knowledge-check .kc-reveal-head {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 23px;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+  color: var(--white);
+}
+.knowledge-check .kc-reveal-head b { color: var(--gold-foil); }
+.knowledge-check .kc-reveal-why {
+  font-size: 18px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, .86);
+}
+
+/* ---- poll-prompt variant: a show-of-hands line in place of lettered options ---- */
+.knowledge-check .kc-poll {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-self: center;
+}
+.knowledge-check .kc-poll-cue {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.knowledge-check .kc-camp {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--navy);
+  font-size: 19px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.knowledge-check .kc-camp .kc-camp-tag {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--navy);
+  font-weight: 600;
+}
+
+/* ---- recommendation-summary ---- */
+/* ---- recommendation-summary ---- */
+/* ============================================================
+   Element: Recommendation summary (.recsum), Recommend & close
+   The "answer" opener of a recommendation close. Three to five
+   numbered, verb-led recommendation groups stack down the slide,
+   each with one or two sub-points and an optional impact tag. The
+   set is MECE; the governing thought lands last as a gold foot-line.
+   The single gold accent rides the number badge and the impact tag;
+   the group bodies stay quiet navy on paper. Per-group cascade
+   follows the .am-link / .it-node discipline (children carry their
+   own opacity:0 + transition keyed to var(--stagger), activated when
+   the parent .recsum gets .in, so it does not lean on the global
+   [data-build] stagger). New namespaced classes only.
+   ============================================================ */
+.recsum {
+  list-style: none;
+  counter-reset: recsum;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* Body is shorter than the canvas: float the stack to the optical center and
+   keep the foot-line clear of the footer chrome (~673). */
+[data-layout="recommendation"] .recsum { margin-block: auto; }
+[data-layout="recommendation"] .slide-head--assert { margin-bottom: 22px; }
+
+/* one recommendation group: number badge, body, optional impact tag */
+.recsum-group {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  column-gap: 22px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy);
+  padding: 16px 24px;
+  /* per-child cascade: each group fades in on its own --stagger once the parent
+     .recsum reaches build 1 (the global [data-build] --stagger only applies to
+     build elements, so the groups carry their own transition here). */
+  opacity: 0;
+  transition: opacity .45s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.recsum.in .recsum-group { opacity: 1; }
+body.mode-scroll .recsum-group { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .recsum-group { transition: none; } }
+
+/* CSS-counter badge, the one gold accent on the rail */
+.recsum-num {
+  counter-increment: recsum;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--navy);
+  background: color-mix(in srgb, var(--navy) 6%, transparent);
+  color: var(--navy);
+  font-family: var(--mono);
+  font-size: 19px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.recsum-num::before { content: counter(recsum); }
+
+/* the recommendation itself: verb-led headline + one or two sub-points */
+.recsum-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.recsum-head {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 22.5px;
+  line-height: 1.18;
+  letter-spacing: -.015em;
+  color: var(--obsidian);
+}
+.recsum-points {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.recsum-points li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.recsum-points li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--navy) 55%, transparent);
+}
+
+/* optional impact tag: the payoff, gold, never a price */
+.recsum-impact {
+  justify-self: end;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  padding: 7px 13px;
+  line-height: 1.3;
+  max-width: 17ch;
+  white-space: normal;
+}
+
+/* ---- next-steps ---- */
+/* ============================================================
+   Element: Next-steps / action plan (Recommend & close)
+   The Monday-morning close: an Action / Owner / Timing table whose
+   rows cascade on one press, or a 30/60/90 three-column variant.
+   Reuses .slide-head--assert + .foot-line; borrows the per-child
+   --stagger idiom from .am-links / .rtl-bar. New namespaced classes
+   only; nothing existing is redefined.
+   ============================================================ */
+
+/* The action table is text-dense but shorter than the canvas, so float the
+   body to the optical center and let the foot-line ride below it. */
+[data-layout="next-steps"] .ns-table,
+[data-layout="next-steps"] .ns-cols { margin-top: auto; }
+[data-layout="next-steps"] .foot-line { margin-bottom: auto; }
+
+/* ---- action table (default variant) ---- */
+.ns-table {
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+  background: var(--paper);
+}
+/* shared 3-column grid: action grows, owner + timing are fixed scan columns */
+.ns-thead,
+.ns-row {
+  display: grid;
+  grid-template-columns: 1fr 190px 150px;
+  align-items: center;
+  column-gap: 24px;
+}
+.ns-thead {
+  padding: 14px 26px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* rows: per-child cascade keyed to --stagger, activated when .ns-rows gets .in
+   (the global [data-build] stagger only fires on the build element itself). */
+.ns-row {
+  position: relative;
+  padding: 16px 26px;
+  border-bottom: 1px solid var(--line-soft);
+  opacity: 0;
+  transition: opacity .45s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.ns-row:last-child { border-bottom: 0; }
+.ns-rows.in .ns-row { opacity: 1; }
+
+.ns-action {
+  font-size: 20.5px;
+  line-height: 1.35;
+  color: var(--ink);
+  font-weight: 500;
+}
+.ns-owner,
+.ns-when {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--navy);
+  font-weight: 600;
+}
+.ns-when { color: var(--muted); }
+
+/* the ONE focal row: the move that has to happen first. Gold left rule plus a
+   quiet "Start here" tag, the single gold accent on the slide. */
+.ns-row--focus {
+  border-left: 3px solid var(--gold);
+  background: color-mix(in srgb, var(--gold) 6%, transparent);
+}
+.ns-row--focus .ns-owner { color: var(--gold); }
+.ns-tag {
+  position: absolute;
+  top: -9px;
+  left: 26px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--gold);
+  padding: 2px 9px;
+}
+
+/* ---- 30/60/90 three-column variant ---- */
+.ns-cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.ns-col {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--navy);
+  padding: 20px 22px 22px;
+  opacity: 0;
+  transition: opacity .45s cubic-bezier(.16, 1, .3, 1) var(--stagger, 0s);
+}
+.ns-cols.in .ns-col { opacity: 1; }
+.ns-col--focus { border-top-color: var(--gold); }
+.ns-col .ns-when {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  letter-spacing: .22em;
+}
+.ns-col--focus .ns-when { color: var(--gold); }
+.ns-col ul { list-style: none; }
+.ns-col li {
+  position: relative;
+  padding: 8px 0 8px 18px;
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line-soft);
+}
+.ns-col li:last-child { border-bottom: 0; }
+.ns-col li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 15px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--navy) 55%, transparent);
+}
+.ns-col--focus li::before { background: var(--gold); }
+
+body.mode-scroll .ns-row,
+body.mode-scroll .ns-col { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .ns-row, .ns-col { transition: none; }
+}
+
+/* proof layout: center the body group in the leftover height (vertical balance) */
+[data-layout="proof"] .split { margin-top: auto; }
+[data-layout="proof"] .foot-line { margin-bottom: auto; }
+
+/* ---- asset-slot: framed placeholder for a real screenshot or screen-recording
+   (visual-honesty: ship the slot, drop the real asset in) ---- */
+.asset-slot {
+  margin: auto;
+  width: 70%;
+  height: 392px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: var(--paper);
+  border: 2px dashed color-mix(in srgb, var(--navy) 32%, transparent);
+  border-radius: 3px;
+  text-align: center;
+  padding: 24px 40px;
+}
+.asset-slot .as-icon { color: var(--gold); }
+.asset-slot .as-icon .icon { width: 58px; height: 58px; }
+.asset-slot .as-label { font-family: var(--mono); font-size: 14px; letter-spacing: .2em; text-transform: uppercase; color: var(--navy); }
+.asset-slot .as-note { font-family: var(--serif); font-style: italic; font-size: 19px; color: var(--muted); max-width: 46ch; line-height: 1.5; }
+
+/* scope (slide 2) centers its body group; decide's body + gold foot-line are
+   handled by the shared vertical-balance rule above (three-gap centering). */
+[data-layout="scope"] .two-col { margin-block: auto; }
+[data-layout="scope"] .note { margin-top: 0; }
+
+/* ---- skill-file: a concrete artifact card, a SKILL.md inside its named folder ---- */
+.skill-file {
+  margin-inline: auto;
+  width: 70%;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.skill-file .sf-path {
+  display: flex; gap: 10px; align-items: center;
+  background: var(--navy); color: var(--white);
+  padding: 9px 16px;
+  font-family: var(--mono); font-size: 13.5px; letter-spacing: .04em;
+}
+.skill-file .sf-folder { opacity: .65; }
+.skill-file .sf-name { font-weight: 600; }
+.skill-file .sf-body {
+  margin: 0; padding: 16px 22px;
+  background: var(--paper);
+  font-family: var(--mono); font-size: 15px; line-height: 1.6;
+  color: var(--ink); white-space: pre-wrap;
+}
+.skill-file .sf-fm  { color: var(--muted); }
+.skill-file .sf-ref { color: var(--gold); }
+.skill-file .sf-var { color: var(--gold); font-weight: 600; }
+[data-layout="artifact"] .skill-file { margin-top: auto; }
+[data-layout="artifact"] .callout-strip { margin-bottom: auto; }
+
+/* risk callout: red-accented variant of the navy callout-strip (use sparingly) */
+.callout-strip--risk {
+  background: color-mix(in srgb, var(--red) 7%, transparent);
+  border-left: 4px solid var(--red);
+  color: var(--ink);
+}
+.callout-strip--risk .label { color: var(--red); }
+.callout-strip--risk .text { color: var(--ink); }

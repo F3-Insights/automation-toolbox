@@ -1,0 +1,234 @@
+/* ============================================================
+   F3 Insights - Brand System
+   Shared tokens, typography, color, and primitives used by
+   every seminar in /web-seminars/.
+
+   Pulled from brand/F3-Insights-Brand-Guide-portable.html.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..700&family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ---- Core palette ---- */
+  --navy: #1E3A6E;          /* Navy Ink - primary brand */
+  --navy-deep: #15295A;     /* Darker navy for atmosphere */
+  --obsidian: #0F172A;      /* Obsidian Black - ink */
+  --brown: #B39164;         /* Doe Brown */
+  --gold: #8F6B2E;          /* Burnished Gold - accent for eyebrows */
+  --gold-foil: #C9A24B;     /* Gold highlight - pull-quotes, send-offs */
+  --mist: #7DD3FC;          /* Cornflower Mist - tertiary accent */
+  --white: #FFFFFF;
+
+  /* ---- Surfaces ---- */
+  --paper: #F6F7F9;         /* Cool paper */
+  --paper-warm: #F3EFE7;    /* Warm paper - used by editorial sections */
+
+  /* ---- Lines ---- */
+  --line: rgba(15, 23, 42, .12);
+  --line-soft: rgba(15, 23, 42, .07);
+  --navy-line: rgba(125, 211, 252, .20);
+
+  /* ---- Ink ---- */
+  --ink: #0F172A;
+  --muted: #5A6473;
+  --muted-on-navy: rgba(255, 255, 255, .62);
+
+  /* ---- Semantic accents (used sparingly) ---- */
+  --green: #2F7D5E;
+  --red: #B23A36;
+
+  /* ---- Type ---- */
+  --serif: "Fraunces", Georgia, serif;
+  --grotesk: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* ---- Canvas (slide design size - 16:9 @ 1280x720) ---- */
+  --slide-w: 1280px;
+  --slide-h: 720px;
+
+  /* ---- Subtle grain texture ---- */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   Reset & defaults
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--sans);
+  background: var(--white);
+  color: var(--ink);
+  line-height: 1.55;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img, svg { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; background: none; border: 0; color: inherit; }
+::selection { background: var(--mist); color: var(--obsidian); }
+
+/* ============================================================
+   Typography primitives
+   ============================================================ */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  line-height: 1;
+}
+.eyebrow::before {
+  content: "";
+  width: 30px;
+  height: 1px;
+  background: currentColor;
+}
+.eyebrow--mist { color: var(--mist); }
+.eyebrow--on-navy { color: var(--gold-foil); }
+.eyebrow--plain::before { display: none; }
+
+h1, h2, h3, h4 {
+  font-family: var(--grotesk);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -.022em;
+  color: var(--obsidian);
+}
+
+.serif-display {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-optical-sizing: auto;
+  letter-spacing: -.015em;
+  line-height: 1.06;
+}
+.serif-italic {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 300;
+}
+
+.lead {
+  font-size: 19px;
+  color: var(--muted);
+  line-height: 1.6;
+  font-weight: 400;
+  max-width: 62ch;
+}
+
+.kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.divider {
+  height: 1px;
+  background: var(--line);
+  border: 0;
+  width: 100%;
+}
+
+/* ============================================================
+   Reusable atmosphere
+   ============================================================ */
+.grain {
+  position: relative;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--grain);
+  background-size: 160px;
+  opacity: .035;
+  mix-blend-mode: multiply;
+}
+.grain-on-navy::after { mix-blend-mode: overlay; opacity: .08; }
+
+.blueprint {
+  position: absolute;
+  inset: 0;
+  opacity: .5;
+  background-image:
+    linear-gradient(var(--navy-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--navy-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 70% at 70% 30%, #000, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 70% 30%, #000, transparent 75%);
+  pointer-events: none;
+}
+
+.glow {
+  position: absolute;
+  width: 760px;
+  height: 760px;
+  border-radius: 50%;
+  filter: blur(10px);
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(125, 211, 252, .28), transparent 62%);
+}
+.glow.glow--gold {
+  background: radial-gradient(circle, rgba(201, 162, 75, .18), transparent 60%);
+}
+
+/* ============================================================
+   Generic card / surface
+   ============================================================ */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 28px;
+}
+.card--warm { background: var(--paper-warm); border-color: rgba(143, 107, 46, .14); }
+.card--navy { background: var(--navy); color: var(--white); border: 0; }
+.card--ghost { background: transparent; border: 1px solid var(--line); }
+.card h3 { font-size: 18px; margin-bottom: 10px; }
+.card .label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+  display: block;
+}
+
+/* Tiny pill (for kickers, tags) */
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 999px;
+}
+.pill--navy   { background: var(--navy);  color: var(--white); border-color: var(--navy); }
+.pill--gold   { background: var(--gold);  color: var(--white); border-color: var(--gold); }
+.pill--mist   { background: rgba(125,211,252,.18); color: var(--navy); border-color: rgba(125,211,252,.5); }
+.pill--green  { background: rgba(47,125,94,.12); color: var(--green); border-color: rgba(47,125,94,.4); }
+
+/* ============================================================
+   Utility
+   ============================================================ */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+[hidden] { display: none !important; }

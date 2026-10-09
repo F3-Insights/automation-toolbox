@@ -1,0 +1,371 @@
+/* ============================================================
+   F3 Insights - Scroll-view editorial layout
+   Activated by <body class="mode-scroll">.
+   Same HTML sections, rendered as a long-form web seminar.
+   Leans into the brand atmosphere: grain, glow, paper-warm
+   alternation, Fraunces serif moments, scroll-reveal.
+   ============================================================ */
+
+body.mode-scroll {
+  background: var(--white);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+/* Persistent grain overlay across the whole page */
+body.mode-scroll::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: var(--grain);
+  background-size: 160px;
+  opacity: .028;
+  mix-blend-mode: multiply;
+}
+
+/* Reading progress bar */
+body.mode-scroll .deck-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--mist), var(--gold-foil));
+  width: 0;
+  z-index: 9998;
+  pointer-events: none;
+  transition: width .15s linear;
+  display: block;
+}
+body.mode-scroll .deck-counter { display: none; }
+
+/* ---- Generic section reset ---- */
+body.mode-scroll .deck {
+  display: block;
+  position: static;
+}
+body.mode-scroll .slide {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: auto;
+  transform: none;
+  top: auto; left: auto;
+  display: block;            /* every slide visible */
+  box-shadow: none;
+  overflow: visible;
+}
+body.mode-scroll .slide-chrome { display: none; }
+body.mode-scroll .notes {
+  display: block;
+  max-width: 1100px;
+  margin: 18px auto 0;
+  padding: 22px 28px;
+  background: var(--paper);
+  border-left: 3px solid var(--gold);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--obsidian);
+  line-height: 1.55;
+}
+body.mode-scroll .notes .label {
+  display: block;
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+body.mode-scroll .notes p + p { margin-top: 12px; }
+
+/* Reveal-on-scroll */
+body.mode-scroll .slide {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .8s cubic-bezier(.16, 1, .3, 1),
+              transform .8s cubic-bezier(.16, 1, .3, 1);
+}
+body.mode-scroll .slide.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   Per-slide treatment in scroll mode
+   ============================================================ */
+
+/* Slide pad scales to web container in scroll mode */
+body.mode-scroll .slide-pad {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 120px 56px;
+  min-height: auto;
+}
+
+/* Slide head: larger, more editorial */
+body.mode-scroll .slide-head { margin-bottom: 56px; }
+body.mode-scroll .slide-head h2 {
+  font-size: clamp(38px, 5.4vw, 72px);
+  letter-spacing: -.03em;
+}
+body.mode-scroll .slide-head .sub {
+  font-size: clamp(20px, 2vw, 28px);
+  margin-top: 22px;
+  max-width: 50ch;
+}
+
+/* Section number - only in scroll mode */
+body.mode-scroll .slide::before {
+  content: attr(data-section-num) " – " attr(data-section-total);
+  position: absolute;
+  top: 92px;
+  right: 56px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .22em;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* Section background alternation */
+body.mode-scroll .slide[data-mood="warm"]  { background: var(--paper-warm); }
+body.mode-scroll .slide[data-mood="paper"] { background: var(--paper); }
+body.mode-scroll .slide[data-mood="white"] { background: var(--white); }
+body.mode-scroll .slide[data-mood="navy"]  {
+  background: var(--navy);
+  color: var(--white);
+}
+body.mode-scroll .slide[data-mood="navy"] .slide-head h2 { color: var(--white); }
+body.mode-scroll .slide[data-mood="navy"] .slide-head .sub { color: var(--gold-foil); }
+body.mode-scroll .slide[data-mood="navy"]::before { color: rgba(255,255,255,.55); }
+body.mode-scroll .slide[data-mood="navy"] .notes {
+  background: rgba(255,255,255,.05);
+  color: var(--white);
+  border-left-color: var(--gold-foil);
+}
+body.mode-scroll .slide[data-mood="navy"] .notes .label { color: var(--gold-foil); }
+
+/* ============================================================
+   Title slide - editorial hero in scroll mode
+   ============================================================ */
+body.mode-scroll .slide--title {
+  background: var(--navy);
+  color: var(--white);
+  min-height: 100vh;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+body.mode-scroll .slide--title .slide-pad {
+  position: relative;
+  z-index: 2;
+  padding: 28vh 56px 22vh;
+  min-height: 100vh;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+body.mode-scroll .slide--title .notes {
+  position: relative;
+  z-index: 3;
+  background: rgba(0, 0, 0, .25);
+  border-left-color: var(--gold-foil);
+  color: rgba(255, 255, 255, .9);
+  margin-top: -40px;
+}
+body.mode-scroll .slide--title .blueprint { opacity: .5; }
+body.mode-scroll .slide--title .glow {
+  position: absolute;
+  width: 760px;
+  height: 760px;
+  border-radius: 50%;
+  filter: blur(10px);
+  pointer-events: none;
+}
+body.mode-scroll .slide--title .glow {
+  top: -220px;
+  right: -160px;
+  background: radial-gradient(circle, rgba(125, 211, 252, .28), transparent 62%);
+}
+body.mode-scroll .slide--title .glow.glow--gold {
+  bottom: -260px;
+  left: -200px;
+  top: auto;
+  right: auto;
+  background: radial-gradient(circle, rgba(201, 162, 75, .18), transparent 60%);
+}
+body.mode-scroll .slide--title h1 {
+  font-size: clamp(62px, 11vw, 156px);
+  line-height: .92;
+  letter-spacing: -.045em;
+  color: var(--white);
+  font-weight: 900;
+}
+body.mode-scroll .slide--title .tagline {
+  margin-top: 32px;
+  font-size: clamp(24px, 2.6vw, 38px);
+  line-height: 1.2;
+}
+body.mode-scroll .slide--title .promise {
+  margin-top: 56px;
+  font-size: clamp(18px, 1.5vw, 22px);
+  color: rgba(255,255,255,.78);
+  max-width: 64ch;
+  line-height: 1.6;
+}
+body.mode-scroll .slide--title .kicker-line {
+  margin-bottom: 48px;
+}
+body.mode-scroll .slide--title .bronze-rule {
+  position: absolute;
+  bottom: 96px;
+  left: 56px;
+  right: 56px;
+  height: 1px;
+  background: rgba(201, 162, 75, .35);
+}
+body.mode-scroll .slide--title .colophon {
+  position: absolute;
+  bottom: 58px;
+  left: 56px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+}
+
+/* Send-off - also a full-bleed hero in scroll mode */
+body.mode-scroll .slide--sendoff {
+  background: var(--navy);
+  color: var(--white);
+  min-height: 80vh;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+body.mode-scroll .slide--sendoff .blueprint { opacity: .25; }
+body.mode-scroll .slide--sendoff .slide-pad {
+  text-align: center;
+  padding: 18vh 56px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+body.mode-scroll .slide--sendoff .stop {
+  font-size: clamp(36px, 4.8vw, 64px);
+}
+body.mode-scroll .slide--sendoff .start {
+  font-size: clamp(64px, 9.6vw, 128px);
+}
+body.mode-scroll .slide--sendoff .epilogue {
+  font-size: clamp(20px, 2vw, 28px);
+  max-width: 52ch;
+  margin: 0 auto;
+}
+body.mode-scroll .slide--sendoff .stripe {
+  margin: 56px auto 40px;
+  width: 280px;
+}
+
+/* ============================================================
+   Per-layout polish in scroll mode
+   ============================================================ */
+
+/* Title type bumps for all component layouts in scroll */
+body.mode-scroll .checklist li { font-size: 24px; }
+body.mode-scroll .analogy .cell { font-size: 20px; min-height: 84px; padding: 22px 28px; }
+body.mode-scroll .analogy-punch  { font-size: 36px; }
+body.mode-scroll .tri .col h3    { font-size: 22px; }
+body.mode-scroll .tri .col li    { font-size: 17px; }
+body.mode-scroll .grid-6 .item h4 { font-size: 21px; }
+body.mode-scroll .grid-6 .item p { font-size: 16px; }
+body.mode-scroll .grid-6 .item .win { font-size: 16px; }
+body.mode-scroll .lifecycle .stage h4 { font-size: 19px; }
+body.mode-scroll .catlist dt { font-size: 17px; }
+body.mode-scroll .catlist dd { font-size: 16px; }
+
+/* The Business AI Picture diagram needs a max width in scroll */
+body.mode-scroll .bap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* Definition block (slide 4) feels nicer when expanded */
+body.mode-scroll .def-block { padding: 38px 44px; }
+body.mode-scroll .def-block .big { font-size: 36px; }
+body.mode-scroll .def-block .small { font-size: 20px; margin-top: 16px; }
+
+/* Lifecycle stays horizontal even in scroll */
+body.mode-scroll .lifecycle .stages { gap: 18px; }
+body.mode-scroll .lifecycle .loopback { margin-top: 38px; font-size: 17px; }
+
+/* Six tools - tighter wins, more breathing room */
+body.mode-scroll .grid-6 { gap: 22px; }
+
+/* Section dividers between slides - subtle bronze hairline */
+body.mode-scroll .slide + .slide {
+  border-top: 1px solid var(--line-soft);
+}
+body.mode-scroll .slide[data-mood="navy"] + .slide,
+body.mode-scroll .slide + .slide[data-mood="navy"] {
+  border-top: 0;
+}
+
+/* Mobile-ish responsiveness */
+@media (max-width: 900px) {
+  body.mode-scroll .slide-pad { padding: 80px 28px; }
+  body.mode-scroll .slide-head h2 { font-size: 36px; }
+  body.mode-scroll .two-col,
+  body.mode-scroll .analogy,
+  body.mode-scroll .tri,
+  body.mode-scroll .grid-6,
+  body.mode-scroll .split,
+  body.mode-scroll .offers,
+  body.mode-scroll .lifecycle .stages {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+  }
+  body.mode-scroll .slide::before {
+    top: 28px;
+    right: 28px;
+  }
+}
+
+/* Top-of-page editorial nav (only in scroll mode) */
+.scroll-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  background: rgba(255, 255, 255, .85);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line-soft);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.scroll-nav .brand {
+  font-family: var(--grotesk);
+  font-weight: 900;
+  letter-spacing: -.04em;
+  font-size: 18px;
+  color: var(--navy);
+  text-transform: none;
+}
+.scroll-nav .brand .i { color: var(--mist); }
+.scroll-nav .meta { display: flex; gap: 22px; color: var(--muted); }
+.scroll-nav .meta .here { color: var(--gold); }
+body.mode-slides .scroll-nav { display: none; }
+@media (max-width: 640px) {
+  .scroll-nav .meta { display: none; }
+}

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="250" viewBox="0 0 1600 250" role="img" aria-label="How the pieces fit: Automation prepares, the Orchestrator runs, Workers do one step each, a Checker verifies, and the owner approves a Change set that the finish step writes.">
+<rect width="1600" height="250" fill="#FFFFFF"/>
+<rect x="20" y="10" width="272" height="230" rx="10" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<text x="44" y="50" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" fill="#59636E" font-weight="500" font-style="normal" text-anchor="start" letter-spacing="2.5">01 / PREPARE</text>
+<text x="44" y="96" font-family="Georgia, 'Iowan Old Style', 'Times New Roman', serif" font-size="30" fill="#1F2328" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">Automation</text>
+<text x="44" y="134" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">Pulls data and picks a</text>
+<text x="44" y="162" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">queue, so the agent</text>
+<text x="44" y="190" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">starts with facts in hand.</text>
+<path d="M307 125.0 h20 m-7 -6 l7 6 l-7 6" fill="none" stroke="#59636E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="342" y="10" width="272" height="230" rx="10" fill="#FFFFFF" stroke="#1B3A6B" stroke-width="2"/>
+<text x="366" y="50" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" fill="#1B3A6B" font-weight="500" font-style="normal" text-anchor="start" letter-spacing="2.5">02 / RUN</text>
+<text x="366" y="96" font-family="Georgia, 'Iowan Old Style', 'Times New Roman', serif" font-size="30" fill="#1F2328" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">Orchestrator</text>
+<text x="366" y="134" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">Runs one workflow end</text>
+<text x="366" y="162" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">to end by dispatching</text>
+<text x="366" y="190" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">workers.</text>
+<path d="M629 125.0 h20 m-7 -6 l7 6 l-7 6" fill="none" stroke="#59636E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="664" y="10" width="272" height="230" rx="10" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<text x="688" y="50" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" fill="#59636E" font-weight="500" font-style="normal" text-anchor="start" letter-spacing="2.5">03 / WORK</text>
+<text x="688" y="96" font-family="Georgia, 'Iowan Old Style', 'Times New Roman', serif" font-size="30" fill="#1F2328" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">Workers</text>
+<text x="688" y="134" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">An analyst, a writer, a</text>
+<text x="688" y="162" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">reviewer: one step each.</text>
+<path d="M951 125.0 h20 m-7 -6 l7 6 l-7 6" fill="none" stroke="#59636E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="986" y="10" width="272" height="230" rx="10" fill="#FBF7EC" stroke="#9A6B12" stroke-width="1.5"/>
+<text x="1010" y="50" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" fill="#9A6B12" font-weight="500" font-style="normal" text-anchor="start" letter-spacing="2.5">04 / VERIFY</text>
+<text x="1010" y="96" font-family="Georgia, 'Iowan Old Style', 'Times New Roman', serif" font-size="30" fill="#1F2328" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">Checker</text>
+<text x="1010" y="134" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">Reviews output against</text>
+<text x="1010" y="162" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">sources only. PASS, or</text>
+<text x="1010" y="190" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">FAIL with fixes.</text>
+<path d="M1273 125.0 h20 m-7 -6 l7 6 l-7 6" fill="none" stroke="#59636E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1308" y="10" width="272" height="230" rx="10" fill="#FFFFFF" stroke="#D0D7DE" stroke-width="1.5"/>
+<text x="1332" y="50" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" fill="#59636E" font-weight="500" font-style="normal" text-anchor="start" letter-spacing="2.5">05 / FINISH</text>
+<text x="1332" y="96" font-family="Georgia, 'Iowan Old Style', 'Times New Roman', serif" font-size="30" fill="#1F2328" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">Change set</text>
+<text x="1332" y="134" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">Owner approves; the</text>
+<text x="1332" y="162" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">finish step writes. No</text>
+<text x="1332" y="190" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">model touches a live</text>
+<text x="1332" y="218" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" fill="#59636E" font-weight="400" font-style="normal" text-anchor="start" letter-spacing="0">system.</text>
+</svg>

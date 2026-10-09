@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Meeting plan check record",
+  "description": "What the checker returns. meeting-publish requires verdict PASS and the plan_hash of the plan it writes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "recording_id", "plan_hash", "fixes"],
+  "properties": {
+    "verdict": {"enum": ["PASS", "FAIL"]},
+    "recording_id": {"type": "string"},
+    "plan_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "fixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["n", "where", "problem", "fix"],
+        "properties": {
+          "n": {"type": "integer", "minimum": 1},
+          "where": {"type": "string"},
+          "problem": {"type": "string"},
+          "fix": {"type": "string"}
+        }
+      }
+    },
+    "notes": {"type": "string"}
+  },
+  "allOf": [
+    {"if": {"properties": {"verdict": {"const": "PASS"}}},
+     "then": {"properties": {"fixes": {"maxItems": 0}}}},
+    {"if": {"properties": {"verdict": {"const": "FAIL"}}},
+     "then": {"properties": {"fixes": {"minItems": 1}}}}
+  ]
+}

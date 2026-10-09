@@ -1,0 +1,3 @@
+#!/bin/sh
+# Relink the installed toolbox (see .githooks/relink).
+exec sh "$(git rev-parse --show-toplevel)/.githooks/relink"

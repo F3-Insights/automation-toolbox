@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "comms-reply-to-email check record",
+  "description": "What email-checker returns and email-deliver validates. email-deliver refuses unless verdict is PASS and draft_id, content_hash, contact_id and email_ref match the draft being delivered.",
+  "type": "object",
+  "required": ["verdict", "draft_id", "content_hash", "contact_id", "email_ref"],
+  "properties": {
+    "verdict": {"enum": ["PASS", "FAIL"]},
+    "draft_id": {"type": "string", "minLength": 1},
+    "content_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "contact_id": {"type": "string", "minLength": 1},
+    "email_ref": {"type": "string", "pattern": "^(portal://email/)?[A-Za-z0-9-]+$"},
+    "checked": {
+      "type": "object",
+      "properties": {
+        "dates": {"enum": ["ok", "fail"]},
+        "numbers": {"enum": ["ok", "fail"]},
+        "commitments": {"enum": ["ok", "fail"]},
+        "coverage": {"enum": ["ok", "fail"]},
+        "tone": {"enum": ["ok", "fail"]},
+        "recipient_and_thread": {"enum": ["ok", "fail"]}
+      }
+    },
+    "fixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["n", "what"],
+        "properties": {
+          "n": {"type": "integer", "minimum": 1},
+          "what": {"type": "string"},
+          "where": {"type": "string"},
+          "source": {"type": "string"}
+        }
+      }
+    }
+  }
+}

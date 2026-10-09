@@ -1,0 +1,11 @@
+#!/bin/sh
+# Keeps the installed toolbox (the flat folder runtimes read, ~/.local/share/f3i-toolbox by default)
+# in step with this checkout after a commit, merge, pull or branch switch. It runs only in the main
+# checkout, never in a linked worktree, and only once the folder has been built by setup/link.py.
+# A failure never blocks git; it prints why and how to fix it.
+[ "$(git rev-parse --git-dir)" = "$(git rev-parse --git-common-dir)" ] || exit 0
+top="$(git rev-parse --show-toplevel)"
+dir="$(python3 "$top/setup/link.py" --print-paths 2>/dev/null | head -1)"
+[ -n "$dir" ] && [ -d "$(dirname "$dir")" ] || exit 0
+python3 "$top/setup/link.py" --quiet || echo "toolbox links not updated; run: python3 setup/link.py" >&2
+exit 0
