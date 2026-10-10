@@ -19,51 +19,52 @@ These skills handle financial records, mail, calendars and client work, so the b
 
 ## Results
 
-Scanned 152 of 152 skills on 2026-10-09 with SkillSpector v2.12.0, static analysis (`--no-llm`): 318 findings.
+Scanned 152 of 152 skills on 2026-10-10 with SkillSpector v2.12.0, static analysis (`--no-llm`): 386 findings. These are the numbers the [workflow](../../.github/workflows/skillspector.yml) produces with the pinned release, so you get the same result when you rerun it.
 
 | Severity | Skills |
 |---|---:|
-| CRITICAL | 10 |
-| HIGH | 9 |
-| MEDIUM | 27 |
-| LOW | 106 |
+| CRITICAL | 7 |
+| HIGH | 12 |
+| MEDIUM | 32 |
+| LOW | 101 |
 
 The 19 skills rated CRITICAL or HIGH:
 
 | Skill | Department | Score | Severity | Findings |
 |---|---|---:|---|---:|
-| `client-update-workstream` | reporting | 100 | CRITICAL | 15 |
-| `erp-ledger-pull` | accounting | 100 | CRITICAL | 12 |
-| `goal-alignment-workstream` | strategy | 100 | CRITICAL | 7 |
-| `meeting-portal-notes` | productivity | 100 | CRITICAL | 5 |
-| `recording-harvest` | decision-playbooks | 100 | CRITICAL | 6 |
-| `report-weekly` | reporting | 100 | CRITICAL | 17 |
-| `skills-extract` | toolbox-maintenance | 100 | CRITICAL | 11 |
-| `weekly-review-workstream` | productivity | 100 | CRITICAL | 8 |
-| `software-factory-workstream` | software | 92 | CRITICAL | 13 |
-| `chief-of-staff-cycle` | chief-of-staff | 89 | CRITICAL | 14 |
+| `client-update-workstream` | reporting | 100 | CRITICAL | 16 |
+| `report-weekly` | reporting | 100 | CRITICAL | 27 |
+| `skills-extract` | toolbox-maintenance | 100 | CRITICAL | 15 |
+| `software-factory-workstream` | software | 97 | CRITICAL | 16 |
+| `chief-of-staff-cycle` | chief-of-staff | 95 | CRITICAL | 15 |
+| `process-flow-workstream` | process-engineering | 91 | CRITICAL | 13 |
+| `orchestrator-scaffold` | software | 89 | CRITICAL | 12 |
 | `software-portfolio-review` | software | 78 | HIGH | 10 |
-| `process-flow-workstream` | process-engineering | 76 | HIGH | 11 |
-| `board-package-workstream` | reporting | 73 | HIGH | 6 |
+| `board-package-workstream` | reporting | 77 | HIGH | 7 |
+| `month-end-accrual-drafts` | accounting | 75 | HIGH | 14 |
 | `writing-seminar-builder` | learning | 71 | HIGH | 7 |
-| `meeting-scheduled-worker` | productivity | 59 | HIGH | 6 |
-| `month-end-accrual-drafts` | accounting | 58 | HIGH | 12 |
+| `erp-ledger-pull` | accounting | 66 | HIGH | 11 |
+| `comms-confirm` | productivity | 65 | HIGH | 8 |
+| `comms-reply-to-email` | productivity | 64 | HIGH | 8 |
+| `meeting-scheduled-worker` | productivity | 63 | HIGH | 7 |
 | `toolbox-audit-workstream` | toolbox-maintenance | 58 | HIGH | 11 |
-| `comms-confirm` | productivity | 56 | HIGH | 6 |
-| `comms-reply-to-email` | productivity | 55 | HIGH | 6 |
+| `report-time-study` | productivity | 56 | HIGH | 8 |
+| `recording-harvest` | decision-playbooks | 51 | HIGH | 4 |
+| `weekly-review-workstream` | productivity | 51 | HIGH | 8 |
 
 ## What the high ratings mean
 
-SkillSpector rates what a skill *can* do, not what it was meant to do, so a skill that legitimately talks to an API looks the same as one built to steal a token. Here is what drives the CRITICAL and HIGH ratings above, checked against the code:
+No single finding in this scan is rated CRITICAL. A skill reaches CRITICAL because many HIGH and MEDIUM findings add up, and the score stops at 100. SkillSpector rates what a skill *can* do, not what it was meant to do, so a skill that legitimately calls an API or writes a draft looks much like one built to misuse that ability. Here is what drives the ratings above, checked against the code:
 
-- **Secrets sent over the network (TT3, CRITICAL).** The skills that call an authenticated API read a credential and send it with the request: a token from an environment variable for Sage Intacct (`erp-ledger-pull`) and the Insights Portal MCP server (the Portal-backed skills), and a browser cookies file you export for private Loom videos (`recording-harvest`). That is how authenticated calls work, and it is also exactly what an exfiltrating skill looks like. Here, the destination is fixed (Intacct's and Loom's APIs) or is the server named in your own MCP config, and these scripts refuse HTTP redirects, so a server cannot bounce the credential elsewhere. Review these before you install them, and only give them the tokens they name.
-- **Capabilities not declared (LP1 and LP3).** Many scripts read environment variables, run other scripts, read and write files or call the network, and the `SKILL.md` does not list them in `allowed-tools`. Declaring each skill's tool scope is on the [roadmap](../roadmap.md).
-- **Running other programs (AST4, TT2).** Scripts run the skill's own sibling scripts and named tools such as `git`, `gh` and `pdftotext`, and the tests run the scripts under test, with `subprocess.run` and an argument list. No script uses `shell=True`.
-- **Environment copied (E2).** Test helpers copy `os.environ` to run a script with fake settings, and the toolbox audit copies it to run Python with one extra variable. None of them send it anywhere.
-- **Instructions that sound like jailbreaks (AR2, EA2, AE1).** Phrases such as "without asking" (for writes the owner pre-approved, such as a draft), "do not judge" (in an intake step that records items and leaves ranking to a later reviewer), and reference files SkillSpector only partly read.
-- **Mentions of other agents' folders (AS1, AS3).** `skills-extract` reads past Claude Code and Codex sessions on purpose, to suggest new skills, and skills name the shared `orchestration-workstream` skill by path.
+- **Capabilities not declared (LP1, HIGH, 31 in these skills; LP3).** Scripts read environment variables, run other scripts, read and write files or call the network, and the `SKILL.md` does not list those capabilities in `allowed-tools`. The skills that call an authenticated API read a credential and send it with the request: a token from an environment variable for Sage Intacct (`erp-ledger-pull`) and the Insights Portal MCP server (the Portal-backed skills), and a browser cookies file you export for private Loom videos (`recording-harvest`). The destination is fixed (Intacct's and Loom's APIs) or is the server named in your own MCP config, and these scripts refuse HTTP redirects, so a server cannot bounce the credential elsewhere. Declaring each skill's tool scope is on the [roadmap](../roadmap.md).
+- **Files only partly analysed (AE1, HIGH).** A skill points to a reference file or script SkillSpector read only in part, so it cannot vouch for the rest. It flags this as possible evasion; here they are long reference files such as `report-weekly`'s `gates.md`.
+- **Environment copied (E2, HIGH).** Test helpers copy `os.environ` to run a script with fake settings, and the toolbox audit copies it to run Python with one extra variable. None of them send it anywhere.
+- **Hidden-looking comments (P2, HIGH).** HTML comments in the seminar deck kit (`writing-seminar-builder`) that label icons and slide parts.
+- **Instructions that sound like jailbreaks (AR2, EA2, RA2).** Phrases such as "without asking" (for writes the owner pre-approved, such as a draft), "do not judge" (in an intake step that records items and leaves ranking to a later reviewer), and the many places a skill tells an agent to write something: a draft, a reply it never sends, or a file in its Run folder.
+- **Other agents' folders and git (AS1, AS3, TM1).** `skills-extract` reads past Claude Code and Codex sessions on purpose, to suggest new skills; skills name the shared `orchestration-workstream` skill by path; and the software factory's rules mention `--force` only to forbid it except in one named case.
+- **Running other programs (AST4, TT2, MEDIUM).** Scripts run the skill's own sibling scripts and named tools such as `git` and `pdftotext`, and the tests run the scripts under test, with `subprocess.run` and an argument list. No script uses `shell=True`.
 
-Treat this as a review checklist, not a clean bill of health. Every finding is in the reports the scan writes, with its file and line.
+Treat this as a review checklist, not a clean bill of health. Every finding is in the reports the scan writes, with its file and line. Newer SkillSpector code than the v2.12.0 release scores some skills differently (for example, it rates sending a credential over the network as CRITICAL on its own), so the workflow pins the release to keep results comparable from scan to scan.
 
 ## Run it yourself
 

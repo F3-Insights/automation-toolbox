@@ -393,7 +393,7 @@ Every skill here is scanned with **[NVIDIA SkillSpector](https://github.com/NVID
 
 **Why it matters.** A skill runs with your permissions: it can read files, run commands and call the network. Skills are shared like software but rarely reviewed like it, and SkillSpector's research found vulnerabilities in 26.1% of public skills it analysed and signs of malicious intent in 5.2%. These skills touch ledgers, mail and client work, so you should see the evidence before you install them.
 
-**What it found.** On the latest scan (static analysis, v2.12.0), 106 of 152 skills rated LOW, 27 MEDIUM, 9 HIGH and 10 CRITICAL. The high ratings come mostly from skills that call authenticated APIs (a token read from the environment and sent to Sage Intacct or the Insights Portal), scripts that run other scripts, and undeclared tool scopes. The [report](docs/security/skillspector.md) lists every high-rated skill and explains each kind of finding, so you can review a skill before you install it.
+**What it found.** On the latest scan (static analysis, v2.12.0), 101 of 152 skills rated LOW, 32 MEDIUM, 12 HIGH and 7 CRITICAL. The high ratings add up from many smaller findings: scripts that use the environment, files, shell or network without declaring it (including the skills that send an API token to Sage Intacct or the Insights Portal), long reference files the scanner only partly read, and instructions that tell an agent to write a draft or a file. The [report](docs/security/skillspector.md) lists every high-rated skill and explains each kind of finding, so you can review a skill before you install it.
 
 **Scan anything yourself**, ours or anyone else's, before you install it:
 
