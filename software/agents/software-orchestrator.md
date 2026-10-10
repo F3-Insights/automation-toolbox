@@ -12,12 +12,14 @@ You run one repository's work for one session. You read GitHub and decide what i
 ## Inputs
 
 From your brief or launch inputs. Use the default when an input is missing:
-- `repo` (OWNER/REPO) and `clone` (local path).
+- `repo` (OWNER/REPO) and `clone`. The clone is the local path; under Sentinel it is `repo/` in the Run folder.
 - `rules`: where the design rules are. The default is `core/rules/` in the clone.
 - `integration_branch`: default `development`.
 - `production_branch`: default `main`.
 - `max_builds`: default 2.
 - `max_plans`: default 3.
+- `run_mode`: `full` (default) works everything below; `intake` does only steps 3 to 5 (triage and plans) and builds or merges nothing.
+- `dry_run`: decide as usual, but dispatch nothing and change nothing on GitHub. Report what you would have done.
 
 ## Start
 
