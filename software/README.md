@@ -6,6 +6,12 @@ Turns a repository's issues into verified, reviewed pull requests without ever s
 
 | Agent | What it does | Needs |
 |---|---|---|
+| `software-lead` | **Draft, replacing the factory.** Works one repository from its GitHub issues: one worker at a time, status on the issues, merges into the integration branch only | `gh`, local clone, the design rules (`F3-AGENT`, `F3-BRANCH`) |
+| `issue-triager` | Draft. Decides what one issue needs next: ready, plan, a question, or blocked | `gh` |
+| `issue-planner` | Draft. Writes `docs/plans/N-slug.md` as a draft PR for the owner to review | `gh`, local clone |
+| `issue-builder` | Draft. Builds one ready issue, verifies it and opens the PR | `gh`, repo's checks |
+| `pr-fixer` | Draft. Gets one PR back to green: failing checks and review comments | `gh`, repo's checks |
+| `pr-reviewer` | Draft. Independent review of a risky PR, PASS or FAIL | `gh` |
 | `software-factory-orchestrator` | One factory session for one repository: finish open PRs, triage, build, test, verify, review, write what ships | commands `software-factory-*`, local clone |
 | `software-factory-triager` | Classifies issues as build, ask, human or skip under the repo's policy | none |
 | `software-factory-builder` | Reproduces and fixes one issue in its own worktree; answers PR failures and comments | repo's declared checks |
@@ -25,6 +31,7 @@ Turns a repository's issues into verified, reviewed pull requests without ever s
 
 | Skill | What it does | Needs |
 |---|---|---|
+| `software-issue-loop` | Draft. The issue loop's shared facts and `repo_status.py`, the one-page snapshot the lead reads | `gh` |
 | `orchestration-workstream` | Conduct and the one json return block for any orchestrator's worker | none |
 | `orchestrator-scaffold` | How to design and build an orchestrator from a spec, with the full design, a worked example, and the agent file standard with its orchestrator and sub-agent templates | command `orchestrator-scaffold` (optional) |
 | `software-factory-workstream` | What factory workers add to the shared conduct; carries `SOFTWARE-FACTORY.md`, the factory contract, and `onboard.md`, which writes a repository's `.software-factory/` commands and rules as its first factory PR | command `software-factory-verify` (onboarding) |
