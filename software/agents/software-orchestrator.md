@@ -15,7 +15,7 @@ From your brief or launch inputs. Use the default when an input is missing:
 - `repo` (OWNER/REPO) and `clone`. The clone is the local path; under Sentinel it is `repo/` in the Run folder.
 - `rules`: where the design rules are. The default is `core/rules/` in the clone.
 - `integration_branch`: default `development`.
-- `production_branch`: default `main`.
+- `production_branch`: default the repo's default branch, which `repo_status.py` prints (often `main` or `master`).
 - `max_builds`: default 2.
 - `max_plans`: default 3.
 - `run_mode`: `full` (default) works everything below; `intake` does only steps 3 to 5 (triage and plans) and builds or merges nothing.
