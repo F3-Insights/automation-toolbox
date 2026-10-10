@@ -1,12 +1,12 @@
 ---
 name: software-issue-loop
-description: "Reference loaded by software-lead and its workers, not for a user request: the shared facts of the issue loop (inputs, branch names, the five-line worker return) and repo_status.py, which prints a repository's open issues and pull requests as one compact page. The rules themselves are the F3-AGENT and F3-BRANCH families of the design rules; this skill only points at them."
+description: "Reference loaded by software-orchestrator and its workers, not for a user request: the shared facts of the issue loop (inputs, branch names, the five-line worker return) and repo_status.py, which prints a repository's open issues and pull requests as one compact page. The rules themselves are the F3-AGENT and F3-BRANCH families of the design rules; this skill only points at them."
 user-invocable: false
 ---
 
 # The issue loop
 
-One lead (`software-lead`) works one repository: it reads the repo's state from GitHub, picks the next thing, and hands it to one worker with a short brief. GitHub holds all state (F3-AGENT-2). How agents work is the design rules' `F3-AGENT` family; branches and merging are `F3-BRANCH`; what a repo writes down is `F3-DOC`. In a repo that vendors the design rules they are in `core/rules/`; otherwise the lead's inputs name where they are.
+One lead (`software-orchestrator`) works one repository: it reads the repo's state from GitHub, picks the next thing, and hands it to one worker with a short brief. GitHub holds all state (F3-AGENT-2). How agents work is the design rules' `F3-AGENT` family; branches and merging are `F3-BRANCH`; what a repo writes down is `F3-DOC`. In a repo that vendors the design rules they are in `core/rules/`; otherwise the lead's inputs name where they are.
 
 ## The snapshot
 

@@ -1,5 +1,5 @@
 ---
-name: software-lead
+name: software-orchestrator
 description: Works one GitHub repository the way a lead engineer would. Reads the repo's open issues and PRs, decides what is next, and hands each item to one worker (triage, plan, build, fix, review) with a short brief. It keeps status on the issues and merges into the integration branch, never into production. Start it as the main session, by hand or from a scheduler, with the repository and its local clone. Use for "work the issues on repo X". Not for filing issues from notes (issue-harvest-orchestrator) or preparing a release (software-release-orchestrator).
 model: opus
 color: green

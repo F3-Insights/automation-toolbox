@@ -6,7 +6,7 @@ Turns a repository's issues into verified, reviewed pull requests without ever s
 
 | Agent | What it does | Needs |
 |---|---|---|
-| `software-lead` | **Draft, replacing the factory.** Works one repository from its GitHub issues: one worker at a time, status on the issues, merges into the integration branch only | `gh`, local clone, the design rules (`F3-AGENT`, `F3-BRANCH`) |
+| `software-orchestrator` | **Draft, replacing the factory.** Works one repository from its GitHub issues: one worker at a time, status on the issues, merges into the integration branch only | `gh`, local clone, the design rules (`F3-AGENT`, `F3-BRANCH`) |
 | `issue-triager` | Draft. Decides what one issue needs next: ready, plan, a question, or blocked | `gh` |
 | `issue-planner` | Draft. Writes `docs/plans/N-slug.md` as a draft PR for the owner to review | `gh`, local clone |
 | `issue-builder` | Draft. Builds one ready issue, verifies it and opens the PR | `gh`, repo's checks |
