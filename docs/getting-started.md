@@ -6,10 +6,22 @@ This guide takes you from a fresh clone to a working skill in a few minutes, the
 
 - [Claude Code](https://claude.com/claude-code), signed in.
 - Python 3.11 or later, for the scripts the skills run.
+- Node.js 18 or later, for the one-command install with npx.
 - Git.
 - For some pieces only: a web search tool, Sage Intacct API access, the GitHub CLI, or the Insights Portal MCP server. Each department README's "Needs" column says which.
 
 ## 1. Install the toolbox
+
+The quickest way is npx, which needs [Node.js](https://nodejs.org) 18 or later. It fetches this repository from GitHub and copies what you choose into Claude Code:
+
+```bash
+npx github:F3-Insights/automation-toolbox list                         # departments
+npx github:F3-Insights/automation-toolbox install marketing strategy   # what this guide uses
+```
+
+Each department comes with the skills it depends on, from other departments too. `--dry-run` shows what would be copied first, and `uninstall` removes only what the installer put there. Restart Claude Code afterwards.
+
+Changing the toolbox itself? Clone it and link it instead, so your edits are live at once:
 
 ```bash
 git clone https://github.com/F3-Insights/automation-toolbox.git
@@ -18,12 +30,12 @@ git config core.hooksPath .githooks
 python3 setup/link.py
 ```
 
-`setup/link.py` builds `~/.local/share/f3i-toolbox`: one flat folder of links back into your clone, the shape Claude Code reads. It prints the commands that point `~/.claude/skills` and `~/.claude/agents` at that folder. Run them yourself; they move your current folders to a dated backup first. The [README's Install section](../README.md#install) explains each step and how to undo it.
+`setup/link.py` builds `~/.local/share/f3i-toolbox`, one flat folder of links back into your clone, and prints the commands that point `~/.claude/skills` and `~/.claude/agents` at it. Run them yourself; they move your current folders to a dated backup first. The [README's Install section](../README.md#install) explains both ways.
 
 Check it worked:
 
 ```bash
-ls ~/.claude/skills | head        # skill folders, each a link into the clone
+ls ~/.claude/skills | head        # one folder per skill
 ls ~/.claude/agents               # one folder per department
 ```
 

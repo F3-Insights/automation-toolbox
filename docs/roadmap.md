@@ -23,6 +23,7 @@ Where the toolbox stands, what is next, and what has not been proven yet. Design
 3. **Context budgets per layer**, so an orchestrator and its workers stay within a known reading load.
 4. **A root router file**: which piece to use for which request.
 5. **Narrower tool grants.** Skills that allow any `python3` command will name their own scripts instead.
+6. **Declared tool scope for every skill.** Each `SKILL.md` lists the tools and capabilities its scripts use (environment, files, shell, network) in `allowed-tools`, which also answers SkillSpector's least-privilege findings ([scan results](security/skillspector.md)).
 
 ## Later
 

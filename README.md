@@ -3,6 +3,8 @@
 </p>
 
 <p align="center">
+  <a href="docs/security/skillspector.md"><img src="https://img.shields.io/badge/NVIDIA_SkillSpector-scanned-76B900?logo=nvidia&logoColor=white" alt="Scanned with NVIDIA SkillSpector"></a>
+  <a href="#install"><img src="https://img.shields.io/badge/install-npx-CB3837?logo=npm&logoColor=white" alt="Install with npx"></a>
   <img src="https://img.shields.io/badge/agents-198-1E3A6E" alt="198 agents">
   <img src="https://img.shields.io/badge/skills-152-1E3A6E" alt="152 skills">
   <img src="https://img.shields.io/badge/workflows-67-1E3A6E" alt="67 workflows">
@@ -17,6 +19,7 @@
   <a href="#departments"><b>Departments</b></a> ·
   <a href="#how-the-pieces-fit"><b>How it works</b></a> ·
   <a href="docs/getting-started.md"><b>Getting started</b></a> ·
+  <a href="#security-scanned-with-nvidia-skillspector"><b>Security</b></a> ·
   <a href="#license"><b>License</b></a>
 </p>
 
@@ -104,16 +107,14 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 
 ## Quick start
 
-Try a piece that needs nothing but Claude Code in a few minutes:
+Install with one command (needs [Node.js](https://nodejs.org) 18 or later; nothing is published to or downloaded from the npm registry, npx fetches this repository from GitHub):
 
 ```bash
-git clone https://github.com/F3-Insights/automation-toolbox.git
-cd automation-toolbox
-git config core.hooksPath .githooks    # keeps the install in step with the clone
-python3 setup/link.py                  # builds a flat view of agents and skills from links
+npx github:F3-Insights/automation-toolbox list                 # see the departments
+npx github:F3-Insights/automation-toolbox install marketing    # install one, with the skills it needs
 ```
 
-Then point Claude Code at the install (step 3 of [Install](#install)), open a session and ask:
+Restart Claude Code, open a session anywhere and ask:
 
 > Use the unslop-email skill on this draft: *paste an email you were about to send*
 
@@ -277,6 +278,39 @@ The full vocabulary (Run, Automation, Context, rules file, change set, owner set
 
 ## Install
 
+There are two ways in. **npx** copies the departments or skills you choose into Claude Code, which suits most people. **Clone and link** keeps a git clone as the live source, which suits anyone changing the toolbox or wanting every update the moment they pull.
+
+### With npx (recommended)
+
+You need [Node.js](https://nodejs.org) 18 or later and Python 3.11 or later. The installer is one dependency-free script in [bin/](bin/automation-toolbox.mjs); npx fetches it with this repository straight from GitHub.
+
+```bash
+npx github:F3-Insights/automation-toolbox list                       # departments, with agent and skill counts
+npx github:F3-Insights/automation-toolbox list finance               # what one department holds
+npx github:F3-Insights/automation-toolbox install finance strategy   # whole departments
+npx github:F3-Insights/automation-toolbox install --skill pre-mortem # one skill
+npx github:F3-Insights/automation-toolbox install --all              # everything
+```
+
+| Command or option | What it does |
+|---|---|
+| `install <department>...` | Copies the department's skills to `~/.claude/skills/<skill>/` and its agents to `~/.claude/agents/<department>/`, plus every skill they depend on |
+| `install --skill <name>` | One skill and the skills it depends on; repeat the option for more |
+| `--project` | Installs into `./.claude` so the pieces belong to one project, not your whole machine |
+| `--target <dir>` | Installs somewhere else, for another runtime |
+| `--no-agents` | Skills only |
+| `--dry-run` | Shows what would change and changes nothing |
+| `status` | Lists what the installer has put in place |
+| `uninstall` | Removes exactly what the installer put in place, nothing else |
+
+**Updating.** Run the same `install` command again: npx fetches the latest commit and the installer replaces what it installed before. To stay on one version, pin it: `npx github:F3-Insights/automation-toolbox#<commit>`.
+
+**Safe by default.** The installer never overwrites a skill or agent it did not install: one of yours with the same name is skipped and reported (`--force` replaces it). It records what it installed in `~/.claude/.f3i-toolbox.json`, so `uninstall` removes only those. Test folders are left out.
+
+**After installing.** Restart Claude Code. Some scripts need Python packages: `pip install pyyaml openpyxl python-pptx pypdf pillow`. Skills that need settings say so the first time they run; [docs/settings.md](docs/settings.md) lists every one.
+
+### Clone and link (for contributors)
+
 The toolbox is kept in department folders so people can find things. Claude Code and other runtimes need one flat list instead: every skill at `skills/<name>/` and every agent under `agents/`. So the clone is the source you edit, and a link script installs a flat view of it, made only of links back into the clone. Nothing is copied: edit a file in the clone and the change is live at once.
 
 | | Source (for people) | Install (for runtimes) |
@@ -347,6 +381,29 @@ To run the tests, make a virtual environment with `pytest`, `pyyaml`, `pypdf`, `
 .venv/bin/python scripts/run_tests.py accounting   # one department
 ```
 
+## Security: scanned with NVIDIA SkillSpector
+
+<p>
+  <a href="docs/security/skillspector.md"><img src="https://img.shields.io/badge/NVIDIA_SkillSpector-scanned-76B900?logo=nvidia&logoColor=white&style=for-the-badge" alt="Scanned with NVIDIA SkillSpector"></a>
+</p>
+
+Every skill here is scanned with **[NVIDIA SkillSpector](https://github.com/NVIDIA/SkillSpector)**, NVIDIA's open-source security scanner for AI agent skills, and the results are published in full: **[read the scan report](docs/security/skillspector.md)**.
+
+**What it is.** SkillSpector checks a skill's instructions and code against 71 vulnerability patterns in 17 categories (prompt injection, data exfiltration, privilege escalation, supply-chain risk, excessive agency, dangerous code and more) and gives each skill a 0 to 100 risk score. It is part of the [NVIDIA Verified Skills pipeline](https://docs.nvidia.com/skills/) NVIDIA uses before it publishes skills.
+
+**Why it matters.** A skill runs with your permissions: it can read files, run commands and call the network. Skills are shared like software but rarely reviewed like it, and SkillSpector's research found vulnerabilities in 26.1% of public skills it analysed and signs of malicious intent in 5.2%. These skills touch ledgers, mail and client work, so you should see the evidence before you install them.
+
+**What it found.** On the latest scan (static analysis, v2.12.0), 106 of 152 skills rated LOW, 27 MEDIUM, 9 HIGH and 10 CRITICAL. The high ratings come mostly from skills that call authenticated APIs (a token read from the environment and sent to Sage Intacct or the Insights Portal), scripts that run other scripts, and undeclared tool scopes. The [report](docs/security/skillspector.md) lists every high-rated skill and explains each kind of finding, so you can review a skill before you install it.
+
+**Scan anything yourself**, ours or anyone else's, before you install it:
+
+```bash
+uv tool install git+https://github.com/NVIDIA/skillspector.git
+skillspector scan path/to/skill --no-llm
+```
+
+A [GitHub workflow](.github/workflows/skillspector.yml) rescans every skill on each change and once a week.
+
 ## Documentation
 
 | Read | For |
@@ -358,6 +415,7 @@ To run the tests, make a virtual environment with `pytest`, `pyyaml`, `pypdf`, `
 | [Roadmap](docs/roadmap.md) | What is next, and what has not been proven yet |
 | [TOOLBOX-DESIGN-SUGGESTIONS.md](TOOLBOX-DESIGN-SUGGESTIONS.md) | The practices and research behind the next decisions |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to add or change a piece |
+| [SkillSpector scan report](docs/security/skillspector.md) | What NVIDIA SkillSpector found in every skill, and what it means |
 | [SECURITY.md](SECURITY.md) | How to report a vulnerability |
 
 ## FAQ
