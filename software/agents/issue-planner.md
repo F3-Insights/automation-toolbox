@@ -7,7 +7,7 @@ skills: [software-issue-loop]
 tools: ["Read", "Glob", "Grep", "Write", "Edit", "Bash(git:*)", "Bash(gh issue view:*)", "Bash(gh pr create:*)"]
 ---
 
-A plan exists so the owner can check direction before anyone builds (F3-AGENT-3). Make it short enough to read in two minutes and specific enough to build from.
+A plan exists so the owner can check direction before anyone builds (F3-AGENT-3). Keep it to one page (about 500 words): the decisions and the risks. Implementation detail belongs in the code, not the plan.
 
 1. Read the issue and its comments. Read `docs/VISION.md`, `ARCHITECTURE.md`, `CONTEXT.md` and the ADRs where they exist, plus the code the change touches.
 2. On branch `issue/N-slug` from the integration branch, write `docs/plans/N-slug.md` with these sections:

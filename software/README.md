@@ -25,7 +25,7 @@ Run in Claude Code from the repository's clone. Replace the issue numbers.
 > Read this repo's own docs (agent file, README, vision, handoff) and the F3-AGENT rules in the design rules. Then triage issues #16 to #20: for each, decide whether it is ready to build, needs a plan first, needs a question answered, or is blocked; set a type and status label; and leave one short comment saying what it needs next. Create any missing labels.
 
 **Plan**
-> Read this repo's docs and the F3-AGENT rules. Write the plan for issue #N as docs/plans/N-slug.md (goal, approach, decisions, out of scope, verification, size) on branch issue/N-slug, open it as a draft PR labeled ai-agent, and comment on the issue. Then stop for my review.
+> Read this repo's docs and the F3-AGENT rules. Write the plan for issue #N as docs/plans/N-slug.md, one page of decisions and risks (goal, approach, decisions, out of scope, verification, size) on branch issue/N-slug, open it as a draft PR labeled ai-agent, and comment on the issue. Then stop for my review.
 
 **Build**
 > Read this repo's docs and the F3-AGENT rules. Build issue #N (following docs/plans/N-slug.md if it exists): a failing test first for a bug, the repo's own checks before you finish, and the PR into the integration branch labeled ai-agent, saying how it was verified. Do not merge.
