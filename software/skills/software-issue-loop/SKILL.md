@@ -1,12 +1,12 @@
 ---
 name: software-issue-loop
-description: "The software factory's method, loaded by software-orchestrator and by the software-worker and software-reviewer it dispatches, not for a user request: how the lead works one repository from its GitHub issues (the snapshot, the order of work, GitHub as the memory), the sections Triage, Plan, Build, Fix a PR and Review, and the five-line return. The rules themselves are the F3-AGENT, F3-BRANCH and F3-DOC families of the design rules; this skill points at them."
+description: "The software factory's method, loaded by software-developer and by the software-worker and software-reviewer it dispatches, not for a user request: how the lead works one repository from its GitHub issues (the snapshot, the order of work, GitHub as the memory), the sections Triage, Plan, Build, Fix a PR and Review, and the five-line return. The rules themselves are the F3-AGENT, F3-BRANCH and F3-DOC families of the design rules; this skill points at them."
 user-invocable: false
 ---
 
 # The issue loop
 
-One lead (`software-orchestrator`) works one repository: it reads the repo's state from GitHub, picks the next thing, and does it or hands it to a worker with a short brief. GitHub holds all state (F3-AGENT-2). How agents work is the design rules' `F3-AGENT` family; branches and merging are `F3-BRANCH`; what a repo writes down is `F3-DOC`. In a repo that vendors the design rules they are in `core/rules/`; otherwise the lead's inputs name where they are.
+One lead (`software-developer`) works one repository: it reads the repo's state from GitHub, picks the next thing, and does it or hands it to a worker with a short brief. GitHub holds all state (F3-AGENT-2). How agents work is the design rules' `F3-AGENT` family; branches and merging are `F3-BRANCH`; what a repo writes down is `F3-DOC`. In a repo that vendors the design rules they are in `core/rules/`; otherwise the lead's inputs name where they are.
 
 ## The snapshot
 

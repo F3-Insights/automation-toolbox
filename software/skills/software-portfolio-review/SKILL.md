@@ -1,6 +1,6 @@
 ---
 name: software-portfolio-review
-description: "Reviews every software project that has a repository, or should have one: finds the project-to-repository mapping, dispatches one software-worker per repository in parallel to steward it (section Steward one repository), and returns one numbered list of proposed next steps per repository. On approval it files the chosen steps as Portal tasks and gives the owner the exact pipeline invocation for each. It starts no pipeline and writes no code. Use for \"where do my repos stand\"; the weekly Run is software-portfolio-review-orchestrator. For a client's project portfolio, use tech-portfolio-orchestrator."
+description: "Reviews every software project that has a repository, or should have one: finds the project-to-repository mapping, dispatches one software-worker per repository in parallel to steward it (section Steward one repository), and returns one numbered list of proposed next steps per repository. On approval it files the chosen steps as Portal tasks and gives the owner the exact pipeline invocation for each. It starts no pipeline and writes no code. Use for \"where do my repos stand\"; the weekly Run is software-weekly-review. For a client's project portfolio, use tech-portfolio-orchestrator."
 argument-hint: "[domain or project, or blank for every software project] [--repos <owner/name>,...]"
 allowed-tools: Agent, Bash, Read, mcp__insights-portal__whoami, mcp__insights-portal__list_entities,
   mcp__insights-portal__hierarchy, mcp__insights-portal__get, mcp__insights-portal__search,
@@ -11,7 +11,7 @@ allowed-tools: Agent, Bash, Read, mcp__insights-portal__whoami, mcp__insights-po
 
 The portfolio question the Portal cannot answer on its own: for each piece of software work the owner is carrying, where does the repository actually stand, and what is the next thing to do in it. One `software-worker` per repository, following the section Steward one repository below, answers the second half; this skill finds the repositories, merges the answers, and turns the owner's decisions into tracked work.
 
-It starts no pipeline. The issue loop (`software-orchestrator`), `software-deep-spec` and a bug-diagnosis skill write code, comment on issues and open pull requests, and they are owner-invoked by design. This skill hands the owner the exact invocation and stops.
+It starts no pipeline. The issue loop (`software-developer`), `software-deep-spec` and a bug-diagnosis skill write code, comment on issues and open pull requests, and they are owner-invoked by design. This skill hands the owner the exact invocation and stops.
 
 **User provided:** $ARGUMENTS
 
@@ -91,7 +91,7 @@ Housekeeping: <the risks, in one line, or "none">
 
 The invocation is written out so it can be copied:
 
-- `claude --agent software-orchestrator` with "work the issues on OWNER/NAME: #<n>, #<n>", or that repository's scheduled issue-loop run if it has one, for the issues the steward called ready to work
+- `claude --agent software-developer` with "work the issues on OWNER/NAME: #<n>, #<n>", or that repository's scheduled issue-loop run if it has one, for the issues the steward called ready to work
 - `/software-deep-spec "<the feature, in the steward's words>"` for one that needs a specification first
 - `software-diagnose-bugs` for one that needs a diagnosis first
 - for work that is not an issue yet, filing it as an issue with a clear expected behaviour, so the issue loop can take it up
@@ -148,7 +148,7 @@ Close by repeating, in one block, the invocations for the steps they said to sta
 
 ## Run by the orchestrator
 
-`software-portfolio-review-orchestrator` runs this review weekly, unattended, on a schedule. It does Steps 1 to 3 as written, adds the inventory and issue-loop sections below, and writes the numbered list to the Run folder instead of asking. Step 4 becomes its approve pass: with the owner's answers as the launch's `answers` input, it writes the approved tasks as a change set (`RUN/changes.json`, below), and the Automation's finish step applies it with the owner's task-stack writer (`task-stack-apply`, outside this plugin). It never calls a Portal write tool. Its session is offline (no route to GitHub), so the stewards read the local clones only until portfolio-check snapshots GitHub's pull requests, issues and CI before the session.
+`software-weekly-review` runs this review weekly, unattended, on a schedule. It does Steps 1 to 3 as written, adds the inventory and issue-loop sections below, and writes the numbered list to the Run folder instead of asking. Step 4 becomes its approve pass: with the owner's answers as the launch's `answers` input, it writes the approved tasks as a change set (`RUN/changes.json`, below), and the Automation's finish step applies it with the owner's task-stack writer (`task-stack-apply`, outside this plugin). It never calls a Portal write tool. Its session is offline (no route to GitHub), so the stewards read the local clones only until portfolio-check snapshots GitHub's pull requests, issues and CI before the session.
 
 - **Inventory.** Three lists reconciled into one table: local clones under the repos folder, the repo map, and the Portal's software projects. A repository in one list only, a map `status` that the activity contradicts (a `retire` repository with commits this month, an `active` one untouched for ninety days), and a local folder with no git are findings.
 - **Issue-loop health.** For each repository the issue loop works, from the local clone: `issue/N-slug` branches not yet merged into the integration branch and how old they are, and an integration branch far ahead of the default branch with no release in sight. The rest of the loop's state is on GitHub (status labels and `ai-agent` pull requests) and waits for portfolio-check's snapshot.
@@ -161,7 +161,7 @@ Its steps are the section Steps, below this one.
 The approve pass writes `RUN/changes.json` in the task-stack change-set shape, using only `create` ops:
 
 ```json
-{"tool": "task-stack-changes", "version": 1, "orchestrator": "software-portfolio-review-orchestrator",
+{"tool": "task-stack-changes", "version": 1, "orchestrator": "software-weekly-review",
  "dry_run": false,
  "ops": [
   {"id": "n1", "op": "create", "title": "Fix the failing nightly build", "project": "<project id>",
@@ -189,7 +189,7 @@ The approve pass writes `RUN/changes.json` in the task-stack change-set shape, u
 
 ## Steps
 
-How `software-portfolio-review-orchestrator` runs the review (section Run by the orchestrator).
+How `software-weekly-review` runs the review (section Run by the orchestrator).
 
 1. [judgment] Run `whoami`. Read the repo map. On an approve pass: read the last Run's `review.md`, write `RUN/changes.json` with one `create` op per approved number, and go to step 6.
    → an approve pass: step 6
@@ -235,7 +235,7 @@ When the brief says offline, run no `gh` at all: read the local clone and list G
 ### Issues by readiness
 | # | Title | Readiness | Note |
 
-Ready to work: hand these to the issue loop (`software-orchestrator`): #<n>, #<n>
+Ready to work: hand these to the issue loop (`software-developer`): #<n>, #<n>
 Need a specification first, via `software-deep-spec`: #<n>
 Need a diagnosis first, via `software-diagnose-bugs`: #<n>
 Need a decision from the owner: #<n>, and the question is <the question>

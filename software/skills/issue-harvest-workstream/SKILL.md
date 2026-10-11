@@ -1,13 +1,13 @@
 ---
 name: issue-harvest-workstream
-description: "The issue harvest's method, loaded by issue-harvest-orchestrator and by the software-worker and software-reviewer it dispatches, not for a user request; adds to orchestration-workstream. Covers running a harvest, the five decisions, the issue shape the issue loop's Triage can take forward, the dedupe rules, the sections Decide a batch and Check the proposals, and the decision block the orchestrator writes to decisions.json."
+description: "The issue harvest's method, loaded by software-issue-collector and by the software-worker and software-reviewer it dispatches, not for a user request; adds to orchestration-workstream. Covers running a harvest, the five decisions, the issue shape the issue loop's Triage can take forward, the dedupe rules, the sections Decide a batch and Check the proposals, and the decision block the orchestrator writes to decisions.json."
 ---
 
 # Issue harvest workstream
 
 This skill extends `orchestration-workstream`: keep its conduct and return its block. Load it if it is not loaded. What follows is only what the issue harvest adds.
 
-The harvest turns what people say about the owner's software (email, Portal notes and tasks, and commitments people mention in meetings that no task or issue records, for example from a time study) into GitHub issues the issue loop (`software-orchestrator`) can work. Nobody in the session reaches GitHub: `software-issue-harvest-sync` read it before the session into `RUN/harvest.json`, and `software-issue-file` writes after it, only what `RUN/decisions.json` says and the checker passed, only on a repository the owner's repo map allows, each with the source's marker so nothing is filed twice; `software-issue-harvest-record` then writes every item's outcome to the harvest ledger so no item is decided twice. Whether the harvest is done overall is computed by `software-issue-harvest-check`.
+The harvest turns what people say about the owner's software (email, Portal notes and tasks, and commitments people mention in meetings that no task or issue records, for example from a time study) into GitHub issues the issue loop (`software-developer`) can work. Nobody in the session reaches GitHub: `software-issue-harvest-sync` read it before the session into `RUN/harvest.json`, and `software-issue-file` writes after it, only what `RUN/decisions.json` says and the checker passed, only on a repository the owner's repo map allows, each with the source's marker so nothing is filed twice; `software-issue-harvest-record` then writes every item's outcome to the harvest ledger so no item is decided twice. Whether the harvest is done overall is computed by `software-issue-harvest-check`.
 
 ## What you have
 
@@ -18,7 +18,7 @@ The harvest turns what people say about the owner's software (email, Portal note
 
 ## Steps
 
-For `issue-harvest-orchestrator`. The queue was cut in code (window, max items, repositories); never widen it.
+For `software-issue-collector`. The queue was cut in code (window, max items, repositories); never widen it.
 
 1. [judgment] Orient. `whoami`; read the rules file and `RUN/harvest.json` (its counts, any unreadable source or repository, the window). Write `RUN/plan.json`: the batches and their item keys.
    → nothing queued: step 5
@@ -30,7 +30,7 @@ For `issue-harvest-orchestrator`. The queue was cut in code (window, max items, 
 6. [judgment] Close. Report how many items became new issues, comments, duplicates, not software and questions, per repository; the questions as one numbered list; any source or repository that could not be read; the deferred count. Never claim a write: the finish step makes and counts them.
    → reported: done
 
-The shape of `RUN/decisions.json`: `{"orchestrator": "issue-harvest-orchestrator", "dry_run": <true|false>, "decisions": [...], "questions": [{"source": <key>, "ask": "...", "why": "..."}]}`.
+The shape of `RUN/decisions.json`: `{"orchestrator": "software-issue-collector", "dry_run": <true|false>, "decisions": [...], "questions": [{"source": <key>, "ask": "...", "why": "..."}]}`.
 
 Bias to action, on evidence: a plain bug or request with no matching issue is filed without asking. Ask only what the source and the record cannot settle, all of a Run's questions as one list. With no one present everything runs the same, and questions go in `decisions.json` and the report.
 

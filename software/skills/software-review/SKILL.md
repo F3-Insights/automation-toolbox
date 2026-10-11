@@ -1,6 +1,6 @@
 ---
 name: software-review
-description: "What an independent code review checks before a change ships, in order: does it solve the issue and only the issue, do the tests prove it (the software-verify bar), is it correct at the edges, does it fit the repo's conventions and recorded decisions, and is it secure; with what counts as a blocker and a security checklist by stack. Use for reviewing any diff, in the issue loop (`software-orchestrator`) or by hand. For deeper security patterns, load software-security-knowledge."
+description: "What an independent code review checks before a change ships, in order: does it solve the issue and only the issue, do the tests prove it (the software-verify bar), is it correct at the edges, does it fit the repo's conventions and recorded decisions, and is it secure; with what counts as a blocker and a security checklist by stack. Use for reviewing any diff, in the issue loop (`software-developer`) or by hand. For deeper security patterns, load software-security-knowledge."
 ---
 
 # Reviewing a change

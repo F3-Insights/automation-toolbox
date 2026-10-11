@@ -17,5 +17,5 @@ Every agent and skill was linked into one flat folder (`~/.claude/skills`), so e
 
 - The scripts stay where 0002 put them; only the way callers name them changes.
 - Agent and skill names stay unique across the toolbox, so the flat link folder keeps working for departments not yet migrated.
-- Under a plugin, names gain a prefix (`software:software-orchestrator`); a runtime may launch either form.
+- Under a plugin, names gain a prefix (`software:software-developer`); a runtime may launch either form.
 - `orchestrator-scaffold` writes command rules and skill-loading lines in the plugin form when the target department is a plugin.

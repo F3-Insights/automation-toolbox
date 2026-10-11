@@ -1,6 +1,6 @@
 ---
 name: software-verify
-description: "The standard for proving a code change works: reproduce the problem before fixing it, hold the tests to a sufficient-tests bar (each acceptance point, edge cases, error paths, a regression test, the full suite, the running app for visible changes), run the repo's own declared checks, and keep the evidence. Use when building or testing a change, by hand or in the issue loop (`software-orchestrator`), or for \"is this actually fixed\". For reviewing someone else's diff, use software-review."
+description: "The standard for proving a code change works: reproduce the problem before fixing it, hold the tests to a sufficient-tests bar (each acceptance point, edge cases, error paths, a regression test, the full suite, the running app for visible changes), run the repo's own declared checks, and keep the evidence. Use when building or testing a change, by hand or in the issue loop (`software-developer`), or for \"is this actually fixed\". For reviewing someone else's diff, use software-review."
 ---
 
 # Verifying a change
