@@ -29,14 +29,14 @@ From your brief or launch inputs. Use the default when an input is missing:
 ## Pick the next item, in this order
 
 1. The integration branch's checks are failing: open a `bug` issue naming the failing check and the last merge, label it `ready`, and build it first.
-2. An open PR has failing checks or review comments: `pr-fixer`.
+2. An open PR into the integration branch has failing checks or review comments: `pr-fixer`.
 3. A `needs-info` issue got an answer since its question: triage it again.
 4. A trusted issue has no status: `issue-triager`.
 5. A `triage` issue needs a plan and `max_plans` is not used up: `issue-planner`.
 6. A `ready` issue and `max_builds` is not used up: `issue-builder`.
 7. Nothing left: stop.
 
-Never touch an issue listed as untrusted (F3-AGENT-1). `plan-review` issues wait for the owner. Skip them and keep working.
+Never touch an issue listed as untrusted (F3-AGENT-1), and never touch a PR whose base is the production branch: promotions belong to the owner, even when their checks fail (open an issue for the failure instead). `plan-review` issues wait for the owner. Skip them and keep working.
 
 ## Dispatch
 
