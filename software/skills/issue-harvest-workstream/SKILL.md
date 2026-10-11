@@ -16,16 +16,19 @@ The harvest turns what people say about the owner's software (email, Portal note
 - The Portal, read only (`whoami`, `get`, `search`, `list_entities`, `email_bodies`): an item's `text` is cut at 6,000 characters and an email's is only its summary, so read the whole note (`get`) or the message (`email_bodies`) before deciding anything but an obvious `not-software`.
 - `RUN` is the working folder; only the orchestrator writes there, always by absolute path.
 
-## Running the harvest
+## Steps
 
 For `issue-harvest-orchestrator`. The queue was cut in code (window, max items, repositories); never widen it.
 
-1. **Orient.** `whoami`; read the rules file and `RUN/harvest.json` (its counts, any unreadable source or repository, the window). Write `RUN/plan.json`: the batches and their item keys.
-2. **Decide.** One `software-worker` per batch, all at once, never two on one item, each told to follow this skill's section Decide a batch, with the batch id and its item keys, the Run folder's absolute path, the rules file's path, today's date and the owner's instructions. With one or two batches, decide them yourself by the same section. Save each return as `RUN/returns/<batch>.json` as soon as it arrives; a reply without the json block goes back once for it.
-3. **Reconcile across batches.** Two batches may propose a `new` for the same thing: keep the one with the fuller source, turn the other into `duplicate` with `of_source`, or add it to the first one's `also`.
-4. **Check every write.** Send every `new` and `comment` to `software-reviewer`, told to use this skill's section Check the proposals, in batches of up to ten, with the proposals as written, the Run folder and the rules path, never the decider's reason or summary. Save its returns as `RUN/returns/check-<n>.json`. A FAIL is revised once with the fixes and checked again; a second FAIL becomes `ask` when there was a best guess, else `not-software` with the checker's reason. Only a PASS is filed.
-5. **Write `RUN/decisions.json`:** `{"orchestrator": "issue-harvest-orchestrator", "dry_run": <true|false>, "decisions": [...], "questions": [{"source": <key>, "ask": "...", "why": "..."}]}`, one decision per queued item (several `new` with a `part` each when one item holds several pieces of work) in the shape of The return here, each `new` and `comment` carrying `"check": "PASS"` or `"FAIL"` as the checker last said.
-6. **Close.** Report how many items became new issues, comments, duplicates, not software and questions, per repository; the questions as one numbered list; any source or repository that could not be read; the deferred count. Never claim a write: the finish step makes and counts them.
+1. [judgment] **Orient.** `whoami`; read the rules file and `RUN/harvest.json` (its counts, any unreadable source or repository, the window). Write `RUN/plan.json`: the batches and their item keys.
+   → nothing queued: step 5
+2. [hand-off: software-worker] **Decide.** One `software-worker` per batch, all at once, never two on one item, each told to follow this skill's section Decide a batch, with the batch id and its item keys, the Run folder's absolute path, the rules file's path, today's date and the owner's instructions. With one or two batches, decide them yourself by the same section. Save each return as `RUN/returns/<batch>.json` as soon as it arrives; a reply without the json block goes back once for it.
+3. [judgment] **Reconcile across batches.** Two batches may propose a `new` for the same thing: keep the one with the fuller source, turn the other into `duplicate` with `of_source`, or add it to the first one's `also`.
+4. [hand-off: software-reviewer] **Check every write.** Send every `new` and `comment` to `software-reviewer`, told to use this skill's section Check the proposals, in batches of up to ten, with the proposals as written, the Run folder and the rules path, never the decider's reason or summary. Save its returns as `RUN/returns/check-<n>.json`. A FAIL is revised once with the fixes and checked again; a second FAIL becomes `ask` when there was a best guess, else `not-software` with the checker's reason. Only a PASS is filed.
+   → FAIL: step 3 (max 1)
+5. [judgment] **Write `RUN/decisions.json`:** `{"orchestrator": "issue-harvest-orchestrator", "dry_run": <true|false>, "decisions": [...], "questions": [{"source": <key>, "ask": "...", "why": "..."}]}`, one decision per queued item (several `new` with a `part` each when one item holds several pieces of work) in the shape of The return here, each `new` and `comment` carrying `"check": "PASS"` or `"FAIL"` as the checker last said.
+6. [judgment] **Close.** Report how many items became new issues, comments, duplicates, not software and questions, per repository; the questions as one numbered list; any source or repository that could not be read; the deferred count. Never claim a write: the finish step makes and counts them.
+   → reported: done
 
 Bias to action, on evidence: a plain bug or request with no matching issue is filed without asking. Ask only what the source and the record cannot settle, all of a Run's questions as one list. With no one present everything runs the same, and questions go in `decisions.json` and the report.
 

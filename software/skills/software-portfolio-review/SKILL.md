@@ -154,14 +154,7 @@ Close by repeating, in one block, the invocations for the steps they said to sta
 - **Issue-loop health.** For each repository the issue loop works, from the local clone: `issue/N-slug` branches not yet merged into the integration branch and how old they are, and an integration branch far ahead of the default branch with no release in sight. The rest of the loop's state is on GitHub (status labels and `ai-agent` pull requests) and waits for portfolio-check's snapshot.
 - **Cap.** Stewards are dispatched eight per message, active repositories first, up to the launch's `max_repos`; the rest are named as not read.
 
-### The orchestrator's steps
-
-1. Run `whoami`. Read the repo map. On an approve pass: read the last Run's `review.md`, write `RUN/changes.json` with one `create` op per approved number, and go to step 6.
-2. Build the inventory (Step 1 plus the inventory above): local clones by `Glob`, the map, the Portal's software projects. Write `RUN/inventory.md`.
-3. Dispatch one `software-worker` per active repository, eight per message, up to `max_repos`, each told to follow the section Steward one repository, with its path, `owner/name` and Portal project, and the line "offline: no gh; read the local clone only, and list GitHub's half under Could not determine". Save each report to `RUN/stewards/<name>.md`.
-4. For the repositories reviewed, list with `git -C` the `issue/N-slug` branches not merged into the integration branch and their age; note stalled work.
-5. Write `RUN/review.md`: per repository the steward's reading and housekeeping line, then the numbered list across all of them with the exact invocations; then the repositories not read and the inventory findings.
-6. Walk the DONE checklist into `RUN/done.md`, each line with its evidence.
+Its steps are the section Steps, below this one.
 
 ### The change set
 
@@ -193,6 +186,19 @@ The approve pass writes `RUN/changes.json` in the task-stack change-set shape, u
 
 - portfolio-check (prepare) and `--precheck`: the inventory in code (local clones, the map, GitHub's repo lists, the Portal's `repositories` field) with dirty-file and ahead counts, and a snapshot of each repository's open pull requests, issues and CI for the offline stewards.
 - The finish step's `task-stack-apply` (kept with the owner's task-stack tools, outside this plugin) for the approve pass.
+
+## Steps
+
+How `software-portfolio-review-orchestrator` runs the review (section Run by the orchestrator).
+
+1. [judgment] Run `whoami`. Read the repo map. On an approve pass: read the last Run's `review.md`, write `RUN/changes.json` with one `create` op per approved number, and go to step 6.
+   → an approve pass: step 6
+2. [judgment] Build the inventory (Step 1 plus the inventory above): local clones by `Glob`, the map, the Portal's software projects. Write `RUN/inventory.md`.
+3. [hand-off: software-worker] Dispatch one `software-worker` per active repository, eight per message, up to `max_repos`, each told to follow the section Steward one repository, with its path, `owner/name` and Portal project, and the line "offline: no gh; read the local clone only, and list GitHub's half under Could not determine". Save each report to `RUN/stewards/<name>.md`.
+4. [script] For the repositories reviewed, list the issue-loop branches (issue/N-slug) not merged into the integration branch, and their age: `git -C <clone> branch -r --no-merged origin/<integration>`. Note stalled work.
+5. [judgment] Write `RUN/review.md`: per repository the steward's reading and housekeeping line, then the numbered list across all of them with the exact invocations; then the repositories not read and the inventory findings.
+6. [judgment] Walk the DONE checklist into `RUN/done.md`, each line with its evidence.
+   → written: done
 
 ## Steward one repository
 

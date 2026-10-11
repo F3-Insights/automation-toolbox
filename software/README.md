@@ -41,7 +41,7 @@ An Automation launches a main agent by name with `--plugin-dir <toolbox>/softwar
 | Skill | What it does | Needs |
 |---|---|---|
 | `software-issue-loop` | Draft. The software factory's method: leading the loop, Triage, Plan, Build, Fix a PR, Review and the five-line return | `gh`, command `software-repo-status` |
-| `issue-harvest-workstream` | Running the harvest, the five decisions, dedupe, the issue standard, Decide a batch and Check the proposals | Insights Portal |
+| `issue-harvest-workstream` | Steps (running the harvest), the five decisions, dedupe, the issue standard, Decide a batch and Check the proposals | Insights Portal |
 | `software-release-workstream` | Prepare, Write and Check a release; the range, files, GitHub drafts and DONE checklist | none |
 | `software-portfolio-review` | Map projects to repositories, Steward one repository per worker, the numbered list, the change set and DONE checklist | Insights Portal, commands `software-repo-sweep`, `software-detect-project-type` |
 | `orchestration-workstream` | Conduct and the one json return block for any orchestrator's worker | none |

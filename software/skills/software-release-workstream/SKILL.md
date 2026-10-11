@@ -1,6 +1,6 @@
 ---
 name: software-release-workstream
-description: "The software release's method, loaded by software-release-orchestrator and by the software-reviewer it dispatches, not for a user request; adds to orchestration-workstream. Covers a repository's integration-to-default release read offline from the local clone, the sections Prepare a release, Write the release and Check the release, the release notes, release pull request body and deploy checklist a person works from, the GitHub writes drafted as github-drafts.json for a later finish step, and the DONE checklist. To prepare a release, start software-release-orchestrator."
+description: "The software release's method, loaded by software-release-orchestrator and by the software-reviewer it dispatches, not for a user request; adds to orchestration-workstream. Covers a repository's integration-to-default release read offline from the local clone, the sections Steps (preparing a release), Write the release and Check the release, the release notes, release pull request body and deploy checklist a person works from, the GitHub writes drafted as github-drafts.json for a later finish step, and the DONE checklist. To prepare a release, start software-release-orchestrator."
 ---
 
 # Software release workstream
@@ -20,15 +20,17 @@ The session has no route to GitHub. It reads:
 
 The release is `origin/<default>..origin/<integration>`. Each merge in it is an issue-loop PR (from an `issue/N-slug` branch) or a person's change. A change whose merge record does not show how it was verified and reviewed is flagged for the person's review.
 
-## Prepare a release
+## Steps
 
-For `software-release-orchestrator`.
+How `software-release-orchestrator` prepares a release.
 
-1. Read the release rules (which repositories release this way, their local clones, integration and default branches) and the repository's agent file and deploy docs. If the repository has no integration branch, write notes for the last week's merges only and say so.
-2. Find the range and the fetch age with `git -C`. Read each merge's record. Write `RUN/plan.json`: the merges, each marked issue-loop PR (with its issue) or a person's change.
-3. Write the release yourself, by the section Write the release, into `RUN/release/`.
-4. Dispatch `software-reviewer`, told to use this skill's section Check the release, with the drafts' folder and the clone path only, never your plan's reasoning. On a FAIL, answer each fix once and send it back; a second FAIL stays in the report.
-5. Walk the DONE checklist into `RUN/done.md`, each line with its evidence.
+1. [judgment] Read the release rules (which repositories release this way, their local clones, integration and default branches) and the repository's agent file and deploy docs. If the repository has no integration branch, write notes for the last week's merges only and say so.
+2. [script] Find the range and the fetch age: `git -C <clone> log origin/<default>..origin/<integration>`. Read each merge's record. Write `RUN/plan.json`: the merges, each marked issue-loop PR (with its issue) or a person's change.
+3. [judgment] Write the release yourself, by the section Write the release, into `RUN/release/`.
+4. [hand-off: software-reviewer] Dispatch `software-reviewer`, told to use this skill's section Check the release, with the drafts' folder and the clone path only, never your plan's reasoning. On a FAIL, answer each fix once and send it back; a second FAIL stays in the report.
+   → FAIL: step 3 (max 1)
+5. [judgment] Walk the DONE checklist into `RUN/done.md`, each line with its evidence.
+   → written: done
 
 ## Write the release
 
