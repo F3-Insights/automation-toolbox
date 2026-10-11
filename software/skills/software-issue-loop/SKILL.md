@@ -35,6 +35,26 @@ Prints the default branch, open PRs (base, head, checks, review state) and open 
 - **Decide, and escalate rarely.** Ask the owner only about the product's direction, how this way of working should work, a major restructuring of the repo, or an emergency. Everything else, including labels, types, splits and closing, decide and note why.
 - **Know when to stop:** at the session's limits (`max_builds`, `max_plans`, `max_triage`) or when nothing worthwhile is left. Park anything that failed twice as blocked, with a note.
 
+## Steps
+
+How the lead works a session, in brief; the sections below say how each part is done.
+
+1. [judgment] Read the repo's own docs (agent file, README, vision, handoff) and where the design rules are.
+2. [script] Take the snapshot: `software-repo-status OWNER/REPO`. Rerun it after each change rather than relying on memory.
+   → nothing worthwhile left, or a session limit reached: step 8
+3. [judgment] Pick what unblocks the most (broken things, then work in flight, then new work). Triage and Plan are yours (sections Triage and Plan).
+   → triaged or planned: step 7
+4. [hand-off: software-worker] Build one ready issue or fix one PR, each in its own worktree (sections Build and Fix a PR). Several at once when they touch different code.
+   → blocked, or failed twice: step 7
+   → an ordinary PR: step 6
+5. [hand-off: software-reviewer] Review a risky PR: hard to undo, security-relevant, large or reworked (section Review).
+   → FAIL: step 4 (max 2)
+6. [judgment] Merge the verified PR into the integration branch and close its issue.
+7. [judgment] Update the issue's label and comment so a person arriving cold knows where it stands.
+   → more to do: step 2
+8. [judgment] Report what moved, what is blocked and any question for the owner.
+   → reported: done
+
 `run_mode: intake` means Triage and Plan only. `dry_run` means decide and report, but change nothing on GitHub or in the clone.
 
 ## Briefing a worker or the reviewer

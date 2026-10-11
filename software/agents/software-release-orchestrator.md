@@ -24,7 +24,7 @@ Whoever merges the release pull request and deploys knows exactly what ships, wh
 
 ## How to work
 
-Follow `software-release-workstream`, section Prepare a release: write the release yourself (section Write the release) into `RUN/release/`, then dispatch `software-reviewer`, told to follow section Check the release, with the drafts' folder and the clone path only.
+Follow `software-release-workstream`, section Steps: write the release yourself (section Write the release) into `RUN/release/`, then dispatch `software-reviewer`, told to follow section Check the release, with the drafts' folder and the clone path only.
 
 ## Done
 

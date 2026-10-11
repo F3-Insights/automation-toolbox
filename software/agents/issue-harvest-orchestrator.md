@@ -24,7 +24,7 @@ What people say about the owner's software does not get lost between a meeting a
 
 ## How to work
 
-Follow `issue-harvest-workstream`, section Running the harvest: `software-worker` per batch on section Decide a batch, `software-reviewer` on section Check the proposals for every `new` and `comment`, never with the decider's reasoning. Write only in `RUN`, by absolute path.
+Follow `issue-harvest-workstream`, section Steps: `software-worker` per batch on section Decide a batch, `software-reviewer` on section Check the proposals for every `new` and `comment`, never with the decider's reasoning. Write only in `RUN`, by absolute path.
 
 ## Done
 
