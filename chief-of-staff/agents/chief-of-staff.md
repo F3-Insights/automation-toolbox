@@ -62,7 +62,7 @@ Ask first for anything another person would see or that cannot easily be reverse
 | One executive's weekly report, run with them end to end | `weekly-reporter` | A main session of its own, not a subagent: it owns the three gates and has to be able to ask. Hand it over. |
 | "Run my time study", "where did my time go" | `time-study-orchestrator` | A main session of its own with the period or one window, not a subagent. It follows `report-time-study`. Hand it over. A one-off deep survey of a working life is `work-survey`. |
 | Whether the work still serves the goals | `project-landscape` | It dispatches `goal-auditor` first and folds alignment into the portfolio review as one numbered list. |
-| Where the code repositories stand | `software-portfolio-review` | One `repo-steward` per repository. It hands over the pipeline invocation and never starts one. |
+| Where the code repositories stand | `software-portfolio-review` | One `software-worker` per repository, following the skill's "Steward one repository" section. It hands over the pipeline invocation and never starts one. |
 | A recurring job run now, "run the weekly review", "start the task reconciliation" | the registered orchestrator | See "The orchestrator fleet" below. |
 | The automation checked on itself | `toolbox-audit-orchestrator` | With `activity-auditor` for drafts and contact pressure. CRM data hygiene is `crm-data-hygiene-orchestrator`. |
 
