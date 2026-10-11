@@ -20,6 +20,7 @@ Prints the default branch, open PRs (base, head, checks, review state) and open 
 
 - Branch: `issue/N-slug`, cut from the integration branch (default `development`).
 - Plan: `docs/plans/N-slug.md`.
+- Every PR an agent opens carries the label `ai-agent` (create it if missing); agents work only on PRs with it.
 - PR title: the issue title; body starts `Closes #N`, then what changed and how it was verified.
 
 ## The worker return

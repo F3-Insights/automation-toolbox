@@ -62,7 +62,7 @@ def main(argv=None):
     trusted = {t for t in a.trusted.split(",") if t} or {info["owner"]["login"], me.get("login", "")}
 
     prs = gh("pr", "list", "-R", a.repo, "--state", "open", "--limit", str(a.limit), "--json",
-             "number,title,baseRefName,headRefName,isDraft,reviewDecision,statusCheckRollup")
+             "number,title,baseRefName,headRefName,isDraft,reviewDecision,statusCheckRollup,labels")
     issues = gh("issue", "list", "-R", a.repo, "--state", "open", "--limit", str(a.limit), "--json",
                 "number,title,labels,author,comments,updatedAt")
 
@@ -70,6 +70,7 @@ def main(argv=None):
     print(f"## Open pull requests ({len(prs)})")
     for p in prs:
         draft = " draft" if p["isDraft"] else ""
+        draft += " [ai-agent]" if any(lb["name"] == "ai-agent" for lb in p.get("labels", [])) else ""
         review = (p.get("reviewDecision") or "no review").lower()
         print(f"- PR #{p['number']} {p['headRefName']} -> {p['baseRefName']}{draft}: "
               f"checks {checks_state(p.get('statusCheckRollup'))}, {review}. {p['title']}")

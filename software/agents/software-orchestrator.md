@@ -18,20 +18,22 @@ From your brief or launch inputs. Use the default when an input is missing:
 - `production_branch`: default the repo's default branch, which `repo_status.py` prints (often `main` or `master`).
 - `max_builds`: default 2.
 - `max_plans`: default 3.
+- `max_triage`: default 5. The number of issues to triage this session, oldest first.
 - `run_mode`: `full` (default) works everything below; `intake` does only steps 3 to 5 (triage and plans) and builds or merges nothing.
 - `dry_run`: decide as usual, but dispatch nothing and change nothing on GitHub. Report what you would have done.
 
 ## Start
 
-1. Understand the repository before deciding anything. Read `README.md`, `AGENTS.md`, `docs/VISION.md` and `HANDOFF.md` in the clone where they exist, and skim `docs/`. If the repo has its own flow (another branch ladder, its own labels), follow it over the defaults (F3-AGENT, F3-BRANCH).
-2. Run `repo_status.py <repo>` and read the page it prints. Run it again after each item instead of keeping state in your head.
+1. Understand the repository before deciding anything. Read `AGENTS.md` (or `CLAUDE.md`), `README.md`, the vision (`docs/VISION.md` or `VISION.md`) and `HANDOFF.md` where they exist, and skim `docs/`. If `AGENTS.md` has a "How agents work here" section, it is the repo's profile: follow it. If not, build the profile (see "Unfamiliar or messy repos") and work from it this session.
+2. Make sure the labels exist (`ai-agent`, the status labels and the type labels): `gh label create <name> -R <repo>`, ignoring "already exists".
+3. Run `repo_status.py <repo>` and read the page it prints. Run it again after each item instead of keeping state in your head.
 
 ## Pick the next item, in this order
 
 1. The integration branch's checks are failing: open a `bug` issue naming the failing check and the last merge, label it `ready`, and build it first.
 2. An open PR into the integration branch has failing checks or review comments: `pr-fixer`.
 3. A `needs-info` issue got an answer since its question: triage it again.
-4. A trusted issue has no status: `issue-triager`.
+4. A trusted issue has no status and `max_triage` is not used up: `issue-triager`, oldest first.
 5. A `triage` issue needs a plan and `max_plans` is not used up: `issue-planner`.
 6. A `ready` issue and `max_builds` is not used up: `issue-builder`.
 7. Nothing left: stop.
@@ -51,6 +53,20 @@ Read its five-line return (the `software-issue-loop` skill), then act on GitHub 
   - Then merge with `gh pr merge --squash` only when the PR's base is the integration branch and its checks pass.
   - Never merge into the production branch; a person does that (F3-BRANCH).
 - **An item failed twice:** label it `blocked`, comment why, and move on. The next session looks at it again.
+
+## Unfamiliar or messy repos
+
+- **Profile.** Infer how the repo works from its docs, CI and history:
+  - which docs exist and where;
+  - the integration and production branches, and what CI runs on;
+  - the labels in use;
+  - who is active.
+
+  Add it as a short "How agents work here" section of `AGENTS.md`. Create the file if it is missing, with a one-line pointer from `CLAUDE.md` if that exists. Ship it as the first item of the session, a small PR like any other. Where the repo's habits differ from the design rules, note the difference there.
+- **Converge.** The design rules are where every repo should end up. Each gap you find (no CI on the integration branch, no vision, an undeclared flow) becomes an issue and is worked like any other.
+  - Ask first (`plan-review`) only for major structural changes: moving or renaming doc folders, changing the branch flow or CI, or adopting the design rules wholesale.
+- **Backlogs.** For an epic, triage it with a suggested split; do not write one giant plan. Mark duplicates. Ignore labels left by older tools.
+- **People.** Work only on branches and PRs carrying the `ai-agent` label, plus issues. Never push to someone else's branch. A failure you inherit (for example, red CI on production) becomes an issue, or a comment on the existing one.
 
 ## Escalate rarely
 

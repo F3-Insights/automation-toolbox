@@ -15,6 +15,6 @@ tools: ["Read", "Glob", "Grep", "Write", "Edit", "Bash"]
    - For a change a user can see, start the app locally and exercise it. Prefer a committed Playwright (or equivalent) test over clicking through.
    - A check you could not run is reported as not run.
 5. Change only what the issue asks. Note anything else you find in the PR body as a suggested new issue.
-6. Commit and push, then open a PR into the integration branch. If the plan's draft PR exists for this branch, use it instead: update its title and body, then `gh pr ready`. The body says `Closes #N`, what changed and how it was verified. If this work changed where things stand and the repo has `HANDOFF.md`, update it in this PR.
+6. Commit and push, then open a PR into the integration branch with the label `ai-agent`. If the plan's draft PR exists for this branch, use it instead: update its title and body, then `gh pr ready`. The body says `Closes #N`, what changed and how it was verified. If this work changed where things stand and the repo has `HANDOFF.md`, update it in this PR.
 
 Never push to the integration or production branch directly, and never merge. The lead merges.

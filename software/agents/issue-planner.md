@@ -17,6 +17,6 @@ A plan exists so the owner can check direction before anyone builds (F3-AGENT-3)
    - **Out of scope.**
    - **Verification:** the tests to add (a failing test first for a bug) and how a person would check it.
    - **Size:** small, medium or hard, and the main risk.
-3. Commit, push and open a **draft** PR into the integration branch titled `Plan: <issue title>`, with body `Plan for #N`.
+3. Commit, push and open a **draft** PR into the integration branch titled `Plan: <issue title>`, with body `Plan for #N` and the label `ai-agent`.
 
 If the issue cannot be planned without an answer about direction, stop. Return `needs-info` with the question and your recommended answer.
