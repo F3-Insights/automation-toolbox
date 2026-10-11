@@ -58,6 +58,7 @@ PY_MARKER = f"{MARKER}; delete this line once written by hand"
 DESCRIPTION_LIMIT = 700
 SHARED_SKILL = "orchestration-workstream"
 SKILL_PATH = "~/.claude/skills/{skill}/scripts/{script}"
+SKILL_FILE = "~/.claude/skills/{skill}/SKILL.md"
 
 NAME_RE = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)+-orchestrator$")
 SLUG = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")
@@ -392,28 +393,73 @@ def home_skill_dir(spec, root):
     return found
 
 
-def command_path(spec, root, command):
-    """The by-name path an agent runs a command at, or None when no script holds it."""
+def is_plugin(dept_dir):
+    """A department that is a Claude Code plugin runs its commands by name from its bin/."""
+    return (dept_dir / ".claude-plugin" / "plugin.json").is_file()
+
+
+def bin_name(department, script):
+    """The plugin command a script runs as: repo_status.py is software-repo-status (as scripts/build_bins.py)."""
+    base = script.split(".")[0].replace("_", "-")
+    return base if base.startswith(f"{department}-") else f"{department}-{base}"
+
+
+def plugin_command(root, name):
+    """True when a plugin department runs this command: its bin/ holds it, or a script there will."""
+    for manifest in root.glob("*/.claude-plugin/plugin.json"):
+        dept = manifest.parent.parent
+        if (dept / "bin" / name).is_file():
+            return True
+        for script in dept.glob("skills/*/scripts/*"):
+            if script.suffix in (".py", ".sh") and not script.name.startswith("_") \
+                    and bin_name(dept.name, script.name) == name:
+                return True
+    return False
+
+
+def spec_is_plugin(spec, root):
+    return is_plugin(root / spec["department"])
+
+
+def skill_hint(spec, root, skill="<name>"):
+    """How an agent reaches a skill that is not loaded: the Skill tool in a plugin, else its by-name path."""
+    if spec_is_plugin(spec, root):
+        return "load it with the Skill tool"
+    return f"read it at `{SKILL_FILE.format(skill=skill)}`"
+
+
+def command_argv(spec, root, command):
+    """How an agent runs a command: [name] from a plugin's bin/, ["python3", by-name path], or None."""
     generated = ([spec["done"]["check"]] if spec["done"]["build"] else []) + [t["name"] for t in spec["tools"]["new"]]
     if command in generated:
-        return SKILL_PATH.format(skill=spec["done"]["skill"], script=script_name(command))
+        home = home_skill_dir(spec, root).parent.parent
+        if is_plugin(home):
+            return [bin_name(home.name, script_name(command))]
+        return ["python3", SKILL_PATH.format(skill=spec["done"]["skill"], script=script_name(command))]
+    if plugin_command(root, command):
+        return [command]
     found = find_script(root, command)
-    return SKILL_PATH.format(skill=found[0], script=found[1].name) if found else None
+    if not found:
+        return None
+    dept = found[1].parent.parent.parent.parent
+    if is_plugin(dept):
+        return [bin_name(dept.name, found[1].name)]
+    return ["python3", SKILL_PATH.format(skill=found[0], script=found[1].name)]
 
 
 def tool_rule(spec, root, tool):
-    """A spec tool as an agent's tools entry: a command becomes the exact script rule."""
+    """A spec tool as an agent's tools entry: a command becomes the exact command rule."""
     tool = str(tool).strip()
     if not SLUG.match(tool):
         return tool
-    path = command_path(spec, root, tool)
-    return f"Bash(python3 {path}:*)" if path else f"Bash({tool}:*)"
+    argv = command_argv(spec, root, tool)
+    return f"Bash({' '.join(argv)}:*)" if argv else f"Bash({tool}:*)"
 
 
 def resolve_argv(spec, root, argv):
-    """A launcher command with its command name replaced by the script that runs it."""
-    path = command_path(spec, root, argv[0]) if SLUG.match(argv[0]) else None
-    return ["python3", path] + argv[1:] if path else list(argv)
+    """A launcher command with its command name replaced by what runs it."""
+    head = command_argv(spec, root, argv[0]) if SLUG.match(argv[0]) else None
+    return head + list(argv[1:]) if head else list(argv)
 
 
 # ------------------------------------------------------------------------------- generated text
@@ -531,7 +577,7 @@ def _cell(text):
 def orchestrator_md(spec, root):
     W = spec["work"]
     label = spec["record"]["folder"]["label"] if spec["record"]["folder"] else "Run folder"
-    check = f"python3 {command_path(spec, root, spec['done']['check']) or spec['done']['check']}"
+    check = " ".join(command_argv(spec, root, spec["done"]["check"]) or ["python3", spec["done"]["check"]])
     call = " ".join([check] + ([spec["done"]["scope"].upper()] if spec["done"]["scope"] else [])
                     + [f"--{o.replace('_', '-')} {o.upper()}" for o in spec["done"]["options"]])
     unit = "period" if spec["periods"] else "Run"
@@ -588,8 +634,8 @@ def orchestrator_md(spec, root):
                 f"- The pull from {system} wins over a summary, a memory or an earlier session's note. A stale pull "
                 f"is said in the report, never patched.",
                 "- The check's output wins over your own reading of done."]
-    context += ["", "A skill named here may not be loaded as a tool in your session. If not, read it at "
-                    "`~/.claude/skills/<name>/SKILL.md` and tell each sub-agent to do the same."]
+    context += ["", f"A skill named here may not be loaded in your session. If not, {skill_hint(spec, root)} "
+                    "and tell each sub-agent to do the same."]
     if loads:
         context += ["", "Skills this work uses: " + ", ".join(f"`{n}`" for n in loads) + "."]
 
@@ -752,11 +798,11 @@ def worker_md(spec, root, w):
         extra_skills = f" and then {', '.join(f'`{s}`' for s in domain)}" if domain else ""
         context += [""]
         context.append(f"Load `{SHARED_SKILL}` first{extra_skills}: the conduct every workstream shares and the one "
-                       f"return block. Read each at `~/.claude/skills/<name>/SKILL.md` if it is not loaded.")
+                       f"return block. If one is not loaded, {skill_hint(spec, root)}.")
     elif w["skills"]:
         context += [""]
-        context.append("Read " + ", ".join(f"`{s}`" for s in w["skills"]) + " at `~/.claude/skills/<name>/SKILL.md` "
-                       "if it is not loaded.")
+        context.append("Use " + ", ".join(f"`{s}`" for s in w["skills"]) + f". If one is not loaded, "
+                       f"{skill_hint(spec, root)}.")
     context += ["", "When two sources disagree, the rules file wins over any skill, a domain skill wins over "
                     f"`{SHARED_SKILL}`, and the sources themselves win over the brief's summary of them."]
     approach = {
@@ -821,12 +867,12 @@ def worker_md(spec, root, w):
     return render("sub-agent.md", values)
 
 
-def skill_md(spec, sk):
+def skill_md(spec, root, sk):
     out = [_frontmatter([("name", sk["name"]), ("description", sk["description"])]), MD_MARKER, "",
            f"# {sk['name'].replace('-', ' ').capitalize()}", ""]
     if sk["workstream"]:
-        out += [f"This skill extends `{SHARED_SKILL}`: keep its conduct and return its block. Read it at "
-                f"`~/.claude/skills/{SHARED_SKILL}/SKILL.md` if it is not loaded. What follows is only what "
+        out += [f"This skill extends `{SHARED_SKILL}`: keep its conduct and return its block. If it is not "
+                f"loaded, {skill_hint(spec, root, SHARED_SKILL)}. What follows is only what "
                 f"{_lower_first(spec['title'])} adds.", "", "## Conduct here", "",
                 f"- **Read the rules first.** `{spec['work']}-RULES.md` says what you may do and the thresholds you "
                 f"work to. It overrides your own instructions.",
@@ -837,8 +883,9 @@ def skill_md(spec, sk):
                 "| Test | States |", "|---|---|"]
         out += [f"| `{t['name']}` | open, in-progress, waiting, done |" for t in spec["done"]["tests"]]
     else:
-        out += [f"Load `{SHARED_SKILL}` first (`~/.claude/skills/{SHARED_SKILL}/SKILL.md`) for the conduct and the "
-                f"return block; this skill is the method and the standard for one kind of work.", "",
+        where = "the Skill tool" if spec_is_plugin(spec, root) else f"`{SKILL_FILE.format(skill=SHARED_SKILL)}`"
+        out += [f"Load `{SHARED_SKILL}` first ({where}) "
+                f"for the conduct and the return block; this skill is the method and the standard for one kind of work.", "",
                 "## The standard", "", "What good looks like, the checks a professional makes.", "",
                 "## The work", "", "How it is done, and which tool does what must be exact.", "",
                 "## The file", "", "What it produces, where, and how it is named."]
@@ -1293,7 +1340,9 @@ def lint(root, orchestrator, agents, texts, skills, scripts, launch=None, launch
                 if home is None or not (home / m.group(2)).is_file():
                     return f"{argv[1]}: no such script in the {m.group(1)} skill"
             return None
-        if "/" in first or find_script(root, first):
+        if "/" in first or find_script(root, first) or plugin_command(root, first):
+            return None
+        if any(first.endswith("-" + Path(s).name.split(".")[0].replace("_", "-")) for s in scripts):
             return None
         return f"'{first}' is no script in any skill's scripts/ folder"
 
@@ -1342,8 +1391,8 @@ def lint(root, orchestrator, agents, texts, skills, scripts, launch=None, launch
                                               "filled; write the value")
     for where, rule in rules:
         if INTERPRETER_RULE.match(rule.strip()):
-            err("interpreter", where, f"{rule}: grant the exact script "
-                                      f"(Bash(python3 ~/.claude/skills/<skill>/scripts/<x>.py:*))")
+            err("interpreter", where, f"{rule}: grant the exact command (Bash(<plugin command>:*), or "
+                                      f"Bash(python3 {SKILL_PATH.format(skill='<skill>', script='<x>.py')}:*))")
             continue
         argv = rule_argv(rule)
         problem = command_problem(argv) if argv else None
@@ -1373,7 +1422,7 @@ def build_plan(spec, root, update):
     files = [(dept / "agents" / f"{spec['name']}.md", orchestrator_md(spec, root))]
     files += [(dept / "agents" / f"{w['name']}.md", worker_md(spec, root, w)) for w in spec["workers"]
               if not w["existing"]]
-    files += [(dept / "skills" / sk["name"] / "SKILL.md", skill_md(spec, sk)) for sk in spec["skills"]["new"]]
+    files += [(dept / "skills" / sk["name"] / "SKILL.md", skill_md(spec, root, sk)) for sk in spec["skills"]["new"]]
     if spec["done"]["build"] or spec["tools"]["new"]:
         scripts = home_skill_dir(spec, root) / "scripts"
         if spec["done"]["build"]:

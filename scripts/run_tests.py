@@ -1,4 +1,4 @@
-"""Run every skill's script tests, one skill at a time, then the setup tests.
+"""Run every skill's script tests, one skill at a time, then the setup and toolbox script tests.
 
 Each skill's scripts share helper names such as `_common.py`, so the skills are tested
 in separate pytest processes rather than one. Prints one line per skill and a total;
@@ -17,14 +17,14 @@ ROOT = Path(__file__).resolve().parent.parent
 def main(argv: list[str]) -> int:
     pattern = f"{argv[0]}/skills/*/scripts/tests" if argv else "*/skills/*/scripts/tests"
     failed = []
-    suites = sorted(ROOT.glob(pattern)) + ([] if argv else [ROOT / "setup" / "tests"])
+    suites = sorted(ROOT.glob(pattern)) + ([] if argv else [ROOT / "setup" / "tests", ROOT / "scripts" / "tests"])
     for tests in suites:
         result = subprocess.run(
             [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", str(tests)],
             cwd=tests.parent, capture_output=True, text=True,
         )
         last = (result.stdout.strip().splitlines() or ["no output"])[-1]
-        owner = tests.parent.parent if tests.parent.name == "scripts" else tests.parent
+        owner = tests.parent.parent if tests.parent.name == "scripts" and tests.parent.parent != ROOT else tests.parent
         print(f"{owner.relative_to(ROOT)}: {last}")
         if result.returncode != 0:
             failed.append(tests)

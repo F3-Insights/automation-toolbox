@@ -5,7 +5,7 @@ head, check state and review decision, and open issues grouped by status label, 
 status marker of its latest status comment (<!-- f3i: status=... -->). Issues opened by someone
 outside --trusted that carry no status label are listed under "untrusted" (F3-AGENT-1).
 
-    python3 ~/.claude/skills/software-issue-loop/scripts/repo_status.py OWNER/REPO [--trusted a,b] [--limit 50]
+    software-repo-status OWNER/REPO [--trusted a,b] [--limit 50]
 
 Exit 2 when gh is missing or a gh call fails.
 """

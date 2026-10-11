@@ -43,18 +43,18 @@ Ask when several `DATABASE_URL`-like environment variables exist, when you canno
 ### 0.1 Project type
 
 ```bash
-bash ~/.claude/skills/software-portfolio-review/scripts/detect_project_type.sh
+software-detect-project-type
 ```
 
-`detect-project-type` is a command (listed in the department README). Store the output as `PROJECT_META`.
+`software-detect-project-type` is one of this plugin's commands. Store the output as `PROJECT_META`.
 
 ### 0.2 Database type
 
 ```bash
-bash scripts/detect-db-type.sh
+software-detect-db-type
 ```
 
-The path is relative to this skill's own directory. Store the output as `DB_META`.
+Store the output as `DB_META`.
 
 ### 0.3 Connection details
 

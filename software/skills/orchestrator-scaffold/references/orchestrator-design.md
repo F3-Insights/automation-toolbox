@@ -93,7 +93,7 @@ A build is not done while the private-name check fails. Fix the file, not the ch
 
 A tool is a command for anything that must be exact or repeatable: reading a system, computing a number, checking a file, writing a controlled format, deciding done.
 
-- Tests use a made-up company (Acme Components). A command is a script in the `scripts/` folder of the skill that owns it, and every caller, a scheduler included, runs it by path (`python3 ~/.claude/skills/<skill>/scripts/<command>.py`); a step naming a path that does not exist fails as "not found".
+- Tests use a made-up company (Acme Components). A command is a script in the `scripts/` folder of the skill that owns it. In a department that is a plugin, every caller runs it by its name from the plugin's `bin/` (`software-repo-status`, a wrapper `scripts/build_bins.py` generates) and an agent grants `Bash(<name>:*)`; elsewhere every caller, a scheduler included, runs it by its by-name path (CONTEXT.md, Command). A step naming a command that does not exist fails as "not found".
 - `--help` documents it; `--format json` for agents, text for people.
 - Exit codes: 0 when it ran (whatever it found), 1 when a check it exists to make fails, 2 for a bad argument. A tool a scheduler runs exits 0 on a soft problem and says so on its first line (`FRESH: ...` / `STALE: ...`, `WORK: ...` / `NOTHING: ...`).
 - Reads its settings from the engagement folder (`SYSTEMS.md` field lines, `METADATA_FIELDS.md` tables), never from its own code.
@@ -106,7 +106,7 @@ A tool is a command for anything that must be exact or repeatable: reading a sys
 <domain>-check SCOPE [--format text|json] [--precheck]
 ```
 
-- `SCOPE` is what the check is about: the engagement folder (`python3 ~/.claude/skills/month-end-workstream/scripts/month_end_check.py FOLDER`), a repository (`OWNER/NAME`), or whatever the domain's unit of work is. Further options narrow it (`--period`, `--sync`).
+- `SCOPE` is what the check is about: the engagement folder (`<domain>-check FOLDER`), a repository (`OWNER/NAME`), or whatever the domain's unit of work is. Further options narrow it (`--period`, `--sync`).
 - Without `--precheck` it reports each test of done: text for a person, `--format json` for the orchestrator.
 - With `--precheck` its first line is `WORK: <reason>` or `NOTHING: <reason>`, for a scheduler's heartbeat; detail lines may follow, indented.
 - Exit 0 whenever it ran, whatever it found; 2 on a bad argument or a missing scope.

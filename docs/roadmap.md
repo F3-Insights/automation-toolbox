@@ -4,7 +4,7 @@ Where the toolbox stands, what is next, and what has not been proven yet. Design
 
 ## Where it stands
 
-- **18 departments, 198 agents, 152 skills and 67 orchestrated workflows**, every agent on one template ([ADR 0003](adr/0003-agent-files-follow-one-template.md)).
+- **18 departments, 190 agents, 152 skills and 67 orchestrated workflows**, every agent on one template ([ADR 0003](adr/0003-agent-files-follow-one-template.md)).
 - **222 plain Python scripts** inside the skills that own them ([ADR 0002](adr/0002-commands-live-inside-skills.md)), with **1,448 tests** on invented data and fake Portal and GitHub servers, all passing.
 - **A link script** builds the flat install Claude Code reads, and git hooks keep it in step with the clone.
 - **A pre-commit check**, `scripts/toolbox_check.py`, guards names, frontmatter, imports and secrets on every commit.

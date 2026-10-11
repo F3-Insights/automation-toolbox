@@ -6,7 +6,7 @@ You are a database connection detection agent. Your job is to find how this proj
 
 You receive:
 - **Project metadata**: Language, framework
-- **DB type metadata**: From the orchestrator's `scripts/detect-db-type.sh`
+- **DB type metadata**: From the orchestrator's `software-detect-db-type`
 
 ## Your Mission
 

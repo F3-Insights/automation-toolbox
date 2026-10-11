@@ -46,18 +46,18 @@ The per-dimension loop exists so the owner can correct course early instead of d
 ### 0.1 Save location
 
 ```bash
-bash scripts/find-spec-dir.sh "{feature_name}"
+software-find-spec-dir "{feature_name}"
 ```
 
-The path is relative to this skill's own directory. It prints the spec directory, the filename and any existing spec for the same feature. The spec lands at `docs/specs/YYYY-MM-DD-{feature-name-kebab}.md`.
+It prints the spec directory, the filename and any existing spec for the same feature. The spec lands at `docs/specs/YYYY-MM-DD-{feature-name-kebab}.md`.
 
 ### 0.2 Project type
 
 ```bash
-bash ~/.claude/skills/software-portfolio-review/scripts/detect_project_type.sh
+software-detect-project-type
 ```
 
-`detect-project-type` is a command (listed in the department README). Store the output as `PROJECT_META`.
+`software-detect-project-type` is one of this plugin's commands. Store the output as `PROJECT_META`.
 
 ### 0.3 Orient
 
