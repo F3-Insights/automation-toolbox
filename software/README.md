@@ -2,6 +2,34 @@
 
 Turns a repository's issues into verified, reviewed pull requests without ever shipping a guess, and keeps an owner's software portfolio in view. The software factory triages issues, reproduces each problem before fixing it, tests and reviews every change independently, and leaves pushing and merging to deterministic tools and people. Around it sit a release preparer, a weekly portfolio review, an issue harvest that turns what people say about the software into well-formed issues, and the owner-started methods for specs, schema documentation and doc cleanup. This department also holds the two skills every orchestrator in the toolbox uses: `orchestration-workstream` (how any worker behaves and returns) and `orchestrator-scaffold` (how to build a new orchestrator, and the template every agent file follows).
 
+## Bringing up the issue loop
+
+The issue loop (`software-orchestrator` and its workers) replaces the software factory. It is brought up in three steps. Each step starts only when the one before it works, because the corrections found in an earlier step are the only instructions worth adding.
+
+1. **You are the orchestrator.** In an ordinary Claude Code session in the repository's clone, ask for one job at a time (the prompts below) and watch. Write down only what it gets wrong; those corrections go into the worker prompts. No Sentinel, no orchestrator.
+2. **The orchestrator chooses, interactively.** When triage, plan and build each work by hand, run `software-orchestrator` in an interactive session and watch what it picks and delegates. The new question is only whether it chooses well.
+3. **Sentinel runs it unattended.** Only once watching is boring. This is when the sealed-session plumbing (tool allowlists, no loaded skills, sub-agent wiring) is worth fixing.
+
+Principles behind it:
+
+- Prove the job by hand before automating it; automate what you find yourself repeating.
+- Prompts state goals and principles, not procedures. Add a rule only for a mistake the agent actually made.
+- Rules live once, in the design rules (`F3-AGENT`, `F3-BRANCH`, `F3-DOC`); prompts point at them.
+- Configuration (schedules, tools, caps) lives in the runner, not in the prompts.
+
+### Step 1 prompts
+
+Run in Claude Code from the repository's clone. Replace the issue numbers.
+
+**Triage**
+> Read this repo's own docs (agent file, README, vision, handoff) and the F3-AGENT rules in the design rules. Then triage issues #16 to #20: for each, decide whether it is ready to build, needs a plan first, needs a question answered, or is blocked; set a type and status label; and leave one short comment saying what it needs next. Create any missing labels.
+
+**Plan**
+> Read this repo's docs and the F3-AGENT rules. Write the plan for issue #N as docs/plans/N-slug.md (goal, approach, decisions, out of scope, verification, size) on branch issue/N-slug, open it as a draft PR labeled ai-agent, and comment on the issue. Then stop for my review.
+
+**Build**
+> Read this repo's docs and the F3-AGENT rules. Build issue #N (following docs/plans/N-slug.md if it exists): a failing test first for a bug, the repo's own checks before you finish, and the PR into the integration branch labeled ai-agent, saying how it was verified. Do not merge.
+
 ## Agents
 
 | Agent | What it does | Needs |
