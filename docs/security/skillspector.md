@@ -28,14 +28,13 @@ Scanned 152 of 152 skills on 2026-10-10 with SkillSpector v2.12.0, static analys
 | MEDIUM | 32 |
 | LOW | 101 |
 
-The 19 skills rated CRITICAL or HIGH:
+The 19 skills rated CRITICAL or HIGH, less one CRITICAL software skill retired on 2026-10-11 (the totals above are the scan's until the next one):
 
 | Skill | Department | Score | Severity | Findings |
 |---|---|---:|---|---:|
 | `client-update-workstream` | reporting | 100 | CRITICAL | 16 |
 | `report-weekly` | reporting | 100 | CRITICAL | 27 |
 | `skills-extract` | toolbox-maintenance | 100 | CRITICAL | 15 |
-| `software-factory-workstream` | software | 97 | CRITICAL | 16 |
 | `chief-of-staff-cycle` | chief-of-staff | 95 | CRITICAL | 15 |
 | `process-flow-workstream` | process-engineering | 91 | CRITICAL | 13 |
 | `orchestrator-scaffold` | software | 89 | CRITICAL | 12 |
@@ -61,7 +60,7 @@ No single finding in this scan is rated CRITICAL. A skill reaches CRITICAL becau
 - **Environment copied (E2, HIGH).** Test helpers copy `os.environ` to run a script with fake settings, and the toolbox audit copies it to run Python with one extra variable. None of them send it anywhere.
 - **Hidden-looking comments (P2, HIGH).** HTML comments in the seminar deck kit (`writing-seminar-builder`) that label icons and slide parts.
 - **Instructions that sound like jailbreaks (AR2, EA2, RA2).** Phrases such as "without asking" (for writes the owner pre-approved, such as a draft), "do not judge" (in an intake step that records items and leaves ranking to a later reviewer), and the many places a skill tells an agent to write something: a draft, a reply it never sends, or a file in its Run folder.
-- **Other agents' folders and git (AS1, AS3, TM1).** `skills-extract` reads past Claude Code and Codex sessions on purpose, to suggest new skills; skills name the shared `orchestration-workstream` skill by path; and the software factory's rules mention `--force` only to forbid it except in one named case.
+- **Other agents' folders and git (AS1, AS3, TM1).** `skills-extract` reads past Claude Code and Codex sessions on purpose, to suggest new skills; and skills name the shared `orchestration-workstream` skill by path.
 - **Running other programs (AST4, TT2, MEDIUM).** Scripts run the skill's own sibling scripts and named tools such as `git` and `pdftotext`, and the tests run the scripts under test, with `subprocess.run` and an argument list. No script uses `shell=True`.
 
 Treat this as a review checklist, not a clean bill of health. Every finding is in the reports the scan writes, with its file and line. Newer SkillSpector code than the v2.12.0 release scores some skills differently (for example, it rates sending a credential over the network as CRITICAL on its own), so the workflow pins the release to keep results comparable from scan to scan.

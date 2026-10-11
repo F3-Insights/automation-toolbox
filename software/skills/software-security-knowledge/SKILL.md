@@ -8,7 +8,7 @@ user-invocable: false
 
 Reference material: security patterns, framework-specific checks, and the severity criteria that keep a rating honest.
 
-The scanning itself is no longer a home-built pipeline. Use the built-in `security-review` skill over a diff, and the `claude-security` plugin for a repository sweep. Read this file first so the pass knows what to look for in the stacks covered here: Supabase, FastAPI and Express. The `software-review` skill, which the software factory's reviewer follows, points its security pass here for exactly that reason.
+The scanning itself is no longer a home-built pipeline. Use the built-in `security-review` skill over a diff, and the `claude-security` plugin for a repository sweep. Read this file first so the pass knows what to look for in the stacks covered here: Supabase, FastAPI and Express. The `software-review` skill, which `software-reviewer` walks for the issue loop, points its security pass here for exactly that reason.
 
 ## OWASP Top 10 (2021): Code-Level Patterns
 

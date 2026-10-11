@@ -1,13 +1,13 @@
 ---
 name: software-pr
-description: "How a change is packaged for review: branch naming, commit shape, and a pull request body a reviewer can act on (the problem, the change, the evidence, the risk, how to check it by hand). Use when writing a PR body or a commit for a change, in the software factory or by hand. For the prose itself use unslop-technical; for release notes, software-release-orchestrator."
+description: "How a change is packaged for review: branch naming, commit shape, and a pull request body a reviewer can act on (the problem, the change, the evidence, the risk, how to check it by hand). Use when writing a PR body or a commit for a change, in the issue loop (`software-orchestrator`) or by hand. For the prose itself use unslop-technical; for release notes, software-release-orchestrator."
 ---
 
 # Packaging a change
 
 ## Branch and commits
 
-- In the software factory: `software-factory/issue-<n>-<slug>`, made by `software-factory-worktree`. By hand: the repo's own convention, else `<kind>/<short-slug>`.
+- In the issue loop: `issue/<n>-<slug>`, cut from the integration branch (`software-issue-loop`). By hand: the repo's own convention, else `<kind>/<short-slug>`.
 - Stage files by name. Commits are imperative ("Fix ISO week date parsing"), with a body that says why. One commit per logical step; the fix and its tests may be one commit.
 - Never commit generated files, secrets, local config or anything the repo ignores.
 

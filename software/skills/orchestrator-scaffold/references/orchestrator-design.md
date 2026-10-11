@@ -1,14 +1,14 @@
 # Orchestrator, agent, skill, tool: the design
 
-How recurring professional work (a month-end close, a forecast, a periodic report, an audit preparation, a software factory) is built so that agents do it, people stay in control, and any session can pick up where the last one stopped. The month-end close is the worked example throughout; every name in it is generic, and nothing here is specific to a client or a machine.
+How recurring professional work (a month-end close, a forecast, a periodic report, an audit preparation, a repository's issue loop) is built so that agents do it, people stay in control, and any session can pick up where the last one stopped. The month-end close is the worked example throughout; every name in it is generic, and nothing here is specific to a client or a machine.
 
 Read this before building a new orchestration. Read it again before changing one.
 
 Two orchestrations follow it in this toolbox:
 - the month-end close (`month-end-orchestrator`), the worked example below;
-- the software factory (`software-factory-orchestrator`), whose contract is `SOFTWARE-FACTORY.md` in the `software-factory-workstream` skill.
+- the issue loop (`software-orchestrator`), whose shared facts are in the `software-issue-loop` skill and whose rules are the design rules' `F3-AGENT` and `F3-BRANCH` families.
 
-Where they differ is instructive. The close's system of record (the ERP) is only read, and a person posts. The factory's system of record (GitHub) is written, but only by deterministic tools that run before and after the agent session (the launcher's prepare and finish steps). The session itself has no route to it at all.
+Where they differ is instructive. The close's system of record (the ERP) is only read, and a person posts. The issue loop keeps no folder of its own: GitHub is both its system of record and its memory, read and written directly by the lead and its workers through `gh`, each worker's tools pinned to what its job needs. The choice follows from the work: a close needs an evidence trail a person signs, while issues and pull requests already are one.
 
 ## The idea in one paragraph
 
@@ -93,7 +93,7 @@ A build is not done while the private-name check fails. Fix the file, not the ch
 
 A tool is a command for anything that must be exact or repeatable: reading a system, computing a number, checking a file, writing a controlled format, deciding done.
 
-- Tests use a made-up company (Acme Components). A command is a script in the `scripts/` folder of the skill that owns it, and every caller, a scheduler included, runs it by path (`python3 ~/.claude/skills/<skill>/scripts/<command>.py`); a step naming a path that does not exist fails as "not found".
+- Tests use a made-up company (Acme Components). A command is a script in the `scripts/` folder of the skill that owns it. In a department that is a plugin, every caller runs it by its name from the plugin's `bin/` (`software-repo-status`, a wrapper `scripts/build_bins.py` generates) and an agent grants `Bash(<name>:*)`; elsewhere every caller, a scheduler included, runs it by its by-name path (CONTEXT.md, Command). A step naming a command that does not exist fails as "not found".
 - `--help` documents it; `--format json` for agents, text for people.
 - Exit codes: 0 when it ran (whatever it found), 1 when a check it exists to make fails, 2 for a bad argument. A tool a scheduler runs exits 0 on a soft problem and says so on its first line (`FRESH: ...` / `STALE: ...`, `WORK: ...` / `NOTHING: ...`).
 - Reads its settings from the engagement folder (`SYSTEMS.md` field lines, `METADATA_FIELDS.md` tables), never from its own code.
@@ -106,7 +106,7 @@ A tool is a command for anything that must be exact or repeatable: reading a sys
 <domain>-check SCOPE [--format text|json] [--precheck]
 ```
 
-- `SCOPE` is what the check is about: the engagement folder (`python3 ~/.claude/skills/month-end-workstream/scripts/month_end_check.py FOLDER`), a repository (`python3 ~/.claude/skills/software-factory-workstream/scripts/software_factory_check.py OWNER/NAME`), or whatever the domain's unit of work is. Further options narrow it (`--period`, `--sync`).
+- `SCOPE` is what the check is about: the engagement folder (`<domain>-check FOLDER`), a repository (`OWNER/NAME`), or whatever the domain's unit of work is. Further options narrow it (`--period`, `--sync`).
 - Without `--precheck` it reports each test of done: text for a person, `--format json` for the orchestrator.
 - With `--precheck` its first line is `WORK: <reason>` or `NOTHING: <reason>`, for a scheduler's heartbeat; detail lines may follow, indented.
 - Exit 0 whenever it ran, whatever it found; 2 on a bad argument or a missing scope.
@@ -128,7 +128,7 @@ A skill is the method and standard for a kind of work: what good looks like, the
 - An `## Inputs` section when a person or a scheduler launches it directly: a launch form can be built from it.
 - No client facts. A skill names the folder sections it reads; the folder holds the values.
 - A companion `rules.md` for a contract too long for SKILL.md (formats, outcome tables). Scripts in `scripts/`, standard library, called by full path.
-- `orchestration-workstream` is a special shared skill: the conduct every workstream of any orchestrator follows and the one json return block. A domain extends it with a thin skill of its own that holds only what is specific to the domain: `month-end-workstream` (the evidence item tests and states), `software-factory-workstream` (always offline, and the factory's contract in `SOFTWARE-FACTORY.md` beside it). A new workstream loads both, the shared one first, rather than restating either.
+- `orchestration-workstream` is a special shared skill: the conduct every workstream of any orchestrator follows and the one json return block. A domain extends it with a thin skill of its own that holds only what is specific to the domain: `month-end-workstream` (the evidence item tests and states), `issue-harvest-workstream` (the five decisions and the issue standard). A new workstream loads both, the shared one first, rather than restating either.
 
 ### Agents
 
@@ -167,7 +167,7 @@ The launcher is how the owner starts, schedules and watches the work. It lives i
 - the folders it may read (the engagement folder) and fixed inputs such as the folder path;
 - the permission fence: Write and Edit on the client folder, and each skill script by its exact command;
 - prepare: the deterministic commands that run before the agent (the pull refresh); their first line reaches the agent;
-- finish: the deterministic commands that run after a session that ended done (the software factory's ship step). They never run after a stopped or failed session, and a command that writes to a system is skipped on a dry run;
+- finish: the deterministic commands that run after a session that ended done (the issue harvest's `issue-file`). They never run after a stopped or failed session, and a command that writes to a system is skipped on a dry run;
 - the launch form (period, instructions, dry run);
 - the schedule and the precheck for a heartbeat. The precheck is the check tool's `--precheck`, so a scheduled Run starts only when something changed. It ships disabled until one live period has run;
 - a turn and time budget, and the list of worker agents whose commands the session must allow.

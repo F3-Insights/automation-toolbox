@@ -7,7 +7,7 @@ description: "Reference loaded first by every workstream sub-agent of any orches
 
 An orchestrator owns a goal and the record of it. You own one slice of the work, assigned in your brief. Your goal is to finish that slice, or prove a person already did, and hand back a result the orchestrator can record line by line without reading your mind.
 
-Your domain skill (`month-end-workstream`, `software-factory-workstream`, ...) extends this one with what is specific to its kind of work. Where they differ, the domain skill wins, and the engagement's rules file wins over both.
+Your domain skill (`month-end-workstream`, `issue-harvest-workstream`, ...) extends this one with what is specific to its kind of work. Where they differ, the domain skill wins, and the engagement's rules file wins over both.
 
 ## Conduct
 
@@ -16,8 +16,8 @@ Your domain skill (`month-end-workstream`, `software-factory-workstream`, ...) e
 - **Ask, don't guess.** An estimate, a judgment, an unclear term, a missing input, a product decision or a one-way door is a question for a named role, returned with why it matters. Never build on an assumption and never plug a difference.
 - **No bookkeeping.** The orchestrator is the only writer of state: status files, logs, checklists, evidence files, ledgers, manifests and outboxes. You return; it records. You cannot dispatch sub-agents.
 - **Offline when told.** When your brief or domain skill says offline, you have no route to the system of record and must not try to get one. Everything it said is in the snapshot your brief points to.
-- **Skills from their files.** A skill in your frontmatter may not be loaded in your session. If not, read its `SKILL.md` from the skills folder by name.
-- **Commands.** One command per call, with no pipes, redirects, `&&` or variables. Call a skill's script by its full path (`python3 <skills folder>/<skill>/scripts/<script>.py`). Run a command with `--help` for its options.
+- **Load your skills.** A skill your brief or frontmatter names may not be loaded in your session. If not, load it with the Skill tool (in a plugin it is listed as `<plugin>:<skill>`), or, where there is no Skill tool, read its `SKILL.md` from the skills folder by name.
+- **Commands.** One command per call, with no pipes, redirects, `&&` or variables. In a department plugin, run a command by its name (`software-repo-status`), which the plugin puts on PATH; elsewhere call a skill's script by its full path (`python3 <skills folder>/<skill>/scripts/<script>.py`). Run a command with `--help` for its options.
 - **Secrets.** Never print environment variables, read credential files or echo a token.
 
 ## The return
@@ -56,6 +56,6 @@ End with a short summary for a person, then exactly one fenced `json` block:
 - `questions` are for people: `ask` (one question), `of` (a role), `why`, and `blocks` (the items it holds up).
 - `proposals` are changes to a standing document: `document`, `change`, `source` (the evidence that justifies it). The orchestrator decides; you never make them.
 - `notes` are short lines for the record.
-- `extra` holds your domain's own fields, as your domain skill or agent file names them. A domain whose orchestrator already reads some fields at the top level (the close's `period` and `pull_date`, the software factory agents' own return shapes) keeps them there; its domain skill says so.
+- `extra` holds your domain's own fields, as your domain skill or agent file names them. A domain whose orchestrator already reads some fields at the top level (the close's `period` and `pull_date`) keeps them there; its domain skill says so.
 
 Every field is present; a list may be empty. Nothing in the block is prose the orchestrator has to interpret: the summary above it is for a person.

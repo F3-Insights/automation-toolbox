@@ -115,6 +115,22 @@ def test_the_orchestrator_follows_the_design(world):
     assert "extends `orchestration-workstream`" in (world["root"] / FILES[4]).read_text()
 
 
+def test_a_plugin_department_runs_commands_by_name(world):
+    plugin = world["root"] / "projects" / ".claude-plugin"
+    plugin.mkdir(parents=True)
+    (plugin / "plugin.json").write_text('{"name": "projects", "description": "d", "version": "0.1.0"}')
+    res = generate(world)
+    assert res.returncode == 0, res.stdout + res.stderr
+    text = (world["root"] / FILES[0]).read_text()
+    assert '"Bash(projects-widget-review-check:*)"' in text
+    assert "`projects-widget-review-check REVIEW_FOLDER --period PERIOD --format json`" in text
+    assert "load it with the Skill tool" in text
+    for rel in FILES:
+        assert ".claude/skills" not in (world["root"] / rel).read_text(), rel
+    res = run("lint", NAME, "--root", str(world["root"]))
+    assert res.returncode == 0, res.stdout
+
+
 @pytest.mark.parametrize("rel", FILES[1:4])
 def test_every_sub_agent_follows_the_template(world, rel):
     assert generate(world).returncode == 0
@@ -237,7 +253,8 @@ def test_a_missing_prepare_command_and_skill_are_named(world):
 
 @pytest.mark.parametrize("rule,flagged", [
     ("Bash(python3:*)", True), ("Bash(python3 -m:*)", True), ("Bash(uv run:*)", True), ("Bash(python3.12:*)", True),
-    ("Bash(python3 ~/.claude/skills/comms-confirm/scripts/confirm.py:*)", False), ("Read", False),
+    ("Bash(python3 ~/.claude/skills/widget-review-workstream/scripts/widget_review_check.py:*)", False),
+    ("Bash(projects-widget-review-check:*)", False), ("Read", False),
 ])
 def test_the_interpreter_rule(rule, flagged):
     assert bool(sc.INTERPRETER_RULE.match(rule)) is flagged

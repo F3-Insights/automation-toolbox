@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="f3i Automation Toolbox: the back office, run by agents. 18 departments, 198 agents, 152 skills, 1,448 tests passing." width="100%">
+  <img src="assets/banner.svg" alt="f3i Automation Toolbox: the back office, run by agents. 18 departments, 190 agents, 152 skills, 1,448 tests passing." width="100%">
 </p>
 
 <p align="center">
   <a href="docs/security/skillspector.md"><img src="https://img.shields.io/badge/NVIDIA_SkillSpector-scanned-76B900?logo=nvidia&logoColor=white" alt="Scanned with NVIDIA SkillSpector"></a>
   <a href="#install"><img src="https://img.shields.io/badge/install-npx-CB3837?logo=npm&logoColor=white" alt="Install with npx"></a>
-  <img src="https://img.shields.io/badge/agents-198-1E3A6E" alt="198 agents">
+  <img src="https://img.shields.io/badge/agents-190-1E3A6E" alt="190 agents">
   <img src="https://img.shields.io/badge/skills-152-1E3A6E" alt="152 skills">
   <img src="https://img.shields.io/badge/workflows-67-1E3A6E" alt="67 workflows">
   <img src="https://img.shields.io/badge/tests-1%2C448_passing-2E7D32" alt="1,448 tests passing">
@@ -103,7 +103,7 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 | Month end | `month-end-orchestrator` | The close worked like a close team: reconciliations, accruals, flux, a review trail |
 | Month end | `board-package-orchestrator` | The board package drafted from the finished close, tied out and red-teamed |
 | Monthly | `goal-alignment-orchestrator` | Goals set against projects and where the time went, as one approval list |
-| On demand | `software-factory-orchestrator` | Issues turned into reviewed, verified pull requests |
+| On demand | `software-orchestrator` | A repository's issues worked into verified pull requests, builds in parallel worktrees (draft) |
 
 ## Quick start
 
@@ -167,14 +167,14 @@ Each folder at the root is a department. Open its README for what is inside and 
 
 ### Delivery
 
-*7 departments · 61 agents · 51 skills.* Client engagements, from the first lead to the last invoice, and the software behind them.
+*7 departments · 53 agents · 51 skills.* Client engagements, from the first lead to the last invoice, and the software behind them.
 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
 | [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews, pre-mortems | 13 / 11 |
 | [Process Engineering](process-engineering/) | Assessments, interview synthesis, process maps, workshops, automation scoping, surveys | 12 / 7 |
 | [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 8 / 3 |
-| [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators | 14 / 18 |
+| [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
 | [Sales & Business Development](sales/) | Pipeline reviews, lead intake, proposals and statements of work, contract audits | 6 / 2 |
 | [Marketing & Writing](marketing/) | Content and case studies, brand, and the unslop editing skills | 4 / 8 |
 | [Training & Community](learning/) | Seminar and workshop decks, peer learning groups | 4 / 2 |
@@ -200,7 +200,7 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `it-governance-orchestrator`: runs IT and AI governance as a control checklist
   - `wind-down-orchestrator`: drives one legal entity's wind-down to dissolution
 - **Software**
-  - `software-factory-orchestrator`: runs the issue-to-pull-request factory for one repository, like a lead engineer
+  - `software-orchestrator`: the software factory; works one repository's GitHub issues into verified pull requests, like a lead engineer (draft)
   - `issue-harvest-orchestrator`: turns notes, mail, tasks and meeting commitments about the software into filed issues
   - `software-portfolio-review-orchestrator`: the weekly review of every repository carried
   - `software-release-orchestrator`: prepares one repository's next release for the person who ships it

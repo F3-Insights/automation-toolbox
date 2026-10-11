@@ -1,6 +1,6 @@
 ---
 name: software-diagnose-bugs
-description: "A diagnosis loop for hard bugs and performance regressions: build a tight feedback loop that goes red on this bug, reproduce and minimise, rank falsifiable hypotheses, instrument, fix with a regression test at the right seam, and clean up. Use when the user says \"diagnose\" or \"debug this\", or reports something broken, throwing, failing or slow. Not for fixing filed issues unattended; start software-factory-orchestrator."
+description: "A diagnosis loop for hard bugs and performance regressions: build a tight feedback loop that goes red on this bug, reproduce and minimise, rank falsifiable hypotheses, instrument, fix with a regression test at the right seam, and clean up. Use when the user says \"diagnose\" or \"debug this\", or reports something broken, throwing, failing or slow. Not for fixing filed issues unattended; start software-orchestrator."
 ---
 
 # Diagnosing Bugs

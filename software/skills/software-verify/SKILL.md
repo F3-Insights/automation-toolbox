@@ -1,6 +1,6 @@
 ---
 name: software-verify
-description: "The standard for proving a code change works: reproduce the problem before fixing it, hold the tests to a sufficient-tests bar (each acceptance point, edge cases, error paths, a regression test, the full suite, the running app for visible changes), run the repo's own declared checks, and keep the evidence. Use when building or testing a change, by hand or in the software factory, or for \"is this actually fixed\". For reviewing someone else's diff, use software-review."
+description: "The standard for proving a code change works: reproduce the problem before fixing it, hold the tests to a sufficient-tests bar (each acceptance point, edge cases, error paths, a regression test, the full suite, the running app for visible changes), run the repo's own declared checks, and keep the evidence. Use when building or testing a change, by hand or in the issue loop (`software-orchestrator`), or for \"is this actually fixed\". For reviewing someone else's diff, use software-review."
 ---
 
 # Verifying a change
@@ -39,10 +39,10 @@ Tests are not sufficient when they:
 ## 3. The repo's own checks
 
 Run what the repo declares, in its order:
-- in the software factory, `.software-factory/commands.yaml` (setup, lint, typecheck, test, build, coverage);
-- otherwise its documented check command (`CONTRIBUTING`, `CLAUDE.md`, the CI workflow).
+- the check commands its agent file or README names (`AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING`), and `f3i check` where it vendors the design rules;
+- otherwise what its CI workflow runs.
 
-In the software factory, `software-factory-verify` runs them from the base commit in a clean, offline environment and writes `verify.json`; its verdict is the one that counts. Your own run is for finding problems early.
+A check you could not run is reported as not run, never as passed (F3-AGENT-4 in the issue loop).
 
 ## 4. Evidence
 

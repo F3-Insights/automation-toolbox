@@ -53,11 +53,11 @@ Nothing private goes in the spec: client names, folder paths and machine-specifi
 
 ## 2. Generate or write the files
 
-The `orchestrator-scaffold` command, this skill's `scripts/orchestrator_scaffold.py`, does this in one step:
+The `software-orchestrator-scaffold` command (this skill's `scripts/orchestrator_scaffold.py`, on PATH from the software plugin's `bin/`) does this in one step:
 
 ```
-python3 ~/.claude/skills/orchestrator-scaffold/scripts/orchestrator_scaffold.py generate SPEC.yaml [--dry-run [--show]] [--update] [--launcher FILE --set PARAM=VALUE ...]
-python3 ~/.claude/skills/orchestrator-scaffold/scripts/orchestrator_scaffold.py lint NAME [--launcher FILE] [--format json]
+software-orchestrator-scaffold generate SPEC.yaml [--dry-run [--show]] [--update] [--launcher FILE --set PARAM=VALUE ...]
+software-orchestrator-scaffold lint NAME [--launcher FILE] [--format json]
 ```
 
 `--dry-run` prints every file it would write and the lint results, `--show` adds each file's text; always dry-run first. A file that exists is refused by name, and `--update` replaces it only while it still carries the scaffold's marker line. Any lint error writes nothing at all. The check script, the command stubs and the check's test go in the `scripts/` folder of the skill `done.skill` names (default the first new skill). The launcher's settings are printed, or written to `--launcher FILE` (outside the toolbox, with the owner's private settings), which needs every fixed input's value through `--set PARAM=VALUE`. `--root DIR` points it at another toolbox checkout.
@@ -89,4 +89,4 @@ Check, on every generation and on any orchestrator before its dry run:
 1. Write the rules file and procedures in the folder with the owner (the design's step 1).
 2. Replace the check skeleton's tests with the domain's real ones, keeping the result's shape; build each stubbed tool; run the generated test and the whole suite.
 3. Write each agent and skill goal-first, keeping the template's sections and their order, then delete its marker. A stage's detailed procedure goes in a skill the stage names, not in the agent file.
-4. Point the launcher's prepare and finish steps at the scripts by path, review the launcher settings, and prove it with a dry run.
+4. In a department that is a plugin (it has `.claude-plugin/plugin.json`), run `python3 scripts/build_bins.py <department>` from the toolbox root so each new script gets its named command in the plugin's `bin/`; the scaffold already writes agents' rules as `Bash(<command>:*)` and tells them to load skills with the Skill tool. Elsewhere, point the launcher's prepare and finish steps at the scripts by path. Review the launcher settings, and prove it with a dry run.

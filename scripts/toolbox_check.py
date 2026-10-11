@@ -23,6 +23,13 @@ Structure
   - No file reaches another skill by a relative "../" path; skills refer to
     each other by name.
 
+Plugins (a department with .claude-plugin/plugin.json)
+  - plugin.json is JSON with the department's name, a description and a version.
+  - Every script in its skills has a wrapper in <department>/bin/, and every file
+    in bin/ is a current wrapper of a script that exists (scripts/build_bins.py).
+  - Its agents and Markdown run commands by name, never by a ~/.claude/skills/ path,
+    and every Bash(<department>-...) rule in an agent names a command in bin/.
+
 Usage:
   python3 scripts/toolbox_check.py            check the whole working tree
   python3 scripts/toolbox_check.py PATH...    check only these files or folders
@@ -33,6 +40,7 @@ Exit status is 1 when anything fails. Each failure prints file:line and why.
 from __future__ import annotations
 
 import ast
+import json
 import os
 import re
 import subprocess
@@ -229,11 +237,53 @@ def check_scripts() -> list[str]:
     return failures
 
 
+SKILLS_PATH = "~/.claude/skills/"
+BASH_RULE = re.compile(r"Bash\(([A-Za-z0-9_.-]+)")
+
+
+def check_plugins() -> list[str]:
+    """A plugin department is whole: a valid manifest, a wrapper per script, commands by name."""
+    import build_bins  # beside this file
+
+    failures = []
+    for dept in DEPARTMENTS:
+        manifest = ROOT / dept / ".claude-plugin" / "plugin.json"
+        if not manifest.exists():
+            continue
+        rel = manifest.relative_to(ROOT)
+        try:
+            meta = json.loads(manifest.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            failures.append(f"{rel}: not JSON: {exc}")
+            meta = {}
+        if meta and meta.get("name") != dept:
+            failures.append(f"{rel}: name must be '{dept}'")
+        for key in ("description", "version"):
+            if meta and not meta.get(key):
+                failures.append(f"{rel}: missing {key}")
+        actions, problems = build_bins.plan(ROOT / dept)
+        for kind, name in actions:
+            failures.append(f"{dept}/bin/{name}: out of date ({kind}); run python3 scripts/build_bins.py {dept}")
+        failures += [f"{dept}/bin: {p}" for p in problems]
+        commands = {p.name for p in (ROOT / dept / "bin").glob("*")}
+        for md in sorted((ROOT / dept).rglob("*.md")):
+            for n, line in enumerate(md.read_text(encoding="utf-8").splitlines(), 1):
+                if SKILLS_PATH in line:
+                    failures.append(f"{md.relative_to(ROOT)}:{n}: a plugin runs a command by name, not by "
+                                    f"a {SKILLS_PATH} path")
+        for agent in sorted((ROOT / dept / "agents").glob("*.md")):
+            for n, line in enumerate(agent.read_text(encoding="utf-8").splitlines(), 1):
+                for cmd in BASH_RULE.findall(line):
+                    if cmd.startswith(f"{dept}-") and cmd not in commands:
+                        failures.append(f"{agent.relative_to(ROOT)}:{n}: Bash({cmd}) names no command in {dept}/bin/")
+    return failures
+
+
 def main(argv: list[str]) -> int:
     files = files_to_check(argv)
     failures = check_privacy(files, load_denylist())
     if not argv:
-        failures += check_structure() + check_scripts()
+        failures += check_structure() + check_scripts() + check_plugins()
     for failure in failures:
         print(failure)
     print(f"{len(failures)} problem(s) in {len(files)} file(s)", file=sys.stderr)

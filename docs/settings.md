@@ -16,7 +16,7 @@ Some skills also read settings kept beside the work, such as the Month-End folde
 |---|---|---|---|---|
 | `portal_mcp_config` | Yes, when a command that reads or writes the Portal runs | none | Path to the MCP config file (JSON) whose `mcpServers` entry gives the Insights Portal URL and Authorization header. | calendar-steward-method, chief-of-staff-cycle, client-delivery-workstream, client-update-workstream, comms-confirm, comms-draft-check, comms-reply-to-email, daily-plan-method, goal-alignment-workstream, issue-harvest-workstream, meeting-portal-notes, meeting-scheduled-worker, nightly-sweep-workstream, project-health-diagnose, project-landscape, report-weekly, task-stack-capture, task-stack-workstream, weekly-review-workstream |
 | `portal_server` | No | `"insights-portal"` | The name of the Portal's entry under `mcpServers` in that config file. | the same skills as `portal_mcp_config` |
-| `state_dir` | Yes, for a command that keeps state, unless a `--state` or `--home` flag or the skill's own setting names the folder | none | The folder that holds each skill's state in a subfolder: `calendar-steward`, `chief-of-staff`, `comms-reply`, `daily-plan`, `goal-alignment`, `issue-harvest`, `meeting-processing`, `nightly-sweep`, `software-factory`, `task-stack`, `weekly-review`. | calendar-steward-method, chief-of-staff-cycle, comms-reply-to-email, daily-plan-method, goal-alignment-workstream, issue-harvest-workstream, meeting-scheduled-worker, nightly-sweep-workstream, project-landscape, quick-capture, software-factory-workstream, task-stack-capture, task-stack-workstream, weekly-review-workstream |
+| `state_dir` | Yes, for a command that keeps state, unless a `--state` or `--home` flag or the skill's own setting names the folder | none | The folder that holds each skill's state in a subfolder: `calendar-steward`, `chief-of-staff`, `comms-reply`, `daily-plan`, `goal-alignment`, `issue-harvest`, `meeting-processing`, `nightly-sweep`, `task-stack`, `weekly-review`. | calendar-steward-method, chief-of-staff-cycle, comms-reply-to-email, daily-plan-method, goal-alignment-workstream, issue-harvest-workstream, meeting-scheduled-worker, nightly-sweep-workstream, project-landscape, quick-capture, task-stack-capture, task-stack-workstream, weekly-review-workstream |
 | `contexts_dir` | Yes, when a Context is named rather than given by its path | none | The folder of Context YAML files, found by name (`<name>.yaml` or `.yml`). | board-package-workstream, client-delivery-workstream, client-update-workstream, process-flow-workstream |
 | `engagements_dir` | Yes, when engagement-folders runs without `--root` | none | The parent folder under which a new engagement's folders are created. | project-engagement-workstream, project-engagement-runbook, marketing-case-study-orchestrator (agent) |
 | `private_terms` | No | none | A list of private words refused in any filed issue, matched as whole words ignoring case; used only when `[issue-harvest-workstream]` has no `private_terms` of its own. | issue-harvest-workstream |
@@ -259,12 +259,6 @@ Every key here except `state` is read from this table first and from the top lev
 | `claude_session_dirs` | No | `["~/.claude/projects"]` | A list of folders holding past Claude Code sessions (one string is read as a list of one); `--claude-dir` overrides it. |
 | `codex_session_dirs` | No | `["~/.codex/sessions"]` | A list of folders holding past Codex sessions; `--codex-dir` overrides it. |
 
-### [software-factory-workstream]
-
-| Key | Required | Default | What it is for |
-|---|---|---|---|
-| `repos_dir` | Yes, unless `SOFTWARE_FACTORY_REPOS_DIR` is set | none | The folder holding the local clones and the factory's worktrees. |
-
 ### [software-portfolio-review]
 
 | Key | Required | Default | What it is for |
@@ -319,9 +313,7 @@ Every key here except `state` is read from this table first and from the top lev
 | `CONFIRM_PORTAL_CMD` | No | python3 with confirm_portal.py beside confirm.py | A command to run in place of the Portal half of comms-confirm. | comms-confirm |
 | `CONFIRM_NOTIFY_CMD` | No | python3 with comms-reply-to-email's notify_owner.py | A command to run in place of notify-owner. | comms-confirm |
 | `REPORT_STORE_DIR` | Yes, unless `--store` is given | none | The executive's report store folder; there is no default path. | report-weekly |
-| `SOFTWARE_FACTORY_REPOS_DIR` | No | `[software-factory-workstream] repos_dir` | The folder of local clones, read before the setting. | software-factory-workstream |
-| `SOFTWARE_FACTORY_STATE_DIR` | No | `<state_dir>/software-factory`, else `~/.local/state/software-factory` | The factory's state folder, holding one subfolder per repository. | software-factory-workstream |
-| `GH` | No | `gh` | The GitHub CLI command to run, split into words. | crm-hygiene-workstream, issue-harvest-workstream, software-factory-workstream |
+| `GH` | No | `gh` | The GitHub CLI command to run, split into words. | crm-hygiene-workstream, issue-harvest-workstream |
 | `F3I_TOOLBOX_DENYLIST` | No | none (`~/.config/f3i-toolbox/denylist.txt` is still read when it exists) | Files of private names, separated by `:`, checked before scaffolded files, harvested skills or audit fixes are written, and used to withhold names from output; the repository's own checker reads it too. | orchestrator-scaffold, skills-extract, skill-harvest-workstream, toolbox-audit-workstream |
 | `YT_DLP` | No | `yt-dlp` from PATH, else `python3 -m yt_dlp` | The command that runs yt-dlp, split into words. | content-scout-workstream, obsidian-video-note |
 | `LOOM_COOKIES_FILE` | No | none (public videos only) | Path to a cookies.txt exported from a signed-in Loom tab, for private videos; `--cookies` overrides it. A credential: keep it out of every repository. | recording-harvest |
