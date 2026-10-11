@@ -1,6 +1,6 @@
 ---
 name: software-pr
-description: "How a change is packaged for review: branch naming, commit shape, and a pull request body a reviewer can act on (the problem, the change, the evidence, the risk, how to check it by hand). Use when writing a PR body or a commit for a change, in the issue loop (`software-orchestrator`) or by hand. For the prose itself use unslop-technical; for release notes, software-release-orchestrator."
+description: "How a change is packaged for review: branch naming, commit shape, and a pull request body a reviewer can act on (the problem, the change, the evidence, the risk, how to check it by hand). Use when writing a PR body or a commit for a change, in the issue loop (`software-developer`) or by hand. For the prose itself use unslop-technical; for release notes, software-release-prep."
 ---
 
 # Packaging a change

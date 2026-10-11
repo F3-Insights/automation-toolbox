@@ -1,6 +1,6 @@
 ---
-name: software-release-orchestrator
-description: "Prepares one repository's next release for the person who ships it. From the local clone, offline, it writes the release notes, the release pull request body, the deploy checklist (every migration, both review passes, rollback) and the issues the release closes, has software-reviewer check them against the clone, and drafts the GitHub writes to github-drafts.json for a later finish step. Start it as the main session or on a schedule. It never pushes, merges, deploys or reaches GitHub. Fixing issues is software-orchestrator."
+name: software-release-prep
+description: "Prepares one repository's next release for the person who ships it. From the local clone, offline, it writes the release notes, the release pull request body, the deploy checklist (every migration, both review passes, rollback) and the issues the release closes, has software-reviewer check them against the clone, and drafts the GitHub writes to github-drafts.json for a later finish step. Start it as the main session or on a schedule. It never pushes, merges, deploys or reaches GitHub. Fixing issues is software-developer."
 model: opus
 color: purple
 skills: [orchestration-workstream, software-release-workstream, software-pr]

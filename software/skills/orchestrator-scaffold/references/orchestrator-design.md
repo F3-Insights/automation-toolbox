@@ -6,7 +6,7 @@ Read this before building a new orchestration. Read it again before changing one
 
 Two orchestrations follow it in this toolbox:
 - the month-end close (`month-end-orchestrator`), the worked example below;
-- the issue loop (`software-orchestrator`), whose shared facts are in the `software-issue-loop` skill and whose rules are the design rules' `F3-AGENT` and `F3-BRANCH` families.
+- the issue loop (`software-developer`), whose shared facts are in the `software-issue-loop` skill and whose rules are the design rules' `F3-AGENT` and `F3-BRANCH` families.
 
 Where they differ is instructive. The close's system of record (the ERP) is only read, and a person posts. The issue loop keeps no folder of its own: GitHub is both its system of record and its memory, read and written directly by the lead and its workers through `gh`, each worker's tools pinned to what its job needs. The choice follows from the work: a close needs an evidence trail a person signs, while issues and pull requests already are one.
 

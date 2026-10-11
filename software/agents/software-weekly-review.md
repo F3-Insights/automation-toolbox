@@ -1,5 +1,5 @@
 ---
-name: software-portfolio-review-orchestrator
+name: software-weekly-review
 description: "The weekly review of every software repository the owner carries. Reconciles the local clones, the repo map and the Portal's software projects into one inventory, has one software-worker steward each active repository read-only, notes stalled issue-loop branches, and writes one numbered list of next steps with the exact invocation for each. On an approve pass it turns the owner's answers into a task change set. Start it as the main session or on a weekly schedule; it starts no pipeline. For an interactive pass, use the software-portfolio-review skill."
 model: opus
 color: purple

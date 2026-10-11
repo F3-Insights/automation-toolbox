@@ -1,13 +1,13 @@
 ---
 name: software-release-workstream
-description: "The software release's method, loaded by software-release-orchestrator and by the software-reviewer it dispatches, not for a user request; adds to orchestration-workstream. Covers a repository's integration-to-default release read offline from the local clone, the sections Steps (preparing a release), Write the release and Check the release, the release notes, release pull request body and deploy checklist a person works from, the GitHub writes drafted as github-drafts.json for a later finish step, and the DONE checklist. To prepare a release, start software-release-orchestrator."
+description: "The software release's method, loaded by software-release-prep and by the software-reviewer it dispatches, not for a user request; adds to orchestration-workstream. Covers a repository's integration-to-default release read offline from the local clone, the sections Steps (preparing a release), Write the release and Check the release, the release notes, release pull request body and deploy checklist a person works from, the GitHub writes drafted as github-drafts.json for a later finish step, and the DONE checklist. To prepare a release, start software-release-prep."
 ---
 
 # Software release workstream
 
 This skill extends `orchestration-workstream`: keep its conduct and return its block. Load it if it is not loaded. What follows is only what a release adds.
 
-The issue loop (`software-orchestrator`) merges verified agent pull requests into a repository's integration branch; promotion to the default branch belongs to a person, through one release pull request (integration to default). This work makes that release easy and safe for the person: notes that say what ships, a pull request body a reviewer can act on (`software-pr`), the issues the release closes, and a deploy checklist that names every migration and gate. A person merges, deploys and runs migrations. Agents never do.
+The issue loop (`software-developer`) merges verified agent pull requests into a repository's integration branch; promotion to the default branch belongs to a person, through one release pull request (integration to default). This work makes that release easy and safe for the person: notes that say what ships, a pull request body a reviewer can act on (`software-pr`), the issues the release closes, and a deploy checklist that names every migration and gate. A person merges, deploys and runs migrations. Agents never do.
 
 ## Offline
 
@@ -22,7 +22,7 @@ The release is `origin/<default>..origin/<integration>`. Each merge in it is an 
 
 ## Steps
 
-How `software-release-orchestrator` prepares a release.
+How `software-release-prep` prepares a release.
 
 1. [judgment] Read the release rules (which repositories release this way, their local clones, integration and default branches) and the repository's agent file and deploy docs. If the repository has no integration branch, write notes for the last week's merges only and say so.
 2. [script] Find the range and the fetch age: `git -C <clone> log origin/<default>..origin/<integration>`. Read each merge's record. Write `RUN/plan.json`: the merges, each marked issue-loop PR (with its issue) or a person's change.

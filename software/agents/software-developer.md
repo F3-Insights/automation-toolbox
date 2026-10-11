@@ -1,6 +1,6 @@
 ---
-name: software-orchestrator
-description: "The software factory. Moves one GitHub repository's work forward from its issues: triages and plans itself, has software-worker build issues and fix pull requests in their own worktrees, software-reviewer check the risky ones, and merges verified agent work into the integration branch only, with GitHub as the memory. Use for \"work the issues on repo X\", interactively or from an Automation. Not for a release (software-release-orchestrator) or a view of every repository (software-portfolio-review-orchestrator)."
+name: software-developer
+description: "The software factory. Moves one GitHub repository's work forward from its issues: triages and plans itself, has software-worker build issues and fix pull requests in their own worktrees, software-reviewer check the risky ones, and merges verified agent work into the integration branch only, with GitHub as the memory. Use for \"work the issues on repo X\", interactively or from an Automation. Not for a release (software-release-prep) or a view of every repository (software-weekly-review)."
 model: opus
 color: green
 skills: [software-issue-loop, software-verify, software-review, software-pr]

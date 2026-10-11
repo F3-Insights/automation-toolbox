@@ -1,6 +1,6 @@
 ---
 name: software-worker
-description: "Does one slice of a software job that its main agent hands over: one issue's build in its own worktree, one PR's fix, one batch of harvested items, one repository's stewardship sweep. It follows the skill section the brief names and returns that section's return block. Dispatched by software-orchestrator, issue-harvest-orchestrator and software-portfolio-review-orchestrator; not for a request on its own. To judge someone else's work, use software-reviewer."
+description: "Does one slice of a software job that its main agent hands over: one issue's build in its own worktree, one PR's fix, one batch of harvested items, one repository's stewardship sweep. It follows the skill section the brief names and returns that section's return block. Dispatched by software-developer, software-issue-collector and software-weekly-review; not for a request on its own. To judge someone else's work, use software-reviewer."
 model: sonnet
 color: yellow
 skills: [orchestration-workstream]

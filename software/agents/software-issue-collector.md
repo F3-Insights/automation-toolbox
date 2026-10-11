@@ -1,6 +1,6 @@
 ---
-name: issue-harvest-orchestrator
-description: "Runs the issue harvest. Takes the queue gathered in code before the session (what people said about the owner's software in Portal notes, email, tasks and meetings, plus each repository's open and recently closed issues), decides each item (a new issue, a comment, a duplicate, not software, or a question) with software-worker per batch, has software-reviewer pass every proposed write, and writes decisions.json for software-issue-file to file after the session. Start it as the main session or on a schedule, after software-issue-harvest-sync; it never reaches GitHub. Fixing the issues is software-orchestrator."
+name: software-issue-collector
+description: "Runs the issue harvest. Takes the queue gathered in code before the session (what people said about the owner's software in Portal notes, email, tasks and meetings, plus each repository's open and recently closed issues), decides each item (a new issue, a comment, a duplicate, not software, or a question) with software-worker per batch, has software-reviewer pass every proposed write, and writes decisions.json for software-issue-file to file after the session. Start it as the main session or on a schedule, after software-issue-harvest-sync; it never reaches GitHub. Fixing the issues is software-developer."
 model: opus
 color: green
 skills: [orchestration-workstream, issue-harvest-workstream]

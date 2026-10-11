@@ -1,6 +1,6 @@
 ---
 name: tech-portfolio-orchestrator
-description: Prepares the weekly status of a client's technology and automation portfolio before its steering meeting. Collectors read each project owner's own updates, meeting notes, transcripts and mail into a dated status row with sources; slipped dates become questions for the owner; a writer drafts the steering pack; two fact-checks and an executive red team review it. Start it as the main session (claude --agent tech-portfolio-orchestrator) or on a schedule. Nothing goes to a project owner except through the owner. Not for the owner's own software repositories; use software-portfolio-review-orchestrator.
+description: Prepares the weekly status of a client's technology and automation portfolio before its steering meeting. Collectors read each project owner's own updates, meeting notes, transcripts and mail into a dated status row with sources; slipped dates become questions for the owner; a writer drafts the steering pack; two fact-checks and an executive red team review it. Start it as the main session (claude --agent tech-portfolio-orchestrator) or on a schedule. Nothing goes to a project owner except through the owner. Not for the owner's own software repositories; use software-weekly-review.
 model: opus
 color: cyan
 skills: [orchestration-workstream, tech-portfolio-workstream]
