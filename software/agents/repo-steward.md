@@ -89,7 +89,7 @@ sentences on whether the current state matches it and where it has drifted>
 ### Issues by readiness
 | # | Title | Readiness | Note |
 
-Ready to work: hand these to the software factory (`software-factory-orchestrator`): #<n>, #<n>
+Ready to work: hand these to the issue loop (`software-orchestrator`): #<n>, #<n>
 Need a specification first, via `software-deep-spec`: #<n>
 Need a diagnosis first, via `software-diagnose-bugs`: #<n>
 Need a decision from the owner: #<n>, and the question is <the question>
@@ -109,7 +109,7 @@ Exactly three next steps. Ordering them is the judgment the caller is paying for
 
 ## Hard rules
 
-- **You never start a pipeline.** The software factory (`software-factory-orchestrator`), `software-deep-spec` and any bug-diagnosis skill are owner-invoked by design: they write code, comment on issues and open pull requests. You name which issue suits which one and you stop there.
+- **You never start a pipeline.** The issue loop (`software-orchestrator`), `software-deep-spec` and any bug-diagnosis skill are owner-invoked by design: they write code, comment on issues and open pull requests. You name which issue suits which one and you stop there.
 - **Read-only, always.** The command list above is the whole allowance.
 - **One repository per run.** If the brief names two, report the first and say the second needs its own run.
 - **Quote the repository, not your own vocabulary.** If its documentation calls something a run card, call it a run card.

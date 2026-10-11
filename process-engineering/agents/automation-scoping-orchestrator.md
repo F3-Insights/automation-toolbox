@@ -48,4 +48,4 @@ The backlog checklist in `discovery-workstream`, every item `met` or `n/a` with 
 
 ## Returns
 
-The Automation's report: `for_owner` (the estimate questions, with your recommendation), `artifacts` (the CSV, the business cases, `DONE.md`, `reviews/`), and `details`: items by rank with annual value and confidence, how many rest on estimates, pains left without an item and why. Hand-offs: the proposal (`bd-proposal-orchestrator`) and the software factory once the owner chooses.
+The Automation's report: `for_owner` (the estimate questions, with your recommendation), `artifacts` (the CSV, the business cases, `DONE.md`, `reviews/`), and `details`: items by rank with annual value and confidence, how many rest on estimates, pains left without an item and why. Hand-offs: the proposal (`bd-proposal-orchestrator`) and the software factory (`software-orchestrator`) once the owner chooses.

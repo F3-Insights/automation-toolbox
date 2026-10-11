@@ -50,7 +50,7 @@ Ask first for anything another person would see or that cannot easily be reverse
 | A finished deliverable reviewed | `executive-red-team`, `fact-check`, `completeness-audit` | See the briefing note below. |
 | Writing cleaned up | `unslop` | The router picks the sub-skill. Everything drafted goes through it. |
 | A seminar or talk built | `writing-seminar-builder` | Then `executive-red-team` on the built deck. |
-| GitHub issues built into reviewed pull requests | `software-factory-orchestrator` | A main session of its own, not a subagent: it dispatches its builders. Hand it over. |
+| GitHub issues built into verified pull requests | `software-orchestrator` | A main session of its own, not a subagent: it dispatches its workers. Hand it over. |
 | Code specified, a schema or the docs worked on | `software-deep-spec`, `software-db-schema`, `software-clean-docs` | Owner-invoked only. Read the repository's own context first. |
 | Something broken or slow | `software-diagnose-bugs` | Reproduce before changing anything. |
 | Architecture or a plan grilled | `software-improve-architecture`, `software-grill-with-docs` | |

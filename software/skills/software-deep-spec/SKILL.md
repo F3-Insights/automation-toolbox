@@ -1,6 +1,6 @@
 ---
 name: software-deep-spec
-description: Writes a ten-dimension feature specification, researching best practice and the codebase first and reviewing each dimension with the owner before moving on. Use when a feature needs a written spec before anyone builds it. It writes a file into the repo, so only the owner starts it. Not for fixing filed issues; start software-factory-orchestrator.
+description: Writes a ten-dimension feature specification, researching best practice and the codebase first and reviewing each dimension with the owner before moving on. Use when a feature needs a written spec before anyone builds it. It writes a file into the repo, so only the owner starts it. Not for fixing filed issues; start software-orchestrator.
 argument-hint: '"feature description"'
 disable-model-invocation: true
 ---
@@ -225,7 +225,7 @@ Save to the path from Phase 0.
 **Open questions**: Z
 **Review**: {the reviewer's assessment}
 
-Next: settle the open questions, then file the spec's work as GitHub issues for the software factory.
+Next: settle the open questions, then file the spec's work as GitHub issues for the issue loop (`software-orchestrator`).
 ```
 
 ---

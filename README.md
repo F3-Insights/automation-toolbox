@@ -103,7 +103,7 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 | Month end | `month-end-orchestrator` | The close worked like a close team: reconciliations, accruals, flux, a review trail |
 | Month end | `board-package-orchestrator` | The board package drafted from the finished close, tied out and red-teamed |
 | Monthly | `goal-alignment-orchestrator` | Goals set against projects and where the time went, as one approval list |
-| On demand | `software-factory-orchestrator` | Issues turned into reviewed, verified pull requests |
+| On demand | `software-orchestrator` | A repository's issues worked into verified pull requests, one worker at a time (draft) |
 
 ## Quick start
 
@@ -200,7 +200,7 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `it-governance-orchestrator`: runs IT and AI governance as a control checklist
   - `wind-down-orchestrator`: drives one legal entity's wind-down to dissolution
 - **Software**
-  - `software-factory-orchestrator`: runs the issue-to-pull-request factory for one repository, like a lead engineer
+  - `software-orchestrator`: the software factory; works one repository's GitHub issues into verified pull requests, like a lead engineer (draft)
   - `issue-harvest-orchestrator`: turns notes, mail, tasks and meeting commitments about the software into filed issues
   - `software-portfolio-review-orchestrator`: the weekly review of every repository carried
   - `software-release-orchestrator`: prepares one repository's next release for the person who ships it

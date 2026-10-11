@@ -11,7 +11,7 @@ allowed-tools: Agent, Bash, Read, mcp__insights-portal__whoami, mcp__insights-po
 
 The portfolio question the Portal cannot answer on its own: for each piece of software work the owner is carrying, where does the repository actually stand, and what is the next thing to do in it. One `repo-steward` per repository answers the second half; this skill finds the repositories, merges the answers, and turns the owner's decisions into tracked work.
 
-It starts no pipeline. The software factory (`software-factory-orchestrator`), `software-deep-spec` and a bug-diagnosis skill write code, comment on issues and open pull requests, and they are owner-invoked by design. This skill hands the owner the exact invocation and stops.
+It starts no pipeline. The issue loop (`software-orchestrator`), `software-deep-spec` and a bug-diagnosis skill write code, comment on issues and open pull requests, and they are owner-invoked by design. This skill hands the owner the exact invocation and stops.
 
 **User provided:** $ARGUMENTS
 
@@ -91,10 +91,10 @@ Housekeeping: <the risks, in one line, or "none">
 
 The invocation is written out so it can be copied:
 
-- `claude --agent software-factory-orchestrator` with `OWNER/NAME issues <n> <n>`, or the scheduled software-factory run for that repository, for the issues the steward called ready to work
+- `claude --agent software-orchestrator` with "work the issues on OWNER/NAME: #<n>, #<n>", or that repository's scheduled issue-loop run if it has one, for the issues the steward called ready to work
 - `/software-deep-spec "<the feature, in the steward's words>"` for one that needs a specification first
 - `software-diagnose-bugs` for one that needs a diagnosis first
-- for work that is not an issue yet, filing it as an issue with a clear expected behaviour, so the software factory can take it up
+- for work that is not an issue yet, filing it as an issue with a clear expected behaviour, so the issue loop can take it up
 - no invocation at all for housekeeping: those are a commit, a push or a branch deletion the owner does, and this skill neither does them nor asks an agent to
 
 Under the list, print the steward's could-not-determine lines and the projects with no repository named.
@@ -148,10 +148,10 @@ Close by repeating, in one block, the invocations for the steps they said to sta
 
 ## Run by the orchestrator
 
-`software-portfolio-review-orchestrator` runs this review weekly, unattended, on a schedule. It does Steps 1 to 3 as written, adds the inventory and factory sections below, and writes the numbered list to the Run folder instead of asking. Step 4 becomes its approve pass: with the owner's answers as the launch's `answers` input, it writes the approved tasks as a `task-stack-workstream` change set (`RUN/changes.json`), and `task-stack-apply` makes them. It never calls a Portal write tool. Its session is offline (no route to GitHub, like the software factory's), so the stewards read the local clones only until portfolio-check snapshots GitHub's pull requests, issues and CI before the session.
+`software-portfolio-review-orchestrator` runs this review weekly, unattended, on a schedule. It does Steps 1 to 3 as written, adds the inventory and issue-loop sections below, and writes the numbered list to the Run folder instead of asking. Step 4 becomes its approve pass: with the owner's answers as the launch's `answers` input, it writes the approved tasks as a `task-stack-workstream` change set (`RUN/changes.json`), and `task-stack-apply` makes them. It never calls a Portal write tool. Its session is offline (no route to GitHub), so the stewards read the local clones only until portfolio-check snapshots GitHub's pull requests, issues and CI before the session.
 
 - **Inventory.** Three lists reconciled into one table: local clones under the repos folder, the repo map, and the Portal's software projects. A repository in one list only, a map `status` that the activity contradicts (a `retire` repository with commits this month, an `active` one untouched for ninety days), and a local folder with no git are findings.
-- **Factory health.** For each repository the factory works, its ledger read only: work verified but never shipped, pull requests open past a week, repeat attempts, and whether the repository still needs onboarding.
+- **Issue-loop health.** For each repository the issue loop works, from the local clone: `issue/N-slug` branches not yet merged into the integration branch and how old they are, and an integration branch far ahead of the default branch with no release in sight. The rest of the loop's state is on GitHub (status labels and `ai-agent` pull requests) and waits for portfolio-check's snapshot.
 - **Cap.** Stewards are dispatched eight per message, active repositories first, up to the launch's `max_repos`; the rest are named as not read.
 
 ### DONE checklist

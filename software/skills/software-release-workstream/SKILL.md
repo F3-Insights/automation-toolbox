@@ -1,30 +1,30 @@
 ---
 name: software-release-workstream
-description: Reference loaded by software-release-writer, software-release-checker and software-release-orchestrator, not for a user request; adds to orchestration-workstream. Covers a repository's integration-to-default release read offline from the local clone and the factory ledger, the release notes, release pull request body and deploy checklist a person works from, the GitHub writes drafted as github-drafts.json for a later finish step, and the DONE checklist. To prepare a release, start software-release-orchestrator.
+description: Reference loaded by software-release-writer, software-release-checker and software-release-orchestrator, not for a user request; adds to orchestration-workstream. Covers a repository's integration-to-default release read offline from the local clone, the release notes, release pull request body and deploy checklist a person works from, the GitHub writes drafted as github-drafts.json for a later finish step, and the DONE checklist. To prepare a release, start software-release-orchestrator.
 ---
 
 # Software release workstream
 
 This skill extends `orchestration-workstream`: keep its conduct and return its block. Load it if it is not loaded. What follows is only what a release adds.
 
-The software factory merges verified, reviewed work into a repository's integration branch and keeps one release pull request (integration to default) open for a person. This work makes that release easy and safe for the person: notes that say what ships, a pull request body a reviewer can act on (`software-pr`), the issues the release closes, and a deploy checklist that names every migration and gate. A person merges, deploys and runs migrations. Agents never do.
+The issue loop (`software-orchestrator`) merges verified agent pull requests into a repository's integration branch; promotion to the default branch belongs to a person, through one release pull request (integration to default). This work makes that release easy and safe for the person: notes that say what ships, a pull request body a reviewer can act on (`software-pr`), the issues the release closes, and a deploy checklist that names every migration and gate. A person merges, deploys and runs migrations. Agents never do.
 
 ## Offline
 
 The session has no route to GitHub. It reads:
 - the local clone, with `git -C <clone>` read-only commands only (`log`, `show`, `diff --stat`, `branch`, `rev-parse`), on the remote-tracking refs as last fetched. Say how old the fetch is (`FETCH_HEAD`'s time); older than a day is a finding;
-- the factory's ledger for the repository, read only: which issue each branch fixed, its verify and review verdicts, and its PR number;
-- the repository's own docs: the factory rules file, the deploy and migration docs it names.
+- each merge's own record in the clone: its PR number, its branch (`issue/N-slug` for an issue-loop PR) and its message, which for an issue-loop PR carries `Closes #N` and how the change was verified;
+- the repository's own docs: its agent file (`AGENTS.md`), README and the deploy and migration docs they name.
 
 ## The range
 
-The release is `origin/<default>..origin/<integration>`. Each merge in it is a factory PR (its ledger row) or a person's change (no row). A person's change gets no review verdict from the ledger and is flagged for the person's review.
+The release is `origin/<default>..origin/<integration>`. Each merge in it is an issue-loop PR (from an `issue/N-slug` branch) or a person's change. A change whose merge record does not show how it was verified and reviewed is flagged for the person's review.
 
 ## What is written (all in `RUN/release/`)
 
 - `RELEASE-NOTES.md`: grouped as Fixed, Added, Changed, Internal; one line per change in user terms, its PR and issue; nothing claimed that is not in the range.
 - `pr-body.md`: the release pull request body in the `software-pr` shape, covering the range.
-- `DEPLOY-CHECKLIST.md`: every migration file added or changed in the range with the command a person runs; config and secrets to set; both review passes (code and security) per change, from the ledger or marked "a person reviews"; the deploy steps from the repo's docs; how to roll back; the smoke checks after deploy.
+- `DEPLOY-CHECKLIST.md`: every migration file added or changed in the range with the command a person runs; config and secrets to set; both review passes (code and security) per change, from the merge record or marked "a person reviews"; the deploy steps from the repo's docs; how to roll back; the smoke checks after deploy.
 - `github-drafts.json`, the GitHub writes for a later finish step:
 
 ```json
@@ -51,5 +51,5 @@ The orchestrator checks each; starred lines are confirmed by `software-release-c
 ## Later tools
 
 - `release-snapshot` (prepare): fetch the clone and snapshot the release PR, open issues and CI.
-- `release-ship` (finish): apply `github-drafts.json` under guards (update the release PR body, post comments, close listed issues; never merge), the way `software-factory-ship` applies its outbox.
+- `release-ship` (finish): apply `github-drafts.json` under guards (update the release PR body, post comments, close listed issues; never merge), as a deterministic finish command after the session.
 - `release-check --precheck`: an integration branch ahead of default with no drafts newer than its head.

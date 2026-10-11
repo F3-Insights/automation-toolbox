@@ -1,13 +1,13 @@
 ---
 name: issue-harvest-workstream
-description: Reference loaded by issue-harvest-analyst, issue-harvest-checker and issue-harvest-orchestrator, not for a user request; adds to orchestration-workstream. Covers the five decisions, the issue shape the software factory's triager marks build, the dedupe rules, the repo map, and the decision block the orchestrator writes to decisions.json.
+description: Reference loaded by issue-harvest-analyst, issue-harvest-checker and issue-harvest-orchestrator, not for a user request; adds to orchestration-workstream. Covers the five decisions, the issue shape the issue loop's triager can take forward, the dedupe rules, the repo map, and the decision block the orchestrator writes to decisions.json.
 ---
 
 # Issue harvest workstream
 
 This skill extends `orchestration-workstream`: keep its conduct and return its block. Load it if it is not loaded. What follows is only what the issue harvest adds.
 
-The harvest turns what people say about the owner's software (email, Portal notes and tasks, and commitments people mention in meetings that no task or issue records, for example from a time study) into GitHub issues the software factory can build. Nobody in the session reaches GitHub: `issue-harvest-sync` read it before the session into `RUN/harvest.json`, and `issue-file` writes after it, only what `RUN/decisions.json` says and the checker passed, only on a repository the owner's repo map allows.
+The harvest turns what people say about the owner's software (email, Portal notes and tasks, and commitments people mention in meetings that no task or issue records, for example from a time study) into GitHub issues the issue loop (`software-orchestrator`) can work. Nobody in the session reaches GitHub: `issue-harvest-sync` read it before the session into `RUN/harvest.json`, and `issue-file` writes after it, only what `RUN/decisions.json` says and the checker passed, only on a repository the owner's repo map allows.
 
 ## What you have
 
@@ -33,11 +33,12 @@ Bias to deciding. A repo hint is a hint: the item's own words decide the reposit
 
 Before any `new`, compare against every open and recently closed issue of that repository by meaning, not words. A `harvest_markers` entry equal to the item's marker means it was filed already: `duplicate`. An open issue on the same defect or request: `comment` if the item adds something, else `duplicate`. A closed one whose fix the item says failed again: `new`, linking the closed issue in the body. Two items in this batch about the same thing: one `new` with the other in `also`.
 
-## The issue standard (what the triager marks build)
+## The issue standard (what the issue loop's triager can take forward)
 
 - **Title** in the repository's convention (the `title.convention` and `pattern`), under 90 characters, saying what is wrong or wanted. For a `YYYYMMDD` convention use the date the problem was reported in the source (a tester's report date), else the item's date.
 - **Body**, markdown, in this order: `## What happens` (or `## What is wanted`) with a short quote of the source; `## Expected behaviour`; `## Where and how to reproduce` (screen, record, steps, the date seen; only what the source says, never invented; "Not stated in the source" otherwise); `## Acceptance` (two to five checkable points). Do not add a source section: `issue-file` appends the source line and the marker.
-- Where the source cannot give expected behaviour or a repro, write it as an ask the triager can route (what is known, the one question that would make it buildable) and add the map's `info` label when it has one.
+- Where the source cannot give expected behaviour or a repro, write it as an ask the triager can route to needs-info (what is known, the one question that would make it buildable) and add the map's `info` label when it has one.
+- **Labels for the issue loop:** a repository the issue loop works lists its status label `triage` under the map's `always` labels, so every filed issue lands on the lead's board waiting for `issue-triager` (`software-issue-loop`). Never set `ready` or a later status: the triager decides that.
 - **Nothing private:** no client names or figures beyond what the bug needs, no email addresses or phone numbers, no file paths on anyone's machine, no secrets. Refer to people by role ("the client's tester"). `issue-file` refuses private content anyway; a refusal costs a Run.
 
 ## The return here

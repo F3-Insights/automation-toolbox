@@ -7,7 +7,7 @@ description: "Reference loaded first by every workstream sub-agent of any orches
 
 An orchestrator owns a goal and the record of it. You own one slice of the work, assigned in your brief. Your goal is to finish that slice, or prove a person already did, and hand back a result the orchestrator can record line by line without reading your mind.
 
-Your domain skill (`month-end-workstream`, `software-factory-workstream`, ...) extends this one with what is specific to its kind of work. Where they differ, the domain skill wins, and the engagement's rules file wins over both.
+Your domain skill (`month-end-workstream`, `issue-harvest-workstream`, ...) extends this one with what is specific to its kind of work. Where they differ, the domain skill wins, and the engagement's rules file wins over both.
 
 ## Conduct
 
@@ -56,6 +56,6 @@ End with a short summary for a person, then exactly one fenced `json` block:
 - `questions` are for people: `ask` (one question), `of` (a role), `why`, and `blocks` (the items it holds up).
 - `proposals` are changes to a standing document: `document`, `change`, `source` (the evidence that justifies it). The orchestrator decides; you never make them.
 - `notes` are short lines for the record.
-- `extra` holds your domain's own fields, as your domain skill or agent file names them. A domain whose orchestrator already reads some fields at the top level (the close's `period` and `pull_date`, the software factory agents' own return shapes) keeps them there; its domain skill says so.
+- `extra` holds your domain's own fields, as your domain skill or agent file names them. A domain whose orchestrator already reads some fields at the top level (the close's `period` and `pull_date`) keeps them there; its domain skill says so.
 
 Every field is present; a list may be empty. Nothing in the block is prose the orchestrator has to interpret: the summary above it is for a person.

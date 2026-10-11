@@ -1,6 +1,6 @@
 ---
 name: software-review
-description: "What an independent code review checks before a change ships, in order: does it solve the issue and only the issue, do the tests prove it (the software-verify bar), is it correct at the edges, does it fit the repo's conventions and recorded decisions, and is it secure; with what counts as a blocker and a security checklist by stack. Use for reviewing any diff, in the software factory or by hand. For deeper security patterns, load software-security-knowledge."
+description: "What an independent code review checks before a change ships, in order: does it solve the issue and only the issue, do the tests prove it (the software-verify bar), is it correct at the edges, does it fit the repo's conventions and recorded decisions, and is it secure; with what counts as a blocker and a security checklist by stack. Use for reviewing any diff, in the issue loop (`software-orchestrator`) or by hand. For deeper security patterns, load software-security-knowledge."
 ---
 
 # Reviewing a change
@@ -16,7 +16,7 @@ Review the change against the problem it claims to solve, not against how you wo
 
 - Hold the tests to `software-verify`'s sufficient-tests bar, point by point.
 - Read the tests as an adversary. Would each one fail if the fix were reverted? Does any test mock the very thing it claims to test, or assert only that nothing raised?
-- `verify.json` must say `verified` for the head commit you are reviewing, with the repro shown.
+- The PR must say how it was verified for the head commit you are reviewing: the repo's checks that ran and passed, and for a bug the repro failing before and passing after. A check reported as not run is not proof.
 
 ## 3. Correct
 
