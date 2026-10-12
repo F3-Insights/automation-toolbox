@@ -33,7 +33,11 @@ def test_notify_runs_comms_reply_to_email_script(monkeypatch, tmp_path):
     monkeypatch.delenv("CONFIRM_NOTIFY_CMD", raising=False)
     monkeypatch.setenv("HOME", str(tmp_path))
     out = confirm.notify("Title", ["one"], dry_run=True)
-    assert out["argv"][1] == str(SCRIPTS.parents[1] / "comms-reply-to-email/scripts/notify_owner.py")
+    # A copy in a department finds its neighbour beside it; the shared source finds the
+    # department that holds it. Either way it is this checkout's file.
+    found = Path(out["argv"][1])
+    assert found.parts[-3:] == ("comms-reply-to-email", "scripts", "notify_owner.py")
+    assert found.is_relative_to(SCRIPTS.parents[3]) and found.is_file()
     assert out["argv"][2:] == ["--title", "Title", "--bullet", "one"]
 
 
