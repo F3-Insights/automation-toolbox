@@ -28,6 +28,7 @@ DESCRIPTION_LIMIT = 700
 FIX_KEYS = ("name", "description")
 LEVELS = ("error", "warning", "info")
 STATES = ("proposed", "fixed", "task", "dismissed")
+COPY_MARKER = ".shared-copy"  # in a copied skill's folder; its source lives in shared/skills/
 TOP_KEY = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*)\s*:")
 HOME_PATH = re.compile(r"(?:/home/|/Users/|/mnt/c/Users/)(?!<)[A-Za-z0-9._-]+")
 DEFAULT_DENYLIST = Path("~/.config/f3i-toolbox/denylist.txt").expanduser()
@@ -275,6 +276,10 @@ def verify_fix(run, worktree, denylist):
         files.append(rel)
         if status != "M":
             problems.append(f"{rel}: {'added' if status in ('?', 'A', '??') else 'status ' + status}; the fix rule only edits files that exist")
+            continue
+        if (Path(worktree) / rel).parent.joinpath(COPY_MARKER).is_file():
+            problems.append(f"{rel}: a copied skill; the copy build rewrites it, so the fix belongs in its source "
+                            "under shared/skills/ (a proposal, outside the fix rule)")
             continue
         old = git("show", f"HEAD:{rel}", cwd=worktree).stdout
         new = (Path(worktree) / rel).read_text(encoding="utf-8")

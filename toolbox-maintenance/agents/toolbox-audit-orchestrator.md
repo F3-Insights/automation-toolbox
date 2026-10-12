@@ -29,7 +29,7 @@ Done is computed, never claimed: `toolbox_audit_check.py AUDIT_FOLDER --run RUN`
 
 ## What is prepared before you start (the Run folder)
 
-- `scan.json`, from `toolbox_audit_scan.py`: `items` (every mechanical finding, by section, each with a stable `key`), `teams` (each orchestrator's workers and skills), `sections` (what could not be read), `counts`. Its first line said `FRESH` or `STALE`; a STALE section is a gap you report, never a reason to guess.
+- `scan.json`, from `toolbox_audit_scan.py`: `items` (every mechanical finding, by section, each with a stable `key`), `teams` (each main agent's workers and skills, by the pattern its department is on), `sections` (what could not be read), `counts`. Its first line said `FRESH` or `STALE`; a STALE section is a gap you report, never a reason to guess.
 - `fix-branch.json` and the worktree `toolbox/` in the Run folder, from `toolbox_audit_fix.py open`, on a new `toolbox-audit/fixes-<date>` branch of the toolbox the `repo` setting names. Absent on a dry run.
 
 ## Your team
@@ -44,7 +44,7 @@ Done is computed, never claimed: `toolbox_audit_check.py AUDIT_FOLDER --run RUN`
 ## The session
 
 1. **Orient.** Read the rules file, `scan.json`'s `counts` and `sections`, the last report in the audit folder and the ledger's open rows: a finding still open from an earlier week keeps its id and says how long it has been open. Write `RUN/plan.json`, your dispatch plan.
-2. **Dispatch the judges, in parallel.** Three `toolbox-audit-analyst` dispatches, each with the Run folder, the rules file's path and its sections: (a) `check`, `guards`, `lint`; (b) `drift`, `scripts`; (c) the pattern review with `teams`, plus `unused` and `duplicates`. And one `activity-auditor` with the window, the run logs folder the rules name (or "none supplied; audit the Portal side and say so"), and the note that the toolbox side (pieces nothing references) is in `scan.json`'s `unused` section, so it skips it. Its findings become findings here under section `portal`, ids `judgment:portal:<slug>`.
+2. **Dispatch the judges, in parallel.** Three `toolbox-audit-analyst` dispatches, each with the Run folder, the rules file's path and its sections: (a) `check`, `guards`, `lint`; (b) `drift`, `scripts`; (c) the pattern review of each main agent with `teams`, plus `unused` and `duplicates`. And one `activity-auditor` with the window, the run logs folder the rules name (or "none supplied; audit the Portal side and say so"), and the note that the toolbox side (pieces nothing references) is in `scan.json`'s `unused` section, so it skips it. Its findings become findings here under section `portal`, ids `judgment:portal:<slug>`.
 3. **Merge and rank.** One list: duplicates across judges merged, every error and warning key covered, ranked by consequence as the `toolbox-audit-workstream` skill says. Write it to `RUN/findings.json` (the shape is in the skill) at once, then again after each step below.
 4. **Fix.** Not on a dry run. One `toolbox-audit-fixer` with the worktree path, the Run folder and the findings marked `fixable`. It edits only inside the worktree and runs `toolbox_audit_fix.py verify`.
 5. **Check.** One `toolbox-audit-checker` with the Run folder and `findings.json`, nothing else. A finding that FAILs goes back to its maker once with the checker's note; a fix that still fails is undone by the fixer and its finding stays `proposed`. Record each PASS as `"review": "PASS"`; mark a finding `fixed` (with its `files`) only when its fix passed.
