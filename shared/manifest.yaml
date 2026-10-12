@@ -1,0 +1,23 @@
+# Which departments get a copy of each shared skill (ADR 0004, amendment of 2026-10-11).
+#
+# The source is shared/skills/<skill>/; scripts/build_shared.py copies it whole into
+# <department>/skills/<skill>/ for every department listed. The first department is the
+# one the skill came from. A department is listed only when its agents or skills use the
+# skill; a department that uses an unslop sub-skill also gets `unslop`, whose five
+# principles every sub-skill applies first.
+#
+# Edit this file or a source, then run: python3 scripts/build_shared.py
+
+skills:
+  orchestration-workstream: [software, accounting, compliance, decision-playbooks, finance, learning, marketing, personal, process-engineering, productivity, projects, recurring-summaries, reporting, sales, strategy, toolbox-maintenance]
+  task-stack-workstream: [productivity, accounting, chief-of-staff, compliance, decision-playbooks, projects, recurring-summaries, sales, strategy]
+  comms-confirm: [productivity, accounting, finance, process-engineering, projects, reporting, sales]
+  office-files: [productivity, accounting, compliance, finance, reporting, sales]
+  report-tieout: [accounting, chief-of-staff, process-engineering, reporting]
+  brand-guide: [marketing, learning, process-engineering, reporting]
+  unslop: [marketing, accounting, chief-of-staff, finance, process-engineering, productivity, projects, reporting, sales, software]
+  unslop-deliverable: [marketing, finance, process-engineering, projects, reporting]
+  unslop-editorial: [marketing, projects]
+  unslop-email: [marketing, accounting, productivity, projects]
+  unslop-proposal: [marketing, projects, sales]
+  unslop-technical: [marketing, software]

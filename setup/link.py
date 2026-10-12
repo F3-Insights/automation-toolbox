@@ -11,10 +11,16 @@ Agents are file links inside real department folders because some runtimes walk
 the agents folder without following folder links. Skills are flat, so
 ~/.claude/skills/<skill>/SKILL.md resolves once ~/.claude/skills points here.
 
+A shared skill (scripts/build_shared.py) has one source, shared/skills/<skill>, and a
+marked copy (a .shared-copy file naming that source) in each department that uses it.
+Its link goes to the source, once, however many departments hold a copy. shared/ is
+not a department; its skills are linked only through their copies.
+
 Rerunning is safe. Links into this toolbox that no longer have a source are
 removed. A real file, or a link that points outside this toolbox, is never touched;
 if one sits where a link should go, it is reported and the run fails. Two
-departments with the same agent or skill name fail the run before anything changes.
+departments with the same agent name, or with the same skill name when they are not
+both marked copies of one shared source, fail the run before anything changes.
 
 It does not repoint ~/.claude/skills or ~/.claude/agents; it prints the commands.
 
@@ -52,29 +58,65 @@ def link_dir_from(arg: str | None) -> Path:
     return Path(os.path.abspath(Path(raw).expanduser()))
 
 
+SHARED_COPY = ".shared-copy"
+
+
+def shared_source(toolbox: Path, copy: Path) -> Path | None:
+    """The shared/skills/<skill> source a marked copy names, or None when the folder is no copy."""
+    marker = copy / SHARED_COPY
+    if not marker.is_file():
+        return None
+    for line in marker.read_text(encoding="utf-8").splitlines():
+        if line.startswith("source: shared/skills/"):
+            return toolbox / "shared" / "skills" / line.removeprefix("source: shared/skills/").strip()
+    return toolbox / "shared" / "skills" / "?"
+
+
+def skill_source(toolbox: Path, name: str, paths: list[Path]) -> Path | None:
+    """The one folder skill `name` links to: the department's own skill when only one
+    department has it, or the shared source when every holder is a marked copy of it."""
+    shared = {shared_source(toolbox, p) for p in paths}
+    if len(shared) == 1 and None not in shared:
+        src = shared.pop()
+        return src if src.name == name and (src / "SKILL.md").is_file() else None
+    return paths[0] if len(paths) == 1 and shared == {None} else None
+
+
 def sources(toolbox: Path) -> tuple[dict[Path, Path], list[str]]:
     """Map each wanted link (relative to the link folder) to its source, and list collisions."""
     wanted: dict[Path, Path] = {}
     agents: dict[str, list[Path]] = {}
     skills: dict[str, list[Path]] = {}
     for dept in sorted(p for p in toolbox.iterdir() if p.is_dir() and not p.name.startswith(".")):
+        if dept.name == "shared":
+            continue
         for agent in sorted((dept / "agents").glob("*.md")):
             if agent.is_file():
                 agents.setdefault(agent.stem, []).append(agent)
         for skill in sorted((dept / "skills").glob("*/SKILL.md")):
             skills.setdefault(skill.parent.name, []).append(skill.parent)
     collisions = []
-    for kind, found in (("agent", agents), ("skill", skills)):
-        for name, paths in sorted(found.items()):
-            if len(paths) > 1:
-                where = ", ".join(str(p.relative_to(toolbox)) for p in paths)
-                collisions.append(f"{kind} name '{name}' is used more than once: {where}")
-            else:
-                src = paths[0]
-                if kind == "agent":
-                    wanted[Path("agents") / src.parent.parent.name / src.name] = src
-                else:
-                    wanted[Path("skills") / name] = src
+    for name, paths in sorted(agents.items()):
+        if len(paths) > 1:
+            where = ", ".join(str(p.relative_to(toolbox)) for p in paths)
+            collisions.append(f"agent name '{name}' is used more than once: {where}")
+        else:
+            wanted[Path("agents") / paths[0].parent.parent.name / paths[0].name] = paths[0]
+    for name, paths in sorted(skills.items()):
+        src = skill_source(toolbox, name, paths)
+        if src is not None:
+            wanted[Path("skills") / name] = src
+            continue
+        where = ", ".join(str(p.relative_to(toolbox)) for p in paths)
+        named = {shared_source(toolbox, p) for p in paths}
+        if len(named) == 1 and None not in named:
+            collisions.append(f"skill '{name}' is held only by copies of {next(iter(named)).relative_to(toolbox)}, "
+                              f"which has no SKILL.md: {where}")
+        elif any(named - {None}):
+            collisions.append(f"skill name '{name}' is held by folders that are not all copies of "
+                              f"shared/skills/{name}: {where}")
+        else:
+            collisions.append(f"skill name '{name}' is used more than once: {where}")
     return wanted, collisions
 
 

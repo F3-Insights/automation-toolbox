@@ -1,8 +1,10 @@
 """Run every skill's script tests, one skill at a time, then the setup and toolbox script tests.
 
 Each skill's scripts share helper names such as `_common.py`, so the skills are tested
-in separate pytest processes rather than one. Prints one line per skill and a total;
-exits non-zero if any skill fails.
+in separate pytest processes rather than one. A department's copy of a shared skill
+(scripts/build_shared.py) is identical to its source, so the source in shared/skills/ is
+tested once in its place. Prints one line per skill and a total; exits non-zero if any
+skill fails.
 
     .venv/bin/python scripts/run_tests.py            # every skill
     .venv/bin/python scripts/run_tests.py accounting # one department
@@ -14,10 +16,21 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
+def source_of(tests: Path) -> Path:
+    """A copied skill's tests are its shared source's tests (the copy's .shared-copy names it)."""
+    marker = tests.parent.parent / ".shared-copy"
+    if marker.is_file():
+        for line in marker.read_text(encoding="utf-8").splitlines():
+            if line.startswith("source: "):
+                return ROOT / line.removeprefix("source: ").strip() / "scripts" / "tests"
+    return tests
+
+
 def main(argv: list[str]) -> int:
     pattern = f"{argv[0]}/skills/*/scripts/tests" if argv else "*/skills/*/scripts/tests"
     failed = []
-    suites = sorted(ROOT.glob(pattern)) + ([] if argv else [ROOT / "setup" / "tests", ROOT / "scripts" / "tests"])
+    suites = sorted({source_of(t) for t in ROOT.glob(pattern)})
+    suites += [] if argv else [ROOT / "setup" / "tests", ROOT / "scripts" / "tests"]
     for tests in suites:
         result = subprocess.run(
             [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", str(tests)],

@@ -19,9 +19,15 @@ Structure
     equals the file name, and a description.
   - Every skill is <department>/skills/<name>/SKILL.md with frontmatter whose
     name equals the folder name, and a description.
-  - Agent and skill names are unique across all departments.
+  - Agent and skill names are unique across all departments. A shared skill's
+    source in shared/skills/ claims its name; its marked copies in departments
+    do not (scripts/build_shared.py).
   - No file reaches another skill by a relative "../" path; skills refer to
     each other by name.
+
+Shared skills (shared/skills/ and shared/manifest.yaml)
+  - Every copy is identical to its source, every copy the manifest lists exists,
+    and no marked copy is left that the manifest no longer lists.
 
 Plugins (a department with .claude-plugin/plugin.json)
   - plugin.json is JSON with the department's name, a description and a version.
@@ -175,7 +181,7 @@ def check_structure() -> list[str]:
         else:
             seen[name] = path
 
-    for dept in DEPARTMENTS:
+    for dept in ["shared", *DEPARTMENTS]:
         for agent in sorted((ROOT / dept / "agents").glob("*.md")):
             fm = frontmatter(agent)
             if fm.get("name") != agent.stem:
@@ -199,8 +205,20 @@ def check_structure() -> list[str]:
                 failures.append(f"{skill.relative_to(ROOT)}: missing description")
             if unquoted_colon(skill):
                 failures.append(f"{skill.relative_to(ROOT)}: quote the description, it contains ': '")
-            claim(skill_dir.name, skill)
+            if dept == "shared" or not (skill_dir / ".shared-copy").is_file():
+                claim(skill_dir.name, skill)
     return failures
+
+
+def check_shared() -> list[str]:
+    """Each department's copy of a shared skill matches its source (scripts/build_shared.py)."""
+    import build_shared  # beside this file
+
+    if not (ROOT / "shared").is_dir():
+        return []
+    actions, problems = build_shared.plan(ROOT)
+    failures = [f"{rel}: copy out of date ({kind}); run python3 scripts/build_shared.py" for kind, rel in actions]
+    return failures + [f"shared: {p}" for p in problems]
 
 
 ALLOWED_PACKAGES = {"yaml", "openpyxl", "pptx", "docx", "pypdf", "PIL", "pytest"}
@@ -283,7 +301,7 @@ def main(argv: list[str]) -> int:
     files = files_to_check(argv)
     failures = check_privacy(files, load_denylist())
     if not argv:
-        failures += check_structure() + check_scripts() + check_plugins()
+        failures += check_structure() + check_scripts() + check_shared() + check_plugins()
     for failure in failures:
         print(failure)
     print(f"{len(failures)} problem(s) in {len(files)} file(s)", file=sys.stderr)
