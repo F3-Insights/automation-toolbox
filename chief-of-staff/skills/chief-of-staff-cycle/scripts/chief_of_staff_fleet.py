@@ -50,10 +50,10 @@ from pathlib import Path
 
 import _common as c
 
-FLEET_STATUS = c.SKILLS_HOME / "orchestrator-fleet" / "scripts" / "fleet_status.py"
-FLEET_REGISTRY = c.SKILLS_HOME / "orchestrator-fleet" / "scripts" / "fleet_registry.py"
-FLEET_LAUNCH = c.SKILLS_HOME / "orchestrator-fleet" / "scripts" / "fleet_launch.py"
-TASK_STACK_CHECK = c.SKILLS_HOME / "task-stack-workstream" / "scripts" / "task_stack_check.py"
+FLEET_STATUS = c.skill_file("orchestrator-fleet", "scripts", "fleet_status.py")
+FLEET_REGISTRY = c.skill_file("orchestrator-fleet", "scripts", "fleet_registry.py")
+FLEET_LAUNCH = c.skill_file("orchestrator-fleet", "scripts", "fleet_launch.py")
+TASK_STACK_CHECK = c.skill_file("task-stack-workstream", "scripts", "task_stack_check.py")
 
 DEFAULT_BACKSTOP = 12
 AUTHORITY = "propose"

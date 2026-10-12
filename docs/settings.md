@@ -195,7 +195,7 @@ Every key here except `state` is read from this table first and from the top lev
 |---|---|---|---|
 | `client_subfolder` | No | `"Process Flows"` | The folder inside the client's folder where process drafts are delivered. |
 | `delivery_dir` | No | none (no delivery folder) | The owner's own delivery folder, used when the Context names no client folder; it must already exist. |
-| `reference_models_dir` | No | `"~/.claude/skills/reference-process-models"` | The library of reference process models that process-flow-prepare looks in. |
+| `reference_models_dir` | No | the `reference-process-models` skill in this toolbox checkout | The library of reference process models that process-flow-prepare looks in. |
 | `screenshot_command` | No | headless Chrome or Chromium from PATH | A command template for process-flow-render's screenshot, with `{url}`, `{out}`, `{width}` and `{height}` filled in. |
 
 ### [product-costing-workstream]
@@ -305,7 +305,7 @@ Every key here except `state` is read from this table first and from the top lev
 | `SAGE_INTACCT_API_USER` | Yes, for a live Intacct pull, unless `[erp-ledger-pull] intacct_api_user` is set (month-end-pull also accepts the Month-End folder's ERP API user) | none | The Intacct API user. | erp-ledger-pull |
 | `SAGE_INTACCT_*_SANDBOX` | No | the same name without the suffix | For the SANDBOX environment, each of the four names above is read with `_SANDBOX` first, then without it; PROD reads only the plain names. | erp-ledger-pull |
 | `INTACCT_USER_AGENT` | No | `f3i-toolbox-intacct/1.0 (read-only)` | The User-Agent header sent to Intacct. | erp-ledger-pull |
-| `ACCRUALS_SKILLS_DIR` | No | `~/.claude/skills` | Where accruals.py finds the other skills whose commands it runs. | month-end-accrual-drafts |
+| `ACCRUALS_SKILLS_DIR` | No | this toolbox checkout (`_skill_paths.py`) | A skills folder in which accruals.py finds the other skills whose commands it runs, for tests. | month-end-accrual-drafts |
 | `MEETING_PROCESSING_STATE` | No | none | The meeting worker's state folder, after `--state` and before the settings. | meeting-scheduled-worker |
 | `F3I_TOOLBOX_DRY_RUN` | No | unset | Set by a runner (`1`, `true`, `yes` or `on`) to mark a dry run; any write called without `--dry-run` is then refused. | chief-of-staff-cycle, meeting-scheduled-worker, nightly-sweep-workstream |
 | `NOTIFY_OWNER_MODE` | No | unset (sends) | `off` sends nothing; `dry-run` (also `dryrun` or `rehearsal`) rehearses; anything else sends. | chief-of-staff-cycle, comms-reply-to-email |

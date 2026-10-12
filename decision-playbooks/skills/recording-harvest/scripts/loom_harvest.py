@@ -44,6 +44,8 @@ import urllib.request
 from http.cookiejar import MozillaCookieJar
 from pathlib import Path
 
+from _skill_paths import skill_file
+
 GRAPHQL_URL = "https://www.loom.com/graphql"
 TRANSCRIPT_QUERY = """
 query FetchVideoTranscript($videoId: ID!, $password: String) {
@@ -62,7 +64,7 @@ HEADERS = {
     # request returns 403, copy the current value from a browser request.
     "x-loom-request-source": "loom_web_dc2BC1d",
 }
-STORE = Path.home() / ".claude" / "skills" / "decision-case-mining" / "scripts" / "decision_store.py"
+STORE = skill_file("decision-case-mining", "scripts", "decision_store.py")
 ID_RE = re.compile(r"(?:loom\.com/(?:share|embed)/)?([0-9a-f]{32})")
 SESSION_COOKIES = ("connect.sid", "connect.lpid")
 

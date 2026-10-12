@@ -79,7 +79,7 @@ def task_text(items, label, mark):
              "holds the month's facts. Answer the list below in one comment here, for example \"1) ok 2) park "
              "3) no\" (\"rest ok\" answers the rest). Nothing you do not approve is changed.", ""]
     return "\n".join(lines + (c.approval_list(items) or ["Nothing to approve this month."])
-                     + ["", f"goal-alignment-orchestrator via {BY}. Marker: {mark}"])
+                     + ["", f"{c.ORCHESTRATOR} via {BY}. Marker: {mark}"])
 
 
 def task_ops(items, month, published, replaced, project, domain):

@@ -44,10 +44,11 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from _skill_paths import skill_file
+
 SKILL_DIR = Path(__file__).resolve().parents[1]
-SKILLS_HOME = Path("~/.claude/skills").expanduser()
-TASK_STACK_CHECK = SKILLS_HOME / "task-stack-workstream" / "scripts" / "task_stack_check.py"
-TASK_STACK_APPLY = SKILLS_HOME / "task-stack-workstream" / "scripts" / "task_stack_apply.py"
+TASK_STACK_CHECK = skill_file("task-stack-workstream", "scripts", "task_stack_check.py")
+TASK_STACK_APPLY = skill_file("task-stack-workstream", "scripts", "task_stack_apply.py")
 STACK_CHECK_TIMEOUT = 600   # seconds; the score pages through every open task
 
 
@@ -800,7 +801,12 @@ def shape_problems(op):
 
 SKILL = "goal-alignment-workstream"
 HOME_NAME = "goal-alignment"
-ORCHESTRATOR = "goal-alignment-orchestrator"
+# The agent that runs this job, as its change sets and approval tasks name it, then the name
+# the department migration gives it. task-stack-apply treats the two as one agent (same
+# checks, same markers). When strategy converts, ORCHESTRATOR becomes the second name; remove
+# the first a month after that.
+ORCHESTRATOR_NAMES = ("goal-alignment-orchestrator", "strategy-goal-alignment")
+ORCHESTRATOR = ORCHESTRATOR_NAMES[0]
 REVIEW_SCHEMA = "goal-alignment/review@1"
 PASS_SCHEMA = "goal-alignment/pass@1"
 ANSWERS_SCHEMA = "goal-alignment/answers@1"

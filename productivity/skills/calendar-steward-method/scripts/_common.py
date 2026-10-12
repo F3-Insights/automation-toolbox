@@ -614,7 +614,12 @@ def new_dir(folder, prefix):
 TOOL = "calendar-steward"
 VERSION = 1
 SCAN_TOOL = "calendar-steward-scan"
-ORCHESTRATOR = "calendar-steward-orchestrator"
+# The agent that runs this job, as its change sets and approval tasks name it, then the name
+# the department migration gives it. task-stack-apply treats the two as one agent (same
+# checks, same markers). When productivity converts, ORCHESTRATOR becomes the second name; remove
+# the first a month after that.
+ORCHESTRATOR_NAMES = ("calendar-steward-orchestrator", "productivity-calendar-steward")
+ORCHESTRATOR = ORCHESTRATOR_NAMES[0]
 PASSES = ("auto", "propose", "approve")
 KINDS = ("focus-block", "move", "decline", "prep")
 # Every scan finding of these kinds needs a proposal or a stated dismissal.

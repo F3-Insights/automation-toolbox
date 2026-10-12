@@ -197,3 +197,9 @@ def test_only_email_deliver_pushes_and_only_notify_owner_sends(name):
     called = set(re.findall(r"""\bcall\(\s*["'](\w+)["']""", source))
     called |= set(re.findall(r"""\bcall\(portal,\s*["'](\w+)["']""", source))
     assert called <= ALLOWED_CALLS[name], called - ALLOWED_CALLS[name]
+
+
+def test_another_skills_script_comes_from_this_checkout():
+    """skill_script finds comms-draft-check through the toolbox checkout, not ~/.claude/skills."""
+    path = c.skill_script("comms-draft-check", "outbound_check.py")
+    assert path.is_file() and SKILL.parents[1] in path.parents

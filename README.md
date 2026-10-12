@@ -351,7 +351,7 @@ The toolbox is kept in department folders so people can find things. Claude Code
 
 **Keeping it current.** The hooks from step 1 rerun the link script after every commit, merge, pull and branch switch, so a new, renamed or removed agent or skill shows up in the install without you doing anything. They print one line only when something changed, run only in the main clone (never in a git worktree), do nothing until step 2 has been done once, and never stop a git command. Without the hooks, rerun `python3 setup/link.py` after you pull.
 
-**Why `~/.claude/skills` appears in commands.** Agents and skills run a skill's scripts by a fixed path, `python3 ~/.claude/skills/<skill>/scripts/<script>.py`, and a runtime that reads skills by path uses the same folder. That path must reach the install, which step 3 does. A different setup, such as installing departments as Claude Code plugins, would need those paths to change too.
+**Why `~/.claude/skills` appears in commands.** Agents and skills run a skill's scripts by a fixed path, `python3 ~/.claude/skills/<skill>/scripts/<script>.py`, and a runtime that reads skills by path uses the same folder. That path must reach the install, which step 3 does. Scripts that run another skill's script do not need it: they find it through the clone they live in. A different setup, such as installing departments as Claude Code plugins, would need those paths to change too.
 
 **Removing it.** Delete the two `~/.claude` links, move your backups back, and delete `~/.local/share/f3i-toolbox`; the clone is untouched.
 

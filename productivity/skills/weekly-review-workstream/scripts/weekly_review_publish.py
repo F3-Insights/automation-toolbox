@@ -67,7 +67,7 @@ def task_text(items, label, mark):
     lines = [f"The weekly review for {label} is ready: the private note \"Weekly review {label}\" on this task "
              "holds the pack. Answer the list below in one comment here, for example \"1) ok 2) park 3) no\" "
              "(\"rest ok\" answers the rest). Nothing you do not approve is changed.", ""]
-    return "\n".join(lines + c.approval_list(items) + ["", f"weekly-review-orchestrator via {BY}. Marker: {mark}"])
+    return "\n".join(lines + c.approval_list(items) + ["", f"{c.ORCHESTRATOR} via {BY}. Marker: {mark}"])
 
 
 def task_ops(items, week, published, replaced, project, domain):

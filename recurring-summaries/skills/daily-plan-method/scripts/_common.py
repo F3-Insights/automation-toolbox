@@ -48,6 +48,11 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 SKILL = "daily-plan-method"
 SKILL_DIR = Path(__file__).resolve().parents[1]
 TOOL, VERSION = "daily-plan", 1
+# What a plan file's "tool" may say: the tool, or the name of the agent that wrote it, now
+# and after the department migration renames it (recurring-summaries-daily-planner, or
+# daily-planner if the plugin becomes daily). Remove the old agent name a month after
+# recurring-summaries converts.
+PLAN_TOOLS = (TOOL, "daily-plan-orchestrator", "recurring-summaries-daily-planner", "daily-planner")
 PASSES = ("morning", "evening")
 OUTCOMES = ("done", "moved", "carried", "dropped")
 NOON = 12
@@ -459,7 +464,7 @@ def plan_problems(plan, day=None, pass_=None):
     if not isinstance(plan, dict):
         return ["the plan is not a JSON object"]
     out = []
-    if plan.get("tool") not in (TOOL, f"{TOOL}-orchestrator"):
+    if plan.get("tool") not in PLAN_TOOLS:
         out.append(f"tool is {plan.get('tool')!r}, not {TOOL!r}")
     if plan.get("version") != VERSION:
         out.append(f"version {plan.get('version')!r}; this reads {VERSION}")

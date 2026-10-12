@@ -128,3 +128,8 @@ def test_register_failure_keeps_going_and_exits_1(tmp_path, monkeypatch, capsys)
     err = capsys.readouterr().err
     assert "archived but not registered: no database" in err
     assert (tmp_path / "a" / GOOD / "transcript.json").exists()
+
+
+def test_the_decision_store_comes_from_this_checkout():
+    toolbox = Path(__file__).resolve().parents[5]
+    assert lh.STORE.is_file() and toolbox in lh.STORE.parents

@@ -249,6 +249,24 @@ def test_a_reconcile_cancel_needs_the_checkers_pass(tmp_path):
     assert r["code"] == "UNCHECKED" and portal.tasks[uid(1)]["status"] == "TODO"
 
 
+def test_the_reconcilers_new_name_also_needs_the_checkers_pass(tmp_path):
+    portal = FakePortal([task(1, "Call the old supplier", updated=90)])
+    data = changes({"id": "s1", "op": "cancel", "task": uid(1), "reason": "stale"},
+                   orchestrator="productivity-task-reconciler")
+    r = by_id(run(portal, data, tmp_path))["s1"]
+    assert r["code"] == "UNCHECKED" and portal.tasks[uid(1)]["status"] == "TODO"
+    assert set(ap.CHECKED_CANCELS) == {"task-reconcile-orchestrator", "productivity-task-reconciler"}
+
+
+def test_a_renamed_agent_writes_the_same_markers_as_its_old_name():
+    """After a department converts, an op its agent proposed before is found, not written again."""
+    op = dict(complete(1), id="c1", reason="one")
+    for new, old in ap.RENAMED_AGENTS.items():
+        assert ap.marker_for(new, op) == ap.marker_for(old, op), new
+        assert ap.AGENT.match(new) and old.endswith("-orchestrator")
+    assert ap.RENAMED_AGENTS["daily-planner"] == ap.RENAMED_AGENTS["recurring-summaries-daily-planner"]
+
+
 def test_this_script_never_deletes():
     from pathlib import Path
     text = Path(ap.__file__).read_text()
