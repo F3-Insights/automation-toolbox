@@ -86,3 +86,14 @@ def test_no_client_goes_to_the_owner_folder_and_nothing_set_goes_nowhere(nw, cap
     settings(nw)
     meta = json.loads((stage(nw, capsys, "run2") / C.STAGED_MARKER).read_text())
     assert meta["delivery"] is None and meta["delivery_basis"].startswith("none")
+
+
+def test_without_a_models_setting_the_reference_model_comes_from_this_checkout(nw, tmp_path):
+    """No reference_models_dir: the reference-process-models skill in the toolbox checkout."""
+    from pathlib import Path
+    write_toml(nw["settings"], "")
+    eng = {"standing": tmp_path / "none-a", "working": tmp_path / "none-b"}
+    found = prep.reference_model("Order to Cash", eng)
+    toolbox = Path(prep.__file__).resolve().parents[4]
+    assert found == toolbox / "process-engineering/skills/reference-process-models/order-to-cash.md"
+    assert prep.reference_model("No Such Process", eng) is None

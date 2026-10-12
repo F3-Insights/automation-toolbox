@@ -46,7 +46,8 @@ THE RULES (an op that fails one is refused whole, with a code; the other ops go 
   duplicate is completed with "Duplicate of <ref>".
 - cancel: with evidence, or without only when the task has had no update for
   --stale-cancel-days (60) and links to no goal. A cancel by task-reconcile-orchestrator
-  carries "check": "PASS" from its checker or is refused UNCHECKED.
+  (or its new name, productivity-task-reconciler) carries "check": "PASS" from its checker
+  or is refused UNCHECKED.
 - create: a verb-first title, an owner (the op's, else the token's own contact), a project
   or a domain whose catch-all project takes it, and no open task in that project already is
   it. A create with `source` is marked by that key alone, so the item gets one task.
@@ -89,7 +90,34 @@ from pathlib import Path
 import _common as c
 
 TOOL, VERSION = "task-stack-changes", 1
-CHECKED_CANCELS = ("task-reconcile-orchestrator",)
+# Agents being renamed by the department migration (each department becomes a plugin): each
+# new name maps to the old one it replaces. A change set from either name is the same
+# agent's: its checks apply, and marker_for hashes the old name, so an op applied before the
+# rename is not applied again after it. Remove a pair a month after its department converts.
+RENAMED_AGENTS = {
+    "accounting-questions": "accounting-questions-orchestrator",
+    "compliance-calendar-keeper": "compliance-calendar-orchestrator",
+    "compliance-entity-wind-down": "wind-down-orchestrator",
+    "daily-planner": "daily-plan-orchestrator",  # if the plugin is renamed daily (decision D9)
+    "decision-playbooks-curator": "playbook-orchestrator",
+    "productivity-calendar-steward": "calendar-steward-orchestrator",
+    "productivity-task-capturer": "task-capture-orchestrator",
+    "productivity-task-clarifier": "task-clarify-orchestrator",
+    "productivity-task-reconciler": "task-reconcile-orchestrator",
+    "productivity-weekly-review": "weekly-review-orchestrator",
+    "projects-client-delivery": "client-delivery-orchestrator",
+    "projects-engagement-closeout": "project-engagement-closeout-orchestrator",
+    "projects-engagement-kickoff": "project-engagement-kickoff-orchestrator",
+    "projects-health-review": "project-health-orchestrator",
+    "recurring-summaries-daily-planner": "daily-plan-orchestrator",
+    "sales-lead-intake": "bd-lead-intake-orchestrator",
+    "sales-pipeline-review": "bd-pipeline-orchestrator",
+    "strategy-goal-alignment": "goal-alignment-orchestrator",
+    "toolbox-maintenance-auditor": "toolbox-audit-orchestrator",
+}
+# The reconciler, by its current name and its new one (remove the old a month after
+# productivity converts).
+CHECKED_CANCELS = ("task-reconcile-orchestrator", "productivity-task-reconciler")
 PROJECT_OPS = ("project_edit", "project_close")
 GOAL_OPS = ("goal_edit", "goal_close")
 OPS = ("complete", "edit", "merge", "cancel", "create", "comment") + PROJECT_OPS + GOAL_OPS
@@ -211,7 +239,7 @@ def marker_for(by, op):
         if content.get("title"):
             content["title"] = c.normalise_title(str(content["title"]))
     content = {k: v for k, v in content.items() if v not in (None, "", {})}
-    raw = json.dumps({"by": by, **content}, sort_keys=True, default=str)
+    raw = json.dumps({"by": RENAMED_AGENTS.get(by, by), **content}, sort_keys=True, default=str)
     return "tsk" + hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
 
 

@@ -26,6 +26,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
+from _skill_paths import skill_file
+
 # Exit codes shared by the reply commands: go on, stop, could not run.
 OK, STOP, ERROR = 0, 3, 2
 
@@ -364,8 +366,8 @@ def guard_run_path(path):
 
 
 def skill_script(skill, name):
-    """Another skill's script, by the skill's name, as an installed toolbox places it."""
-    return Path.home() / ".claude" / "skills" / skill / "scripts" / name
+    """Another skill's script, by the skill's name, found in this toolbox checkout (_skill_paths.py)."""
+    return skill_file(skill, "scripts", name)
 
 
 # --------------------------------------------------------------------------- the calendar

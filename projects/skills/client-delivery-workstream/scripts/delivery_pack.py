@@ -53,8 +53,9 @@ from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
 import _common as dc
+from _skill_paths import skill_file
 
-REPORT_COLLECT = Path("~/.claude/skills/report-weekly/scripts/report_collect.py").expanduser()
+REPORT_COLLECT = skill_file("report-weekly", "scripts", "report_collect.py")
 CHECK = Path(__file__).with_name("delivery_check.py")
 OPEN_STATUSES = ("TODO", "IN_PROGRESS", "WAITING")
 PORTAL_KINDS = ("meeting", "note", "mail")

@@ -8,7 +8,7 @@ Input: a title or path, and optionally --vault (else the setting vault_dir), --n
 (skips the full scan backlinks need) and --format. Prints a table, or JSON.
 Exit 1 when no single note matches; exit 2 when no vault is configured.
 
-    python3 ~/.claude/skills/obsidian-workstream/scripts/vault_links.py "Projects MOC" --no-backlinks
+    python3 vault_links.py "Projects MOC" --no-backlinks
 """
 
 import argparse

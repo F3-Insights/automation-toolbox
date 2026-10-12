@@ -108,3 +108,9 @@ def test_missing_email_deliver_and_bad_arguments(tmp_path):
     else:
         raise AssertionError("expected Bad")
     assert dl.main([]) == 2 and dl.main([str(tmp_path / "nowhere")]) == 2
+
+
+def test_email_deliver_comes_from_this_checkout():
+    """The comms-reply-to-email script is found through the toolbox checkout, not ~/.claude/skills."""
+    toolbox = Path(__file__).resolve().parents[5]
+    assert dl.EMAIL_DELIVER.is_file() and toolbox in dl.EMAIL_DELIVER.parents

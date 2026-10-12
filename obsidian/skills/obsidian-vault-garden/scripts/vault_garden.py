@@ -17,7 +17,7 @@ Private folders (setting vault_private_dirs) are never read, and a note or folde
 Input: optionally --vault (else the setting vault_dir), --limit, --stale-months,
 --moc-suffix, --placeholder, --skip (repeatable), --format text|json, --as-script.
 
-    python3 ~/.claude/skills/obsidian-vault-garden/scripts/vault_garden.py --format json
+    python3 vault_garden.py --format json
 """
 
 import argparse

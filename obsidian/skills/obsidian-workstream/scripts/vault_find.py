@@ -8,7 +8,7 @@ Input: a query, and optionally --vault (else the setting vault_dir), --limit, --
 Prints a table of matches (title, path, why it matched, size), or JSON with each match's
 frontmatter. Exit 1 when nothing matches; exit 2 when no vault is configured.
 
-    python3 ~/.claude/skills/obsidian-workstream/scripts/vault_find.py "pricing ideas" --limit 3
+    python3 vault_find.py "pricing ideas" --limit 3
 """
 
 import argparse

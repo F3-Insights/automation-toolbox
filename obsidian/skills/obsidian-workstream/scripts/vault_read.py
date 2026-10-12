@@ -8,7 +8,7 @@ Input: a title or path, and optionally --vault (else the setting vault_dir) and 
 Prints the note (frontmatter as a list, then the body), or JSON with frontmatter, links and
 body. Exit 1 when no single note matches; exit 2 when no vault is configured.
 
-    python3 ~/.claude/skills/obsidian-workstream/scripts/vault_read.py "Reading list" --format json
+    python3 vault_read.py "Reading list" --format json
 """
 
 import argparse

@@ -12,7 +12,7 @@ Exit 2 when yt-dlp is missing or fails, or when --out points inside the owner's 
 (setting vault_dir). Environment: YT_DLP, the command to run yt-dlp
 (default: yt-dlp on PATH, else python3 -m yt_dlp).
 
-    python3 ~/.claude/skills/content-scout-workstream/scripts/youtube_channel_list.py @example-creator --max 25 --out research/example-creator/youtube/_raw.json
+    python3 youtube_channel_list.py @example-creator --max 25 --out research/example-creator/youtube/_raw.json
 """
 
 import argparse

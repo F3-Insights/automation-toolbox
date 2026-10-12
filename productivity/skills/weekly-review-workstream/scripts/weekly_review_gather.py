@@ -43,7 +43,7 @@ import _common as c
 QUEUE, STALE_DAYS = 30, 30
 SOMEDAY_OVERDUE_DAYS, SOMEDAY_STALE_DAYS = 30, 60
 PRIORITY = {"P1": 1, "P2": 2, "P3": 3, "P4": 4}
-CALENDAR_TIME = c.SKILLS_HOME / "calendar-steward-method" / "scripts" / "calendar_time.py"
+CALENDAR_TIME = c.skill_file("calendar-steward-method", "scripts", "calendar_time.py")
 CARRY_STATES = ("unanswered", "modified", "unclear", "unavailable", "partial", "refused", "deferred")
 
 

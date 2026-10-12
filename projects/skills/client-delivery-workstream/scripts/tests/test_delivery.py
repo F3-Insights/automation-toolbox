@@ -397,3 +397,10 @@ def test_apply_refuses_a_run_folder_inside_the_skill(run, capsys):
     inside = ap.SKILL_DIR / "scripts" / "run"
     assert ap.main([NAME, f"--run-dir={inside}", f"--contexts-dir={paths['contexts']}", "--dry-run"]) == 2
     assert not inside.exists()
+
+
+def test_other_skills_scripts_come_from_this_checkout():
+    """report_collect.py and task_stack_apply.py are found through the toolbox checkout."""
+    toolbox = Path(__file__).resolve().parents[5]
+    for path in (pk.REPORT_COLLECT, ap.TASK_STACK_APPLY):
+        assert path.is_file() and toolbox in path.parents, path

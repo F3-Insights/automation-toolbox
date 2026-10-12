@@ -7,7 +7,7 @@ Input: nothing (reads vault_dir, vault_inbox, vault_private_dirs and vault_rules
 owner's settings). Prints JSON with each value, its resolved path and a list of problems.
 Exit 0 when the vault and inbox are usable; exit 2 otherwise.
 
-    python3 ~/.claude/skills/obsidian-workstream/scripts/vault_config.py
+    python3 vault_config.py
 """
 
 import argparse

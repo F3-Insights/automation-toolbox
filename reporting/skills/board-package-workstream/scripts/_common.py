@@ -47,6 +47,8 @@ from decimal import ROUND_HALF_UP, Decimal
 from html.parser import HTMLParser
 from pathlib import Path
 
+from _skill_paths import skill_file
+
 RULES_MD = "BOARD-RULES.md"
 SOURCES_JSON = "sources.json"
 SOURCES_MD = "sources.md"
@@ -72,7 +74,7 @@ HOUSE_PHRASES = ("on track", "ahead of schedule", "great progress", "successfull
                  "key milestone", "critical finding", "alarming", "major concern", "game-changer",
                  "revolutionary", "seamless", "robust", "leverage", "going forward",
                  "it should be noted", "as previously discussed", "circle back", "cutting-edge")
-MONTH_END_CHECK = "~/.claude/skills/month-end-workstream/scripts/month_end_check.py"
+MONTH_END_CHECK = str(skill_file("month-end-workstream", "scripts", "month_end_check.py"))
 
 
 class Bad(Exception):

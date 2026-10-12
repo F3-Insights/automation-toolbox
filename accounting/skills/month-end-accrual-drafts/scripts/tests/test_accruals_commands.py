@@ -42,12 +42,18 @@ def test_journal_entry_commands_come_from_their_owning_skill(monkeypatch):
     assert accruals.command("je-import-check")[-1].endswith("month-end-journal-entry/scripts/je_import_check.py")
 
 
-def test_default_skills_folder_is_the_by_name_path(monkeypatch, tmp_path):
+def test_default_finds_the_owning_skill_in_this_checkout(monkeypatch, tmp_path):
+    """With no ACCRUALS_SKILLS_DIR and an empty home, the command comes from this checkout."""
     monkeypatch.delenv("ACCRUALS_SKILLS_DIR", raising=False)
     monkeypatch.setenv("HOME", str(tmp_path))
+    assert accruals.command("je-import")[-1] == str(SKILLS / "month-end-journal-entry/scripts/je_import.py")
+
+
+def test_a_missing_command_names_where_it_looked(monkeypatch, tmp_path):
+    monkeypatch.setenv("ACCRUALS_SKILLS_DIR", str(tmp_path))
     with pytest.raises(accruals.Bad) as err:
         accruals.command("je-import")
-    assert str(tmp_path / ".claude/skills/month-end-journal-entry/scripts/je_import.py") in str(err.value)
+    assert str(tmp_path / "month-end-journal-entry/scripts/je_import.py") in str(err.value)
 
 
 def test_run_executes_a_command_with_nothing_on_path(monkeypatch, tmp_path):

@@ -51,6 +51,9 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import _common as c
+from _skill_paths import skill_file
+
+TASK_STACK_APPLY = skill_file("task-stack-workstream", "scripts", "task_stack_apply.py")
 
 OK, REFUSE, BAD, FAILED = 0, 1, 2, 3
 AGENT_SIGN = f"(posted by {c.ORCHESTRATOR}, an agent)"
@@ -209,7 +212,7 @@ def op_for(it, listed, project, domain):
 
 def task_stack_apply(changes_path, log_path, dry):
     """Run task-stack-apply (task-stack-workstream) on one change set; its JSON result."""
-    argv = ["python3", str(Path.home() / ".claude" / "skills" / "task-stack-workstream" / "scripts" / "task_stack_apply.py"),
+    argv = ["python3", str(TASK_STACK_APPLY),
             str(changes_path), "--log", str(log_path), "--max-changes", "100"]
     if dry:
         argv.append("--dry-run")
@@ -412,7 +415,7 @@ def apply(run, home, pass_, form, dry, portal, project, domain, now=None, runner
 
 def task_stack_undo(log_path, op_id, dry):
     """Run task-stack-apply --undo on one undo log; its JSON result."""
-    argv = ["python3", str(Path.home() / ".claude" / "skills" / "task-stack-workstream" / "scripts" / "task_stack_apply.py"),
+    argv = ["python3", str(TASK_STACK_APPLY),
             "--undo", str(log_path)] + (["--op", op_id] if op_id else []) + (["--dry-run"] if dry else [])
     done = subprocess.run(argv, capture_output=True, text=True, timeout=600, stdin=subprocess.DEVNULL)
     try:
