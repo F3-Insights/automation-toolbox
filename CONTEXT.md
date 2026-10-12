@@ -6,9 +6,11 @@ The words this repository uses, and what each one means here.
 
 **Agent.** One Markdown file, `<department>/agents/<name>.md`, with frontmatter (`name`, `description`, `tools`, `model`, and optionally `color`, `skills`) and a prompt as its body. Claude Code runs it as a subagent, or as the main session with `claude --agent <name>`. A piece is an agent only when it needs its own context window, to run in parallel, a different model, independence or different tool access; otherwise it is a skill.
 
-**Agent file standard.** The one template every agent follows ([ADR 0003](docs/adr/0003-agent-files-follow-one-template.md)): an opening sentence saying what the agent owns, then `## Goal`, `## Inputs`, `## Context`, `## Approach`, `## Boundaries`, `## Done when`, `## Output`. The templates are in the `orchestrator-scaffold` skill; the toolbox audit reports drift from them.
+**Agent file standard.** The one template every agent follows ([ADR 0003](docs/adr/0003-agent-files-follow-one-template.md)): an opening sentence saying what the agent owns, then `## Goal`, `## Inputs`, `## Context`, `## Approach`, `## Boundaries`, `## Done when`, `## Output`. The templates are in the `orchestrator-scaffold` skill; the toolbox audit reports drift from them. It holds in a department that is not a plugin; a plugin department follows the **plugin pattern** instead (ADR 0003 as amended, [ADR 0004](docs/adr/0004-a-department-is-a-plugin.md)), whose templates are the main agent, the `<department>-reviewer` and the `<department>-worker` in [templates/](templates/).
 
 **Orchestrator.** An agent whose name ends in `-orchestrator`. It runs one workflow end to end by dispatching sub-agents and checking what they return. Its Approach is the five stages and it has a `## Team` section.
+
+**Main agent.** In a plugin department, the one agent per job that an Automation runs: about 40 lines of goal, inputs, done and never, named for what it does, its procedure the `## Steps` of its job's skill. It is told apart by what it does (it holds the `Agent` tool or dispatches its department's worker or reviewer), not by its name. It dispatches only its own department's `<department>-reviewer` (read-only, for independence) and `<department>-worker` (for parallel or isolated slices).
 
 **Stage.** One of an orchestrator's five fixed parts of a Run: A. Gather, B. Plan & clarify, C. Build, D. Test & review, E. Deliver. Each states its Goal, Who does it and when to move on.
 
