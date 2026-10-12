@@ -15,7 +15,7 @@ The three commands, all standard-library Python in this skill's `scripts/` folde
 python3 ~/.claude/skills/skills-extract/scripts/session_pack.py --terms "TERM,TERM" [--project NAME] [--since 90d] \
     [--repo PATH] [--claude-export FILE] --out WORK/pack.json
 python3 ~/.claude/skills/skills-extract/scripts/skill_inventory.py --pack WORK/pack.json [--project-dir PATH] \
-    [--projects-root PATH] [--skills-dir PATH] --out WORK/skills.json
+    [--projects-root PATH] [--toolbox PATH] [--skills-dir PATH] --out WORK/skills.json
 python3 ~/.claude/skills/skills-extract/scripts/name_check.py DRAFTS/SKILL-NAME --pack WORK/pack.json [--names OWNER_CONTEXT]
 ```
 
@@ -28,7 +28,7 @@ The session folders the pack reads are settings, `claude_session_dirs` and `code
 - **Topic or scope** (required): a subject, a repository or folder, or both.
 - **Window** (optional): how far back to look. Default: all history on the machine.
 - **Owner context** (optional): a private file describing the owner, their clients and house rules, ideally with a "Private names" list. It sharpens the terms and the name check, and is never quoted into a draft.
-- **Other skills folders** (optional): the inventory already looks in the owner's user, project, plugin and Codex skills folders; name any other folder that holds skills.
+- **Other skills folders** (optional): the inventory already looks in the owner's user, project, plugin and Codex skills folders, and in the toolbox checkout the `toolbox_dirs` setting names (its plugin departments' skills included); name any other folder or toolbox checkout that holds skills.
 - **Working folder** (required): a private local folder outside any git repository for the pack, the inventory and the candidate list. Default: the session's scratch folder.
 - **Drafts folder** (required before step 6): where drafted skills go. Never the live skills folder unless the owner says yes to that in this session.
 
@@ -42,7 +42,7 @@ If a required input was not given, ask. If no one can be asked, stop and name it
    → `NOTHING`: stop
    → exit 2: stop
    → off topic: step 1 (max 2)
-3. [script] Inventory the skills the owner already has: `python3 ~/.claude/skills/skills-extract/scripts/skill_inventory.py --pack WORK/pack.json --out WORK/skills.json`, with `--project-dir` for the repository or folder input, `--projects-root` for the folder holding the owner's repositories when the scope is all projects, and `--skills-dir` for any other folder. It lists every user, project, plugin and Codex skill and how often the matched sessions loaded it, with dates. The first line is `SKILLS: ...`.
+3. [script] Inventory the skills the owner already has: `python3 ~/.claude/skills/skills-extract/scripts/skill_inventory.py --pack WORK/pack.json --out WORK/skills.json`, with `--project-dir` for the repository or folder input, `--projects-root` for the folder holding the owner's repositories when the scope is all projects, `--toolbox` for a toolbox checkout the settings do not name, and `--skills-dir` for any other folder. It lists every user, project, plugin, toolbox and Codex skill and how often the matched sessions loaded it, with dates. The first line is `SKILLS: ...`.
    → exit 2: stop
 4. [judgment] Read `pack.json` and `skills.json` and cluster the repeated work into candidates by the tests in `rules.md`. Map each to the existing skills that touch it: covered, partly covered or not covered. For covered or partly covered, find from the sessions and the skill's SKILL.md why it went unused and what is missing. Recommend, in this order of preference: use as is, improve a named skill, merge or retire, new skill. Open a raw transcript only to settle one question, cited by session id and date. Write `WORK/candidates.md` in the format in `rules.md`, existing skills first.
    → nothing recurs: stop

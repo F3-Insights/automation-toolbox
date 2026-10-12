@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """List every skill the owner already has and how often the matched sessions used each one.
 
-Finds skills in four kinds of place:
+Finds skills in five kinds of place:
 
 - user: the Claude Code skills folder in the home folder;
 - codex: Codex's skills folders (its own and the shared agents folder), system skills included;
@@ -9,7 +9,12 @@ Finds skills in four kinds of place:
   cached version of a plugin counts, and a plugin's trash is never read;
 - project: the skills folders inside each repository the pack's sessions worked in or loaded a
   skill from, any repository or folder given with ``--project-dir``, and every repository
-  directly under a ``--projects-root`` folder.
+  directly under a ``--projects-root`` folder;
+- toolbox: a toolbox checkout laid out by department (``--toolbox``, else the ``toolbox_dirs``
+  setting under ``[skills-extract]``). A department that is a plugin (its folder holds
+  ``.claude-plugin/plugin.json``) counts as a plugin, its skills invoked ``<department>:<name>``;
+  any other department's skills keep their plain names. A copied shared skill counts once per
+  department that carries it; the ``shared/`` sources are not installed and are not read.
 
 A skill reached from several places (a symlink, a synced copy, a worktree's copy with the same
 text) is one entry with every location listed. Two skills with one name and different text stay
@@ -34,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import tomllib
 import json
 import os
 import re
@@ -85,6 +91,32 @@ def frontmatter(text: str) -> Dict[str, str]:
 def clip(text: str, n: int = DESC_CHARS) -> str:
     text = " ".join(text.split())
     return text if len(text) <= n else text[: n - 1] + "…"
+
+
+def settings(section: str) -> Dict[str, Any]:
+    """Owner settings from ~/.config/f3i-toolbox/settings.toml (or $F3I_TOOLBOX_SETTINGS)."""
+    path = Path(os.environ.get("F3I_TOOLBOX_SETTINGS", "~/.config/f3i-toolbox/settings.toml")).expanduser()
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        data = {}
+    return data.get(section, {})
+
+
+def is_plugin_skills(skills_dir: Path) -> bool:
+    """A ``skills`` folder that belongs to a plugin: its parent holds a plugin manifest."""
+    root = skills_dir.parent
+    return any((root / d / "plugin.json").is_file() for d in (".claude-plugin", ".codex-plugin"))
+
+
+def toolbox_skill_dirs(toolbox: Path) -> List[Tuple[str, Path, bool]]:
+    """(kind, skills folder, is a plugin folder) for each department of a toolbox checkout."""
+    out = []
+    for dept in sorted(p for p in toolbox.iterdir() if p.is_dir() and not p.name.startswith(".") and p.name != "shared"):
+        if (dept / "skills").is_dir():
+            plugin = is_plugin_skills(dept / "skills")
+            out.append(("plugin" if plugin else "toolbox", dept / "skills", plugin))
+    return out
 
 
 def plugin_name(skills_dir: Path) -> str:
@@ -193,7 +225,8 @@ def event_projects(events: Iterable[Dict[str, Any]]) -> List[Path]:
     return sorted(out)
 
 
-def locations(home: Path, project_dirs: Iterable[Path], extra: Iterable[Path]) -> List[Tuple[str, Path, Optional[bool]]]:
+def locations(home: Path, project_dirs: Iterable[Path], extra: Iterable[Path],
+              toolboxes: Iterable[Path] = ()) -> List[Tuple[str, Path, Optional[bool]]]:
     """(kind, skills folder, is a plugin folder) for every place a skill can live."""
     out: List[Tuple[str, Path, Optional[bool]]] = [("user", home / ".claude" / "skills", False)]
     out += [("codex", home / ".codex" / "skills", False), ("codex", home / ".agents" / "skills", False)]
@@ -208,7 +241,9 @@ def locations(home: Path, project_dirs: Iterable[Path], extra: Iterable[Path]) -
                 if d.is_dir() and d not in seen and d.parent.parent != home:
                     seen.add(d)
                     out.append(("project", d, False))
-    out += [("given", Path(e), False) for e in extra]
+    for toolbox in toolboxes:
+        out += toolbox_skill_dirs(toolbox)
+    out += [("given", Path(e), is_plugin_skills(Path(e))) for e in extra]
     return out
 
 
@@ -312,7 +347,10 @@ def main(argv: Optional[List[str]] = None) -> int:
                     "project skills to include, beyond those the pack's sessions worked in; repeatable")
     ap.add_argument("--projects-root", action="append", default=[], help="a folder of repositories; the "
                     "project skills of every repository directly under it are included; repeatable")
-    ap.add_argument("--skills-dir", action="append", default=[], help="any other skills folder; repeatable")
+    ap.add_argument("--skills-dir", action="append", default=[], help="any other skills folder (a plugin's "
+                    "is read as that plugin's); repeatable")
+    ap.add_argument("--toolbox", action="append", default=[], help="a toolbox checkout laid out by department, "
+                    "plugin departments included; repeatable (default: the toolbox_dirs setting under [skills-extract])")
     ap.add_argument("--home", default=str(Path.home()), help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
     try:
@@ -334,8 +372,13 @@ def main(argv: Optional[List[str]] = None) -> int:
             if not root.is_dir():
                 raise Refused(f"no such folder: {root}")
             projects += sorted(d for d in root.iterdir() if d.is_dir())
+        toolboxes = args.toolbox or settings("skills-extract").get("toolbox_dirs") or []
+        toolboxes = [Path(t).expanduser() for t in ([toolboxes] if isinstance(toolboxes, str) else toolboxes)]
+        for t in toolboxes:
+            if not t.is_dir():
+                raise Refused(f"no such toolbox folder: {t}")
         places = locations(Path(args.home).expanduser(), [p for p in projects if p.is_dir()],
-                           [Path(p).expanduser() for p in args.skills_dir])
+                           [Path(p).expanduser() for p in args.skills_dir], toolboxes)
         skills, scanned = inventory(places)
         unmatched = attach_use(skills, pack.get("skill_events", []))
         skills.sort(key=lambda s: (-s["use"]["sessions"], -s["use"]["loads"], s["invoke"]))

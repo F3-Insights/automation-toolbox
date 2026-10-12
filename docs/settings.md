@@ -258,6 +258,7 @@ Every key here except `state` is read from this table first and from the top lev
 |---|---|---|---|
 | `claude_session_dirs` | No | `["~/.claude/projects"]` | A list of folders holding past Claude Code sessions (one string is read as a list of one); `--claude-dir` overrides it. |
 | `codex_session_dirs` | No | `["~/.codex/sessions"]` | A list of folders holding past Codex sessions; `--codex-dir` overrides it. |
+| `toolbox_dirs` | No | none | A list of toolbox checkouts whose departments' skills the skill inventory reads, plugin departments as plugins (one string is read as a list of one); `--toolbox` overrides it. |
 
 ### [software-portfolio-review]
 
