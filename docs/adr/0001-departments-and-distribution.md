@@ -1,6 +1,6 @@
 # 0001. Departments, one home per piece, and clone-and-link distribution
 
-Status: accepted, 2026-10-06. Decision 2's `tools/` folder and the second consequence are replaced by [0002](0002-commands-live-inside-skills.md).
+Status: accepted, 2026-10-06. Decision 2's `tools/` folder and the second consequence are replaced by [0002](0002-commands-live-inside-skills.md). Decisions 3 and 4 are amended by [0004](0004-a-department-is-a-plugin.md)'s amendment of 2026-10-11: a skill several departments use has one source in `shared/skills/` and an identical, marked copy in each department that uses it.
 
 ## Context
 

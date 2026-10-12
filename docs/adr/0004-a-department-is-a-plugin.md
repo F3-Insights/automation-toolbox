@@ -1,6 +1,6 @@
 # 0004. A department is a standalone plugin, with light agents, skills and named commands
 
-Status: accepted, 2026-10-11, for the software department first; the other departments follow one at a time. Amends [0002](0002-commands-live-inside-skills.md) decision 5 and [0003](0003-agent-files-follow-one-template.md) for a department that is a plugin.
+Status: accepted, 2026-10-11, for the software department first; the other departments follow one at a time. Amends [0002](0002-commands-live-inside-skills.md) decision 5 and [0003](0003-agent-files-follow-one-template.md) for a department that is a plugin. Amended 2026-10-11 (shared skills, below), which also amends [0001](0001-departments-and-distribution.md) decisions 3 and 4.
 
 ## Context
 
@@ -16,6 +16,23 @@ Every agent and skill was linked into one flat folder (`~/.claude/skills`), so e
 ## Consequences
 
 - The scripts stay where 0002 put them; only the way callers name them changes.
-- Agent and skill names stay unique across the toolbox, so the flat link folder keeps working for departments not yet migrated.
+- Agent and skill names stay unique across the toolbox, so the flat link folder keeps working for departments not yet migrated. A shared skill's copies are the one exception (see the amendment); they share their source's name and the link folder links the source once.
 - Under a plugin, names gain a prefix (`software:software-developer`); a runtime may launch either form.
 - `orchestrator-scaffold` writes command rules and skill-loading lines in the plugin form when the target department is a plugin.
+
+## Amendment, 2026-10-11: shared skills are copied from one source
+
+**What changed.** Decision 1 says a plugin depends on no other department and copies what it needs into one of its own skills. Deciding how to copy, the owner settled three questions (D1 to D3 of the department migration plan):
+
+1. **D1: one source, in `shared/skills/`.** A skill several departments use has its single source in `shared/skills/<skill>/`. `shared/` is not a plugin and not a department. `shared/manifest.yaml` lists, for each shared skill, the departments that get a copy. `scripts/build_shared.py` writes each copy to `<department>/skills/<skill>/` and marks it with a `.shared-copy` file naming the source. A copy is never edited by hand; `scripts/toolbox_check.py` fails when a copy differs from its source, a listed copy is missing, or a marked copy is no longer listed.
+2. **D2: a copied skill's commands keep one unprefixed name.** In every department that holds a copy, `task_stack_apply.py` is the command `task-stack-apply`, never `accounting-task-stack-apply`. A department's own scripts keep decision 4's `<department>-` prefix. Two plugins on one PATH then hold wrappers of the same name that run identical code, so which comes first does not matter. A copy's command that clashes with a department's own command is an error in `scripts/build_bins.py`.
+3. **D3: whole skills are copied, kept small.** A copy is the whole skill folder, byte for byte (caches aside), with only the marker added; files are never picked. A big skill that several departments need only part of is split into small shareable skills before it is shared.
+
+**Why.** A neutral home means an edit always goes to one obvious place: marketing does not carry the unslop sub-skills for everyone else, and productivity does not own the skills other departments need. Unprefixed command names keep each copy's text identical to its source, so the identity check is a plain file comparison and scripts that call a sibling keep working; prefixed names would make every copy differ and need a substitution step. Whole copies keep one rule ("a copy is identical to its source") that is easy to check, where picked files make every copy a special case.
+
+**Consequences.**
+
+- `setup/link.py` links a shared skill's source once in the flat folder, however many departments hold a copy, and still refuses two different skills with one name. The npx installer skips `shared/`; a department's install brings its copies.
+- `scripts/run_tests.py` tests a shared skill's source once in place of its copies.
+- The first shared skills are `orchestration-workstream`, `task-stack-workstream`, `comms-confirm`, `office-files`, `report-tieout`, `brand-guide` and the `unslop` family. A department is listed in the manifest only when its agents or skills use the skill; one that uses an `unslop` sub-skill also gets `unslop`, whose principles every sub-skill applies first.
+- [0001](0001-departments-and-distribution.md) decision 3 ("no shared or common folder") gives way to `shared/skills/` for these sources, and decision 4 (unique names) holds for every skill except a shared skill's marked copies.

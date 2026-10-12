@@ -9,7 +9,8 @@ Thanks for helping improve the toolbox. Issues, fixes and new pieces are all wel
 
 ## The rules a change must follow
 
-- **One home per piece.** Every agent and skill lives in exactly one department. There is no shared folder; other pieces refer to it by name.
+- **One home per piece.** Every agent and skill lives in exactly one department; other pieces refer to it by name. The exception is a shared skill, which several departments use: its one source is in `shared/skills/`, and each department that uses it holds a generated copy (see the README's "Shared skills").
+- **Never edit a copy of a shared skill.** A folder holding `.shared-copy` is generated. Edit `shared/skills/<name>/`, run `python3 scripts/build_shared.py`, then `python3 scripts/build_bins.py <department>` for any plugin department that holds a copy, and commit the source and the copies together.
 - **Names are unique across the repository.** The check enforces it.
 - **Agents follow one template**: an opening sentence, then Goal, Inputs, Context, Approach, Boundaries, Done when and Output. Start from [templates/](templates/).
 - **Scripts live in the skill that owns them**, in `scripts/`, import only the standard library, a few named packages and files in their own folder, and ship with tests in `scripts/tests/`.
@@ -22,6 +23,7 @@ Thanks for helping improve the toolbox. Issues, fixes and new pieces are all wel
 
 ```bash
 git config core.hooksPath .githooks
+python3 scripts/build_shared.py --check
 python3 scripts/toolbox_check.py
 .venv/bin/python scripts/run_tests.py <department>
 ```
