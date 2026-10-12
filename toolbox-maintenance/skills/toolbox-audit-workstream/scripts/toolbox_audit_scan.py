@@ -6,13 +6,21 @@
 Read-only. It reads one toolbox checkout (--root, else the `repo` setting under
 [toolbox-audit-workstream]) laid out by department, `<department>/agents/<name>.md` and
 `<department>/skills/<name>/SKILL.md` with each command a script in the owning skill's `scripts/`
-folder. It runs the toolbox's own `scripts/toolbox_check.py` for privacy and structure rather than
-repeating it, and the orchestrator-scaffold lint for each orchestrator when that skill is present.
+folder. It runs the toolbox's own `scripts/toolbox_check.py` for privacy, structure and each
+plugin's manifest and bin/ rather than repeating it, and the orchestrator-scaffold lint for each
+old-pattern orchestrator when that skill is present.
+
+Two patterns stand side by side while departments convert, and each department is judged by the
+one it is on: a department whose folder holds `.claude-plugin/plugin.json` by the plugin pattern
+(ADR 0004, ADR 0003 as amended), every other one by the agent file standard (ADR 0003). `shared/`
+holds the single sources of skills copied into departments; it is not a department, and a copy
+(a skill folder holding `.shared-copy`) is checked only for being identical to its source.
 
 Each finding is an item with a stable `key` (so the findings ledger can tell a new finding from
 one still open), a `section`, a `kind`, a `level` (error, warning or info), `where` and `text`:
 
-- check: what the toolbox check reports about structure (names, frontmatter, relative paths).
+- check: what the toolbox check reports about structure (names, frontmatter, relative paths) and,
+  kind `plugin`, about a plugin's manifest, its bin/ against its scripts and commands run by path.
 - guards: the toolbox check's privacy hits, one item per file and kind, file only; a private name
   is never copied into the scan. Any denylisted name elsewhere in the scan (a file path, a
   lint's text) is replaced by "(withheld)" before the scan is printed or written.
@@ -22,19 +30,30 @@ one still open), a `section`, a `kind`, a `level` (error, warning or info), `whe
   orchestrator without `## Team` (`template-team`) or without the five stages A to E under
   `## Approach`, each with its Goal, Who and Move on when (`template-stages`), and a sub-agent
   whose body is a step script (`template-steps`: a `## Steps` heading, or two or more headings
-  such as `## Step 1` or `### 1.`).
+  such as `## Step 1` or `### 1.`). In a plugin department instead, drift from the plugin pattern
+  (warnings): a main agent (found by holding the Agent tool or dispatching the department's worker
+  or reviewer) without Goal, Inputs, Done and Never, over about 60 lines, named -orchestrator,
+  without skills:, Skill or with bare Bash (`pattern-main`); a main agent with no `## Steps` in
+  its skills, or Steps Sentinel cannot read (`pattern-steps`); a step handing off to anything but
+  the department's worker or reviewer (`pattern-handoff`); a reviewer that can write
+  (`pattern-reviewer`); a worker that can dispatch (`pattern-worker`); any other agent
+  (`pattern-role`); no reviewer or no main agent (`pattern-department`); a script run by its path
+  (`pattern-script-path`).
 - drift: a script path or a `skills:` entry naming something that does not exist; a department
   the toolbox check does not cover; a department README out of step with its folder; an
-  environment variable or a settings table a script reads that docs/settings.md does not describe.
+  environment variable or a settings table a script reads that docs/settings.md does not describe;
+  a plugin's `skills:` entry or `Agent(...)` grant naming another department's piece
+  (`cross-department`); a copied skill that differs from its source (`copy`).
 - scripts: departures from ADR 0002 (a code file outside a skill's scripts folder, a hyphen in a
   script's name, no docstring, a package used without its `# /// script` block, imports from
   outside its folder, no test, `--help` failing under plain python3).
-- unused (info): agents, skills and scripts no other file names. Department READMEs do not count
-  as a mention, since they list everything.
+- unused (info): agents, skills and scripts no other file names (a plugin command's name counts
+  as naming its script; a plugin's main agents are entry points and never listed). Department
+  READMEs do not count as a mention, since they list everything.
 - duplicates (info): agent or skill pairs whose descriptions share most of their words.
 
-It also writes `teams` (each orchestrator's agents and the skills they load), `template` (per
-department, its agents and how many drift from the standard), `counts` and
+It also writes `teams` (each orchestrator's or plugin main agent's agents and the skills they
+load), `template` (per department, its pattern, its agents and how many drift from it), `counts` and
 `sections` (each section's ok flag and error). The first line printed is `FRESH: <counts>`, or
 `STALE: <sections that could not be read>; ...`. Exit 0 when it ran; 2 on a bad argument.
 
@@ -68,6 +87,12 @@ SCRIPT_REF = re.compile(r"~/\.claude/skills/([A-Za-z0-9_.-]+)/scripts/([A-Za-z0-
 ENV_READ = re.compile(r"""os\.(?:environ\.get|getenv)\(\s*["']([A-Z][A-Z0-9_]+)["']|os\.environ\[\s*["']([A-Z][A-Z0-9_]+)["']\s*\]""")
 SETTINGS_TABLE = re.compile(r"""\bsettings\(\s*["']([a-z0-9-]+)["']""")
 CHECK_LINE = re.compile(r"^(?P<file>[^:]+?)(?::(?P<line>\d+))?: (?P<why>.+)$")
+SHARED = "shared"  # the shared skills' single sources (not a department); departments hold copies
+COPY_MARKER = c.COPY_MARKER  # written into a copied skill's folder by scripts/build_shared.py, naming its source
+WRAPPED = re.compile(r'"\$root/([^"]+)"')  # the script a scripts/build_bins.py wrapper runs
+PLUGIN_CHECK = ("out of date (", "runs no script in this department", "was not written by build_bins",
+                "is not a plain file", "a plugin runs a command by name", "names no command in", "not JSON:",
+                "name must be '", "missing version")
 STRUCTURE = ("frontmatter name", "missing description", "already used by", "no SKILL.md", "no subfolders",
              "relative path to another skill", "quote the description")
 
@@ -87,13 +112,31 @@ class Toolbox:
     def __init__(self, root):
         self.root = root
         self.departments = sorted(p.name for p in root.iterdir()
-                                  if p.is_dir() and not p.name.startswith(".") and ((p / "agents").is_dir() or (p / "skills").is_dir()))
+                                  if p.is_dir() and not p.name.startswith(".") and p.name != SHARED
+                                  and ((p / "agents").is_dir() or (p / "skills").is_dir()))
+        # A department with a plugin manifest is judged by the plugin pattern (ADR 0004), else by
+        # the agent file standard (ADR 0003): both stand side by side while departments convert.
+        self.plugins = {d for d in self.departments if (root / d / ".claude-plugin" / "plugin.json").is_file()}
         self.agents = {p.stem: p for d in self.departments for p in sorted((root / d / "agents").glob("*.md"))}
-        self.skills = {p.name: p for d in self.departments for p in sorted((root / d / "skills").glob("*")) if p.is_dir()}
-        self.scripts = sorted(p for d in self.departments for p in (root / d / "skills").glob("*/scripts/*")
-                              if p.is_file() and p.suffix in (".py", ".sh") and p.name != "_common.py")
+        self.dept_skills = {d: {p.name: p for p in sorted((root / d / "skills").glob("*")) if p.is_dir()}
+                            for d in self.departments}
+        # A copied skill (it carries a COPY_MARKER naming its source) is the source's: findings about
+        # its text, scripts and use belong to the source, and the copy is only checked for identity.
+        self.copies = {f for skills in self.dept_skills.values() for f in skills.values() if (f / COPY_MARKER).is_file()}
+        self.sources = {p.name: p for p in sorted((root / SHARED / "skills").glob("*")) if p.is_dir()}
+        self.skills = dict(self.sources)
+        for copies in (False, True):  # a department's own skill first, a copy only when no source is found
+            for d in self.departments:
+                for name, folder in self.dept_skills[d].items():
+                    if (folder in self.copies) == copies:
+                        self.skills.setdefault(name, folder)
+        homes = [root / d / "skills" for d in self.departments] + [root / SHARED / "skills"]
+        self.scripts = sorted(p for h in homes for p in h.glob("*/scripts/*")
+                              if p.is_file() and p.suffix in (".py", ".sh") and p.name != "_common.py"
+                              and p.parent.parent not in self.copies)
+        self.commands = {d: self.read_bin(d) for d in sorted(self.plugins)}
         self.texts = {}
-        for d in self.departments:
+        for d in self.departments + ([SHARED] if (root / SHARED).is_dir() else []):
             for p in (root / d).rglob("*"):
                 if p.is_file() and p.suffix in (".md", ".py", ".sh", ".yaml", ".yml", ".json", ".toml") and "__pycache__" not in p.parts:
                     try:
@@ -105,17 +148,42 @@ class Toolbox:
             if p.is_file():
                 self.texts[p] = p.read_text(encoding="utf-8")
 
+    def read_bin(self, dept):
+        """{command name: the script it runs}, read from the wrappers scripts/build_bins.py wrote."""
+        out = {}
+        for p in sorted((self.root / dept / "bin").glob("*")):
+            try:
+                m = WRAPPED.search(p.read_text(encoding="utf-8"))
+            except (OSError, UnicodeDecodeError):
+                continue
+            if m:
+                out[p.name] = self.root / dept / m.group(1)
+        return out
+
     def rel(self, path):
         try:
             return str(Path(path).relative_to(self.root))
         except ValueError:
             return str(path)
 
+    def dept_of(self, path):
+        return Path(self.rel(path)).parts[0]
+
     def meta(self, path):
         return c.parse_frontmatter(path.read_text(encoding="utf-8"))
 
     def orchestrators(self):
-        return [n for n in self.agents if n.endswith("-orchestrator")]
+        """The old pattern's main agents: named -orchestrator, in a department that is not a plugin."""
+        return [n for n, p in self.agents.items() if n.endswith("-orchestrator") and self.dept_of(p) not in self.plugins]
+
+    def roles(self):
+        """{agent: main, reviewer, worker or other} for every agent of a plugin department."""
+        return {n: role_of(n, self.dept_of(p), p.read_text(encoding="utf-8"))
+                for n, p in self.agents.items() if self.dept_of(p) in self.plugins}
+
+    def main_agents(self):
+        """The plugin pattern's main agents, found by what they do rather than by their name."""
+        return [n for n, role in self.roles().items() if role == "main"]
 
 
 # --- check and guards: the toolbox's own check ---------------------------------------------
@@ -137,6 +205,10 @@ def check_items(tb):
             grouped.setdefault((where, kind), []).append(m.group("line") or "")
         elif any(s in why for s in STRUCTURE):
             out.append(item("check", "structure", "error", where, why, evidence=["scripts/toolbox_check.py"]))
+        elif any(s in why for s in PLUGIN_CHECK):
+            # A plugin department's manifest, its bin/ against its scripts (build_bins.py --check),
+            # and commands run by name: the plugin pattern's mechanics, checked at every commit.
+            out.append(item("check", "plugin", "error", where, why, evidence=["scripts/toolbox_check.py"]))
         elif "imports" in why or "relative import" in why or "does not parse" in why:
             out.append(item("scripts", "imports", "error", where, why, evidence=["scripts/toolbox_check.py"]))
         else:
@@ -270,6 +342,8 @@ def template_problems(name, text):
 def template_items(tb):
     out = []
     for name, path in tb.agents.items():
+        if tb.dept_of(path) in tb.plugins:
+            continue  # a plugin department's agents are judged by the plugin pattern, below
         where = tb.rel(path)
         for kind, text in template_problems(name, path.read_text(encoding="utf-8")):
             out.append(item("lint", kind, "warning", where, text, key=f"lint:{kind}:{where}",
@@ -278,15 +352,296 @@ def template_items(tb):
 
 
 def template_summary(tb, items):
-    """Per department: how many agents it has and how many drift from the standard."""
-    flagged = {i["where"] for i in items if i["section"] == "lint" and i["kind"].startswith("template-")}
+    """Per department: which pattern judges it, how many agents it has and how many drift from it."""
+    flagged = {i["where"] for i in items if i["section"] == "lint" and i["kind"].startswith(("template-", "pattern-"))}
     summary = {}
     for name, path in tb.agents.items():
-        dept = Path(tb.rel(path)).parts[0]
-        row = summary.setdefault(dept, {"agents": 0, "flagged": 0})
+        dept = tb.dept_of(path)
+        row = summary.setdefault(dept, {"pattern": "plugin" if dept in tb.plugins else "agent-file", "agents": 0, "flagged": 0})
         row["agents"] += 1
         row["flagged"] += tb.rel(path) in flagged
     return dict(sorted(summary.items()))
+
+
+# --- the plugin pattern (ADR 0004, and 0003 as amended) ------------------------------------
+
+AGENT_SECTIONS = ("Goal", "Inputs", "Done", "Never")  # a main agent's and the reviewer's
+MAIN_LINES = 60  # a main agent is about 40 lines; past this its procedure belongs in its job's skill
+WRITE_TOOLS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
+AGENT_GRANT = re.compile(r"^Agent(?:\((.*)\))?$")
+SCRIPT_PATH = re.compile(r"(?:\$\{?CLAUDE_PLUGIN_ROOT\}?|\bskills/[A-Za-z0-9_.-]+)/scripts/[A-Za-z0-9_.-]+\.(?:py|sh)\b")
+# Sentinel's `## Steps` contract (engine/skillsteps.py in Sentinel): `N. [kind] text` or
+# `N. [hand-off: agent] text`, and indented branch lines `→ condition: step N|stop|ask|done (max N)`.
+STEP_KINDS = ("script", "judgment", "hand-off", "ask")
+STEPS_SECTION = re.compile(r"^##\s+steps\s*$", re.I)
+STEP_LINE = re.compile(r"^(\d{1,3})\.\s+(.*)$")
+KIND_TAG = re.compile(r"^\[([^\]]*)\]\s*(.*)$")
+BRANCH_MARK = re.compile(r"^\s*(→|->)\s*(.*)$")
+DESTINATION = re.compile(r"^(?:step\s+(\d{1,3})|(stop|ask|done))\s*(?:\(\s*max\s+(\d{1,3})\s*\))?\s*\.?$", re.I)
+
+
+def as_list(value):
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(",") if v.strip()]
+    return [str(v).strip() for v in value] if isinstance(value, list) else [str(value)]
+
+
+def granted(tools):
+    """The agents an Agent rule grants: None for bare Agent (any), else the names in Agent(...)."""
+    names, bare = [], False
+    for t in tools:
+        m = AGENT_GRANT.match(t)
+        if m and m.group(1) is None:
+            bare = True
+        elif m:
+            names += [n.strip() for n in m.group(1).split(",") if n.strip()]
+    return None if bare else names
+
+
+def dispatches_own(dept, body):
+    """The department's worker and reviewer that an agent's text names."""
+    return [n for n in (f"{dept}-worker", f"{dept}-reviewer")
+            if re.search(rf"(?<![A-Za-z0-9_-]){re.escape(n)}(?![A-Za-z0-9_-])", body)]
+
+
+def role_of(name, dept, text):
+    """main, reviewer, worker or other: a main agent is found by what it does (it holds the Agent
+    tool or dispatches the department's worker or reviewer), never by an -orchestrator name."""
+    if name == f"{dept}-reviewer":
+        return "reviewer"
+    if name == f"{dept}-worker":
+        return "worker"
+    meta, _ = c.parse_frontmatter(text)
+    tools = as_list((meta or {}).get("tools"))
+    if any(AGENT_GRANT.match(t) for t in tools) or dispatches_own(dept, c.split_text(text)[1]):
+        return "main"
+    return "other"
+
+
+def parse_steps(markdown):
+    """(found, steps, problems) for a SKILL.md's `## Steps`, read as Sentinel reads it: each step
+    {n, kind, target, line}, each problem (line, why). Never raises."""
+    lines = str(markdown or "").splitlines()
+    start = next((i for i, ln in enumerate(lines) if STEPS_SECTION.match(ln.strip())), None)
+    if start is None:
+        return False, [], []
+    steps, problems, current, fence = [], [], None, False
+    for i in range(start + 1, len(lines)):
+        raw, n = lines[i], i + 1
+        if raw.lstrip().startswith(("```", "~~~")):
+            fence = not fence
+            continue
+        if fence or not raw.strip():
+            continue
+        if re.match(r"^#{1,2}\s", raw):
+            break  # the next section
+        branch = BRANCH_MARK.match(raw)
+        if branch:
+            if current is None:
+                problems.append((n, "a branch line outside any step"))
+                continue
+            cond, sep, dest = branch.group(2).rpartition(":")
+            m = DESTINATION.match(dest.strip()) if sep and cond.strip() else None
+            if m is None:
+                problems.append((n, f"step {current['n']}: a branch reads 'condition: step N|stop|ask|done (max N)'"))
+            elif m.group(1):
+                current["_to"].append((n, int(m.group(1))))
+            if branch.group(1) == "->":
+                problems.append((n, f"step {current['n']}: write a branch with →, not ->"))
+            if raw[:1] not in (" ", "\t"):
+                problems.append((n, f"step {current['n']}: indent a branch line under its step"))
+            continue
+        m = STEP_LINE.match(raw)
+        if m:
+            number, rest = int(m.group(1)), m.group(2).strip()
+            kind, target, text = "unknown", None, rest
+            tag = KIND_TAG.match(rest)
+            if tag:
+                name, colon, tgt = tag.group(1).partition(":")
+                target, text = (tgt.strip() or None) if colon else None, tag.group(2)
+                if name.strip().lower() in STEP_KINDS:
+                    kind = name.strip().lower()
+                else:
+                    problems.append((n, f"step {number}: '{tag.group(1).strip()}' is not a kind (script, judgment, hand-off or ask)"))
+            else:
+                problems.append((n, f"step {number}: no [kind] after the number"))
+            expected = steps[-1]["n"] + 1 if steps else 1
+            if number != expected:
+                problems.append((n, f"step {number} comes where step {expected} was expected"))
+            if kind == "hand-off" and not target:
+                problems.append((n, f"step {number}: a hand-off names no agent ([hand-off: agent-name])"))
+            if kind == "script" and "`" not in text:
+                problems.append((n, f"step {number}: a script step names no command in backticks"))
+            current = {"n": number, "kind": kind, "target": target, "line": n, "_to": []}
+            steps.append(current)
+        elif raw[:1] not in (" ", "\t"):
+            current = None  # prose between or after the steps belongs to no step
+    numbers = {s["n"] for s in steps}
+    for s in steps:
+        problems += [(line, f"step {s['n']}: goes to step {to}, which does not exist") for line, to in s.pop("_to") if to not in numbers]
+    if not steps:
+        problems.append((start + 1, "the section has no numbered step"))
+    return True, steps, sorted(problems)
+
+
+def steps_skill(tb, dept, skills):
+    """The first of an agent's skills (in its own department) with a `## Steps`: the one Sentinel draws."""
+    for s in skills:
+        folder = tb.dept_skills[dept].get(s)
+        if folder is not None and (folder / "SKILL.md").is_file():
+            if parse_steps((folder / "SKILL.md").read_text(encoding="utf-8"))[0]:
+                return s
+    return None
+
+
+def pattern_problems(tb, name, path, role):
+    """[(kind, text)]: where one agent of a plugin department departs from the plugin pattern."""
+    dept, text = tb.dept_of(path), path.read_text(encoding="utf-8")
+    meta = c.parse_frontmatter(text)[0] or {}
+    top = [t for level, t, _ in headings(c.split_text(text)[1]) if level == 2]
+    tools, skills = as_list(meta.get("tools")), as_list(meta.get("skills"))
+    out = []
+    if role == "other":
+        return [("pattern-role", f"neither a main agent (no Agent tool; it dispatches neither {dept}-worker nor "
+                                 f"{dept}-reviewer) nor the department's reviewer or worker: a specialist, which the "
+                                 "plugin pattern folds into a section of the job's skill")]
+    if role in ("main", "reviewer"):
+        missing = [s for s in AGENT_SECTIONS if s not in top]
+        if missing:
+            out.append((f"pattern-{role}", "missing " + ", ".join(f"## {s}" for s in missing)))
+    if role == "main":
+        lines = len(text.splitlines())
+        if lines > MAIN_LINES:
+            out.append(("pattern-main", f"{lines} lines; a main agent is about 40 (goal, inputs, done, never): "
+                                        "move the procedure into its job's skill"))
+        if name.endswith("-orchestrator"):
+            out.append(("pattern-main", "named -orchestrator; a main agent is named for what it does"))
+        if not skills:
+            out.append(("pattern-main", "no skills: the job's skill holds its procedure, checklists and formats"))
+        if not tools:
+            out.append(("pattern-main", "no tools:, so it inherits every tool; grant the narrowest set"))
+        elif "Skill" not in tools:
+            out.append(("pattern-main", "tools lack Skill, so it cannot load its skills (a main session does not preload them)"))
+        if "Bash" in tools:
+            out.append(("pattern-main", "bare Bash: grant the department's named commands, Bash(<command>:*)"))
+        if skills and steps_skill(tb, dept, skills) is None:
+            out.append(("pattern-steps", f"none of its skills in {dept} ({', '.join(skills)}) has a ## Steps section, "
+                                         "so its job cannot be drawn or followed step by step"))
+    elif role == "reviewer":
+        loose = [t for t in tools if t in WRITE_TOOLS or t == "Bash" or AGENT_GRANT.match(t)]
+        if not tools:
+            out.append(("pattern-reviewer", "no tools:, so it inherits every tool, Write and Edit included; a reviewer is read-only"))
+        elif loose:
+            out.append(("pattern-reviewer", f"not read-only: its tools grant {', '.join(loose)}; it returns its verdict "
+                                            "and the main agent writes any file"))
+    elif role == "worker":
+        if not tools:
+            out.append(("pattern-worker", "no tools:, so it inherits every tool; grant the union of its slices' tools"))
+        elif any(AGENT_GRANT.match(t) for t in tools):
+            out.append(("pattern-worker", "a worker does one slice and cannot dispatch; drop Agent from its tools"))
+    return out
+
+
+def copy_source(tb, folder):
+    """The shared source a copied skill names in its marker (`shared/skills/<name>`, or a
+    `source:` line), else the shared source of the same name."""
+    try:
+        text = (folder / COPY_MARKER).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        text = ""
+    m = re.search(rf"\b{SHARED}/skills/([A-Za-z0-9_.-]+)", text) or \
+        re.search(r"^\s*(?:source|from)\s*:\s*[`'\"]?([A-Za-z0-9_.-]+)", text, re.M | re.I)
+    return tb.root / SHARED / "skills" / (m.group(1) if m else folder.name)
+
+
+def tree_files(folder, skip=()):
+    return {p.relative_to(folder).as_posix(): p for p in folder.rglob("*")
+            if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc" and p.name not in skip}
+
+
+def copy_items(tb):
+    """Every copied skill is identical to its shared source; an edit belongs in the source."""
+    out = []
+    for folder in sorted(tb.copies):
+        where = tb.rel(folder)
+        source = copy_source(tb, folder)
+        if not (source / "SKILL.md").is_file():
+            out.append(item("drift", "copy", "error", where, f"a copy whose source {tb.rel(source)} does not exist",
+                            key=f"drift:copy:{where}"))
+            continue
+        mine, theirs = tree_files(folder, skip=(COPY_MARKER,)), tree_files(source, skip=(COPY_MARKER,))
+        differ = sorted(set(mine) ^ set(theirs)) + sorted(k for k in set(mine) & set(theirs)
+                                                          if mine[k].read_bytes() != theirs[k].read_bytes())
+        if differ:
+            out.append(item("drift", "copy", "error", where,
+                            f"differs from its source {tb.rel(source)} in {', '.join(differ[:5])}"
+                            + (f" and {len(differ) - 5} more" if len(differ) > 5 else "")
+                            + "; edit the source and rebuild the copies", key=f"drift:copy:{where}"))
+    return out
+
+
+def pattern_items(tb, section):
+    """Each plugin department against the plugin pattern, and copies against their sources
+    everywhere: the items of one scan section (lint or drift)."""
+    out = copy_items(tb)
+    roles = tb.roles()
+    for dept in sorted(tb.plugins):
+        own = {n: p for n, p in tb.agents.items() if tb.dept_of(p) == dept}
+        for name, path in own.items():
+            where = tb.rel(path)
+            for kind, text in pattern_problems(tb, name, path, roles[name]):
+                out.append(item("lint", kind, "warning", where, text, key=f"lint:{kind}:{where}",
+                                evidence=["docs/converting-a-department.md and templates/ in the toolbox"]))
+            meta = tb.meta(path)[0] or {}
+            for s in as_list(meta.get("skills")):
+                if s not in tb.dept_skills[dept] and s in tb.skills:
+                    out.append(item("drift", "cross-department", "error", where,
+                                    f"loads the skill {s} from {tb.dept_of(tb.skills[s])}; a plugin loads only its own "
+                                    "skills, so copy it in (shared/manifest.yaml) or drop it",
+                                    key=f"drift:cross-department:{name}:skill:{s}"))
+            for a in granted(as_list(meta.get("tools"))) or []:
+                bare = a.split(":", 1)[-1]
+                if bare not in own:
+                    out.append(item("drift", "cross-department", "error", where,
+                                    f"Agent({a}) grants an agent that is not in {dept}; a plugin dispatches only its own "
+                                    "worker and reviewer, and hands other work over as a launch, a task or a file",
+                                    key=f"drift:cross-department:{name}:agent:{bare}"))
+        if own and f"{dept}-reviewer" not in own:
+            out.append(item("lint", "pattern-department", "warning", dept,
+                            f"no {dept}-reviewer: every check in the department runs through one read-only reviewer",
+                            key=f"lint:pattern-department:{dept}:reviewer"))
+        if own and not any(roles[n] == "main" for n in own):
+            out.append(item("lint", "pattern-department", "warning", dept,
+                            "no main agent: none holds the Agent tool or dispatches the worker or reviewer",
+                            key=f"lint:pattern-department:{dept}:main"))
+        helpers = {f"{dept}-worker", f"{dept}-reviewer", f"{dept}:{dept}-worker", f"{dept}:{dept}-reviewer"}
+        for name, folder in sorted(tb.dept_skills[dept].items()):
+            if folder in tb.copies or not (folder / "SKILL.md").is_file():
+                continue
+            where = tb.rel(folder / "SKILL.md")
+            found, steps, problems = parse_steps((folder / "SKILL.md").read_text(encoding="utf-8"))
+            if problems:
+                out.append(item("lint", "pattern-steps", "warning", where,
+                                "## Steps does not read as Sentinel's format: "
+                                + "; ".join(f"line {n}: {why}" for n, why in problems[:3])
+                                + (f"; and {len(problems) - 3} more" if len(problems) > 3 else ""),
+                                key=f"lint:pattern-steps:{where}"))
+            stray = sorted({s["target"] for s in steps if s["kind"] == "hand-off" and s["target"] and s["target"] not in helpers})
+            if stray:
+                out.append(item("lint", "pattern-handoff", "warning", where,
+                                f"## Steps hands off to {', '.join(stray)}; a step hands off only to {dept}-worker or "
+                                f"{dept}-reviewer", key=f"lint:pattern-handoff:{where}"))
+        files = list((tb.root / dept / "agents").glob("*.md")) + \
+            [p for f in tb.dept_skills[dept].values() if f not in tb.copies for p in f.rglob("*.md") if "tests" not in p.parts]
+        for path in sorted(files):
+            hits = [n for n, line in enumerate(tb.texts.get(path, "").splitlines(), 1) if SCRIPT_PATH.search(line)]
+            if hits:
+                out.append(item("lint", "pattern-script-path", "warning", tb.rel(path),
+                                f"runs a script by its path (line {', '.join(map(str, hits[:5]))}); a plugin names the "
+                                "command from its bin/", key=f"lint:pattern-script-path:{tb.rel(path)}"))
+    return [i for i in out if i["section"] == section]
 
 
 # --- drift --------------------------------------------------------------------------------
@@ -344,14 +699,15 @@ def drift_items(tb):
             if line.startswith("|") and not set(line) <= set("|- :"):
                 named |= set(re.findall(r"`([a-z0-9-]+)`", line.strip().strip("|").split("|")[0]))
         own = {n for n, p in tb.agents.items() if Path(tb.rel(p)).parts[0] == d} | \
-              {n for n, p in tb.skills.items() if Path(tb.rel(p)).parts[0] == d}
+              {n for n, p in tb.dept_skills[d].items() if p not in tb.copies}  # copies are the source's
         for n in sorted(own - named):
             out.append(item("drift", "readme", "warning", f"{d}/README.md", f"{n} is in the department but not in its README tables",
                             key=f"drift:readme-missing:{d}:{n}"))
-        for n in sorted(named - set(tb.agents) - set(tb.skills)):
+        commands = {n for cmds in tb.commands.values() for n in cmds}
+        for n in sorted(named - set(tb.agents) - set(tb.skills) - commands):
             if re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)+", n):
                 out.append(item("drift", "readme", "warning", f"{d}/README.md",
-                                f"the README lists {n}, which no department has as an agent or skill",
+                                f"the README lists {n}, which no department has as an agent, skill or command",
                                 key=f"drift:readme-stale:{d}:{n}"))
     settings_doc = (tb.root / "docs" / "settings.md")
     doc = settings_doc.read_text(encoding="utf-8") if settings_doc.is_file() else ""
@@ -450,21 +806,33 @@ def mentioned(tb, name, own):
 
 def unused_items(tb):
     out = []
+    entry = set(tb.main_agents())  # a plugin's main agent is what an Automation or a person starts
     for name, path in tb.agents.items():
-        if not mentioned(tb, name, lambda p, me=path: p == me):
+        if name not in entry and not mentioned(tb, name, lambda p, me=path: p == me):
             out.append(item("unused", "agent", "info", tb.rel(path), f"no other file names the agent {name}",
                             key=f"unused:agent:{name}"))
+    copies = {}
+    for folder in tb.copies:
+        copies.setdefault(folder.name, []).append(folder)
     for name, folder in tb.skills.items():
-        if not mentioned(tb, name, lambda p, f=folder: p.is_relative_to(f)):
+        same = [folder] + copies.get(name, [])
+        if not mentioned(tb, name, lambda p, fs=same: any(p.is_relative_to(f) for f in fs)):
             out.append(item("unused", "skill", "info", tb.rel(folder),
                             f"no agent or other skill names the skill {name}; only a person can invoke it",
                             key=f"unused:skill:{name}"))
+    named_as = {}  # (skill, script file) -> the commands a plugin's bin/ runs it as
+    for cmds in tb.commands.values():
+        for cmd, script in cmds.items():
+            named_as.setdefault((script.parent.parent.name, script.name), set()).add(cmd)
     for path in tb.scripts:
         if "tests" in path.parts:
             continue
         tests = path.parent / "tests"
-        names = {path.name, path.stem.replace("_", "-")}
-        if not any(mentioned(tb, n, lambda p, me=path, t=tests: p == me or p.is_relative_to(t)) for n in names):
+        skill = path.parent.parent.name
+        names = {path.name, path.stem.replace("_", "-")} | named_as.get((skill, path.name), set())
+        homes = copies.get(skill, [])
+        if not any(mentioned(tb, n, lambda p, me=path, t=tests, hs=homes: p == me or p.is_relative_to(t)
+                             or any(p.is_relative_to(h) for h in hs)) for n in names):
             out.append(item("unused", "script", "info", tb.rel(path), f"no agent, skill or other script names {path.name}",
                             key=f"unused:script:{tb.rel(path)}"))
     return out
@@ -495,7 +863,8 @@ def duplicate_items(tb):
 
 
 def teams(tb):
-    """Each orchestrator's agents (backticked names in its tables) and the skills each loads."""
+    """Each main agent's agents and the skills each loads: an orchestrator's from its tables (the
+    agent file standard), a plugin main agent's as the department's worker and reviewer it names."""
     result = {}
     for name in tb.orchestrators():
         body = c.split_text(tb.agents[name].read_text(encoding="utf-8"))[1]
@@ -505,7 +874,18 @@ def teams(tb):
                 for n in re.findall(r"`([a-z0-9-]+)`", line.strip().strip("|").split("|")[0]):
                     if n in tb.agents and n not in members and n != name:
                         members.append(n)
-        result[name] = {"agent_file": tb.rel(tb.agents[name]),
+        result[name] = {"pattern": "agent-file", "agent_file": tb.rel(tb.agents[name]),
+                        "workers": [{"agent": m, "skills": (tb.meta(tb.agents[m])[0] or {}).get("skills") or []} for m in members]}
+    for name in tb.main_agents():
+        path = tb.agents[name]
+        dept = tb.dept_of(path)
+        skills = as_list((tb.meta(path)[0] or {}).get("skills"))
+        job = steps_skill(tb, dept, skills)
+        text = c.split_text(path.read_text(encoding="utf-8"))[1]
+        if job:
+            text += tb.texts.get(tb.dept_skills[dept][job] / "SKILL.md", "")
+        members = [m for m in dispatches_own(dept, text) if m in tb.agents]
+        result[name] = {"pattern": "plugin", "agent_file": tb.rel(path), "skills": skills, "steps_skill": job,
                         "workers": [{"agent": m, "skills": (tb.meta(tb.agents[m])[0] or {}).get("skills") or []} for m in members]}
     return result
 
@@ -523,8 +903,8 @@ def scan(root, run_help=True):
             sections[name] = {"ok": False, "error": f"{type(exc).__name__}: {exc}"[:300]}
             return []
 
-    for name, fn in (("check", lambda: check_items(tb)), ("lint", lambda: lint_items(tb) + template_items(tb)),
-                     ("drift", lambda: drift_items(tb)),
+    for name, fn in (("check", lambda: check_items(tb)), ("lint", lambda: lint_items(tb) + template_items(tb) + pattern_items(tb, "lint")),
+                     ("drift", lambda: drift_items(tb) + pattern_items(tb, "drift")),
                      ("scripts", lambda: script_items(tb, run_help)), ("unused", lambda: unused_items(tb)),
                      ("duplicates", lambda: duplicate_items(tb))):
         for it in section(name, fn) or []:
@@ -532,7 +912,8 @@ def scan(root, run_help=True):
     team = section("teams", lambda: teams(tb)) or {}
     order = {lvl: i for i, lvl in enumerate(c.LEVELS)}
     listed = sorted(items.values(), key=lambda i: (order.get(i["level"], 9), i["section"], i["key"]))
-    counts = {"departments": len(tb.departments), "agents": len(tb.agents), "orchestrators": len(tb.orchestrators()),
+    counts = {"departments": len(tb.departments), "plugins": len(tb.plugins), "agents": len(tb.agents),
+              "orchestrators": len(tb.orchestrators()), "main_agents": len(tb.main_agents()),
               "skills": len(tb.skills), "scripts": len([p for p in tb.scripts if "tests" not in p.parts]),
               "error": sum(1 for i in listed if i["level"] == "error"),
               "warning": sum(1 for i in listed if i["level"] == "warning"),
@@ -548,7 +929,8 @@ def scan(root, run_help=True):
 
 def headline(result):
     counts = result["counts"]
-    text = (f"{counts['departments']} departments, {counts['agents']} agents ({counts['orchestrators']} orchestrators), "
+    text = (f"{counts['departments']} departments ({counts.get('plugins', 0)} plugins), {counts['agents']} agents "
+            f"({counts['orchestrators']} orchestrators, {counts.get('main_agents', 0)} main agents), "
             f"{counts['skills']} skills, {counts['scripts']} scripts; {counts['error']} error(s), "
             f"{counts['warning']} warning(s), {counts['info']} info")
     stale = [k for k, v in result["sections"].items() if not v.get("ok")]

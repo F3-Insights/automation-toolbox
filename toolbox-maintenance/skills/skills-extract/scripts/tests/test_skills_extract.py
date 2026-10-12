@@ -314,8 +314,9 @@ def skill(folder: Path, name: str, description: str, body: str = "", scripts=())
 
 
 @pytest.fixture
-def machine(tmp_path: Path) -> dict:
+def machine(tmp_path: Path, monkeypatch) -> dict:
     """A made-up home folder with skills in all four kinds of place, and Acme Components sessions."""
+    monkeypatch.setenv("F3I_TOOLBOX_SETTINGS", str(tmp_path / "no-settings.toml"))
     home = tmp_path / "home"
     toolbox = home / "toolbox" / "skills"
     skill(toolbox / "finance-close", "finance-close", "Run the month-end close.",
@@ -459,3 +460,41 @@ def test_the_inventory_refuses_a_git_tree_and_a_missing_pack(machine, tmp_path, 
     assert inventory_script.main(["--pack", str(machine["pack"]), "--out", str(repo / "skills.json")]) == 2
     assert inventory_script.main(["--pack", str(tmp_path / "none.json"), "--out", str(machine["out"])]) == 2
     assert "git working tree" in capsys.readouterr().err
+
+
+def acme_toolbox(root: Path) -> Path:
+    """A toolbox checkout: gadgets converted to a plugin, widgets not yet, a shared source."""
+    (root / "gadgets" / ".claude-plugin").mkdir(parents=True)
+    (root / "gadgets" / ".claude-plugin" / "plugin.json").write_text('{"name": "gadgets", "description": "d", "version": "0.1.0"}')
+    skill(root / "gadgets" / "skills" / "gadget-count", "gadget-count", "Count the gadget lots.", "## Steps\n\n1. [judgment] Count.\n")
+    skill(root / "gadgets" / "skills" / "acme-conduct", "acme-conduct", "How every Acme agent behaves.")
+    skill(root / "widgets" / "skills" / "widget-tally", "widget-tally", "Tally the widget lots.")
+    skill(root / "shared" / "skills" / "acme-conduct", "acme-conduct", "How every Acme agent behaves.")
+    return root
+
+
+def test_the_inventory_reads_a_toolboxs_plugin_departments(machine, tmp_path):
+    toolbox = acme_toolbox(tmp_path / "toolbox")
+    result = run_inventory(machine, "--toolbox", str(toolbox))
+    by = result["by"]
+    assert by["gadgets:gadget-count"]["kinds"] == ["plugin"] and by["gadgets:gadget-count"]["has_steps"]
+    assert by["gadgets:acme-conduct"]["plugin"] == "gadgets"  # the copy, as the plugin carries it
+    assert by["widget-tally"]["kinds"] == ["toolbox"]  # not yet a plugin: its plain name
+    assert "acme-conduct" not in by  # the shared source is not installed
+    assert {p["kind"] for p in result["data"]["locations"]} >= {"plugin", "toolbox"}
+
+
+def test_a_plugins_skills_folder_given_by_hand_is_that_plugins(machine, tmp_path):
+    toolbox = acme_toolbox(tmp_path / "toolbox")
+    by = run_inventory(machine, "--skills-dir", str(toolbox / "gadgets" / "skills"))["by"]
+    assert by["gadgets:gadget-count"]["kinds"] == ["given"]
+
+
+def test_the_toolbox_is_a_setting(machine, tmp_path, monkeypatch):
+    toolbox = acme_toolbox(tmp_path / "toolbox")
+    settings = tmp_path / "settings.toml"
+    settings.write_text(f'[skills-extract]\ntoolbox_dirs = ["{toolbox}"]\n')
+    monkeypatch.setenv("F3I_TOOLBOX_SETTINGS", str(settings))
+    assert "gadgets:gadget-count" in run_inventory(machine)["by"]
+    assert inventory_script.main(["--pack", str(machine["pack"]), "--out", str(machine["out"]),
+                                  "--home", str(machine["home"]), "--toolbox", str(tmp_path / "nowhere")]) == 2

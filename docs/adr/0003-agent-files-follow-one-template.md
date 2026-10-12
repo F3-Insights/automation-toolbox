@@ -1,6 +1,6 @@
 # 0003. Agent files follow one template
 
-Status: accepted, 2026-10-07.
+Status: accepted, 2026-10-07; amended 2026-10-11 for plugin departments (below).
 
 ## Context
 
@@ -20,3 +20,17 @@ The toolbox's 198 agents were written over many months by different sessions, an
 - Every existing agent is flagged on the first scan (198 of 198 on 2026-10-07): the standard is new, and no agent was written to it. They are brought to it department by department, each with an independent review, as other work touches them.
 - ICM's stage contract is settled by this record: Inputs, Approach and Output cover its Inputs, Process and Outputs.
 - Orchestrators that followed the scaffold's earlier eight-step session shape (orient, facts, plan, dispatch, review, findings, questions, close) keep that content; it moves into the five stages.
+
+## Amendment, 2026-10-11: one template per role in a plugin department
+
+**What changed.** A department that is a plugin (its folder holds `.claude-plugin/plugin.json`, [0004](0004-a-department-is-a-plugin.md)) still writes every agent to one template, but the templates are the plugin pattern's three, drawn from the software department's six agents and kept in the toolbox's `templates/`:
+
+1. **A main agent per job** (`templates/main-agent.md`): an opening sentence, `## Goal`, `## Inputs`, `## How to work`, `## Done`, `## Never`, with `skills:` and `tools:` (including `Skill`) in the frontmatter, about 40 lines. It is named for what it does, not `-orchestrator`, and is recognised by what it does: it holds the `Agent` tool or dispatches its department's worker or reviewer. Its procedure is the `## Steps` section of its job's skill, in the format Sentinel draws (`N. [script|judgment|hand-off: agent|ask] text`, branch lines `→ condition: step N|stop|ask|done (max N)`), not the five stages; the former specialists' instructions are `##` sections of that skill.
+2. **One `<department>-reviewer`** (`templates/reviewer.md`): read-only (no Write, Edit or bare Bash), judges from the sources alone against the checklist section its brief names, and returns PASS or FAIL with numbered fixes.
+3. **At most one `<department>-worker`** (`templates/worker.md`): does one slice following the section its brief names and returns that section's block; it cannot dispatch.
+
+A step hands off only to the department's own worker or reviewer, and no `skills:` entry or `Agent(...)` grant names another department's piece. Decision 2's five stages and `## Team`, and decision 3's sub-agent template, apply only to departments that are not yet plugins; decision 5's templates in the `orchestrator-scaffold` skill are that older pattern's.
+
+**Why.** The software department's conversion showed the five stages and the specialists cost more context than they returned: most specialist steps were done better by the main agent following a skill section, and the only reasons left to dispatch are independence (the reviewer) and parallel or isolated work (the worker). Keeping "one template" while changing what it is lets the audit go on telling an agent that has drifted from one that was never shaped.
+
+**Consequences.** Both patterns stand side by side until the last department converts. The toolbox audit judges each department by the one it is on (decision 6 still holds: it reports drift and never fixes it), so a converted department is checked against the plugin pattern instead of being flagged against the old one, and an unconverted one is judged as before. How to convert a department is `docs/converting-a-department.md`.

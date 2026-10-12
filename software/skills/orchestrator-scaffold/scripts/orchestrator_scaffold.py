@@ -1321,9 +1321,10 @@ def load_denylist():
     return terms
 
 
-def lint(root, orchestrator, agents, texts, skills, scripts, launch=None, launch_where="launcher"):
+def lint(root, orchestrator, agents, texts, skills, scripts, launch=None, launch_where="launcher", plugin=False):
     """Findings as (level, lint, where, text). agents: name -> (where, text); texts: toolbox
-    files to screen for private names and home paths; scripts: generated script paths."""
+    files to screen for private names and home paths; scripts: generated script paths. plugin:
+    the agent is a main agent of a plugin department, named for what it does (ADR 0004)."""
     out = []
 
     def err(name, where, text):
@@ -1346,7 +1347,7 @@ def lint(root, orchestrator, agents, texts, skills, scripts, launch=None, launch
             return None
         return f"'{first}' is no script in any skill's scripts/ folder"
 
-    if not NAME_RE.match(orchestrator):
+    if not plugin and not NAME_RE.match(orchestrator):
         err("name", orchestrator, "an orchestrator is kebab-case <domain>-<thing>-orchestrator")
     rules = []
     for name, (where, text) in agents.items():
@@ -1536,7 +1537,13 @@ def lint_existing(args):
         raise SpecError(f"no agent {args.name}.md under {root}/*/agents")
     text = path.read_text(encoding="utf-8")
     agents = {args.name: (str(path.relative_to(root)), text)}
-    for member in team_from_table(split_frontmatter(text)[1], root):
+    plugin = is_plugin(path.parent.parent)
+    members = team_from_table(split_frontmatter(text)[1], root)
+    if plugin:  # a plugin's main agent names its department's worker and reviewer in prose, not a table
+        dept = path.parent.parent.name
+        members += [m for m in (f"{dept}-worker", f"{dept}-reviewer")
+                    if m not in members and re.search(rf"(?<![a-z0-9-]){m}(?![a-z0-9-])", text) and find_agent(root, m)]
+    for member in members:
         if member != args.name:
             p = find_agent(root, member)
             agents[member] = (str(p.relative_to(root)), p.read_text(encoding="utf-8"))
@@ -1555,7 +1562,7 @@ def lint_existing(args):
             raise SpecError(f"launcher {args.launcher}: {exc}") from None
         if launch.get("agent") and launch["agent"] != args.name:
             raise SpecError(f"launcher {args.launcher} is for {launch['agent']}, not {args.name}")
-    findings = lint(root, args.name, agents, texts, skill_names(root), set(), launch, str(args.launcher or ""))
+    findings = lint(root, args.name, agents, texts, skill_names(root), set(), launch, str(args.launcher or ""), plugin)
     errors = [f for f in findings if f[0] == "error"]
     if args.format == "json":
         print(json.dumps({"name": args.name, "ok": not errors, "agents": sorted(agents),

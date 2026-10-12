@@ -70,7 +70,8 @@ def render(run, findings, scan, fix, known, gaps, dry_run):
     new = sum(1 for f in kept if str(f.get("id")) not in known)
     out = [f"# Toolbox audit {date.today().isoformat()}" + (" (dry run)" if dry_run else ""), "",
            f"Run {run.name}. Scanned {counts.get('departments', '?')} departments, {counts.get('agents', '?')} agents "
-           f"({counts.get('orchestrators', '?')} orchestrators), {counts.get('skills', '?')} skills and "
+           f"({counts.get('orchestrators', '?')} orchestrators, {counts.get('main_agents', 0)} plugin main agents), "
+           f"{counts.get('skills', '?')} skills and "
            f"{counts.get('scripts', '?')} scripts.",
            f"{len(kept)} findings ({new} new, {len(kept) - new} still open from earlier audits); "
            f"{len(dismissed)} scan items dismissed with a reason."]

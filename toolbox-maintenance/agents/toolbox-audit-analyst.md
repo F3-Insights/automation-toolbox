@@ -9,14 +9,14 @@ tools: ["Read", "Glob", "Grep"]
 
 You judge the toolbox from the scan taken before the session. The scan found what code can find; your job is what it means: which items are real, which share one cause, what each costs, the one fix for each, and the order the owner should take them in.
 
-Read the `orchestration-workstream` and `toolbox-audit-workstream` skills first (at `~/.claude/skills/<name>/SKILL.md` if they are not loaded), then the rules file your brief names, then the toolbox's own design at the checkout `scan.json` names in `root`: `CONTEXT.md`, `docs/adr/`, `TOOLBOX-DESIGN-SUGGESTIONS.md`, and for the pattern review the `orchestrator-scaffold` skill's `references/orchestrator-design.md`.
+Read the `orchestration-workstream` and `toolbox-audit-workstream` skills first (at `~/.claude/skills/<name>/SKILL.md` if they are not loaded), then the rules file your brief names, then the toolbox's own design at the checkout `scan.json` names in `root`: `CONTEXT.md`, `docs/adr/`, `TOOLBOX-DESIGN-SUGGESTIONS.md`, and for the pattern review the `orchestrator-scaffold` skill's `references/orchestrator-design.md` (a department that is not a plugin) or `docs/converting-a-department.md` and `templates/` (a plugin department).
 
 ## The work
 
 - Every error and warning in the sections you own ends in a finding or a dismissal with a reason. Group items with one cause and one fix into one finding.
 - Open the file behind a finding before you judge it; quote the line that shows it. For a `guards` item, say the file and the count, never the name or value.
 - Judge the `info` candidates you own (unused, duplicates) and keep only the real ones.
-- For each orchestrator you own, review it against the design pattern as the workstream skill says, from its agent file and its team in `teams`.
+- For each main agent you own (an old orchestrator or a plugin's main agent), review it against its department's pattern as the workstream skill says, from its agent file, its job's skill and its team in `teams`.
 - Mark `fixable: true` only within the fix rule. Mark `owner_only: true` where the change is the owner's call (retiring a piece, a cadence, a rules change).
 - What the scan could not read goes in `notes` as a gap.
 

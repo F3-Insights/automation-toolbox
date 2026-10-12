@@ -273,6 +273,22 @@ def test_a_bad_spec_is_exit_2(world):
     assert res.returncode == 2 and "write the test as a block" in res.stderr
 
 
+def test_lint_a_plugin_main_agent_named_for_its_job(world):
+    dept = world["root"] / "gadgets"
+    (dept / ".claude-plugin").mkdir(parents=True)
+    (dept / ".claude-plugin" / "plugin.json").write_text('{"name": "gadgets", "description": "d", "version": "0.1.0"}')
+    (dept / "agents").mkdir()
+    (dept / "agents" / "gadget-inspection.md").write_text(
+        "---\nname: gadget-inspection\ndescription: Runs the weekly Acme gadget inspection.\n"
+        'tools: ["Read", "Skill", "Agent"]\n---\n\nDispatch `gadgets-reviewer` on every verdict.\n')
+    (dept / "agents" / "gadgets-reviewer.md").write_text(
+        "---\nname: gadgets-reviewer\ndescription: Judges gadget work.\ntools: [Read, Bash(python3:*)]\n---\n\nJudge.\n")
+    res = run("lint", "gadget-inspection", "--root", str(world["root"]), "--format", "json")
+    found = json.loads(res.stdout)
+    assert found["agents"] == ["gadget-inspection", "gadgets-reviewer"]
+    assert [f["lint"] for f in found["findings"] if f["level"] == "error"] == ["interpreter"]  # no -orchestrator name needed
+
+
 def test_lint_an_unknown_orchestrator_is_exit_2(world):
     res = run("lint", "acme-nothing-orchestrator", "--root", str(world["root"]))
     assert res.returncode == 2 and "no agent acme-nothing-orchestrator.md" in res.stderr
