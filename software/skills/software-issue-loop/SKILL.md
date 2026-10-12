@@ -58,7 +58,7 @@ How the lead works a session, in brief; the sections below say how each part is 
 5. [hand-off: software-reviewer] Review a risky PR: hard to undo, security-relevant, large or reworked (section Review).
    → FAIL: step 4 (max 2)
 6. [script] Merge the verified PR into the integration branch: `software-pr-merge N -R OWNER/REPO`, then close its issue.
-   → refused: step 7, with the reason it printed
+   → refused (the comment gives the reason it printed): step 7
 7. [judgment] Update the issue's label and comment so a person arriving cold knows where it stands.
    → more to do: step 2
 8. [judgment] Report what moved, what is blocked and any question for the owner.
