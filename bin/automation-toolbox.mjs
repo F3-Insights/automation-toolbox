@@ -42,7 +42,8 @@ function catalog() {
   const departments = [];
   for (const name of fs.readdirSync(ROOT).sort()) {
     const dir = path.join(ROOT, name);
-    if (name.startsWith(".") || !fs.statSync(dir).isDirectory()) continue;
+    // shared/ holds the sources of skills copied into departments; installing a department brings its copies.
+    if (name.startsWith(".") || name === "shared" || !fs.statSync(dir).isDirectory()) continue;
     const agentsDir = path.join(dir, "agents");
     const skillsDir = path.join(dir, "skills");
     if (!fs.existsSync(agentsDir) && !fs.existsSync(skillsDir)) continue;
