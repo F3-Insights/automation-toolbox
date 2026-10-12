@@ -115,6 +115,62 @@ def test_collision_fails_and_changes_nothing(tb, out):
     assert snapshot(out) == before
 
 
+def share(tb: Path, skill: str, *depts: str) -> None:
+    """Make `skill` a shared skill with a marked copy in each department, as build_shared.py does."""
+    (tb / "shared" / "skills" / skill).mkdir(parents=True, exist_ok=True)
+    (tb / "shared" / "skills" / skill / "SKILL.md").write_text(f"---\nname: {skill}\n---\n")
+    for dept in depts:
+        copy = tb / dept / "skills" / skill
+        copy.mkdir(parents=True, exist_ok=True)
+        (copy / "SKILL.md").write_text(f"---\nname: {skill}\n---\n")
+        (copy / ".shared-copy").write_text(f"Generated.\nsource: shared/skills/{skill}\n")
+
+
+def test_copies_of_one_shared_skill_link_its_source_once(tb, out):
+    share(tb, "common-method", "widgets", "gadgets")
+    r = run(tb, str(out))
+    assert r.returncode == 0, r.stderr
+    link = out / "skills" / "common-method"
+    assert link.is_symlink()
+    assert link.resolve() == (tb / "shared" / "skills" / "common-method").resolve()
+    assert "3 agents and 4 skills linked" in r.stdout
+
+
+def test_a_skill_moved_into_shared_is_relinked_to_its_source(tb, out):
+    run(tb, str(out))
+    shutil.rmtree(tb / "widgets" / "skills" / "widget-method")
+    share(tb, "widget-method", "widgets", "gadgets")
+    r = run(tb, str(out))
+    assert r.returncode == 0, r.stderr
+    assert "replace skills/widget-method" in r.stdout
+    assert (out / "skills" / "widget-method").resolve() == (tb / "shared" / "skills" / "widget-method").resolve()
+
+
+def test_a_copy_beside_a_different_skill_of_the_same_name_fails(tb, out):
+    run(tb, str(out))
+    before = snapshot(out)
+    share(tb, "gadget-method", "widgets")  # gadgets has its own, unmarked gadget-method
+    r = run(tb, str(out))
+    assert r.returncode == 2
+    assert "skill name 'gadget-method' is held by folders that are not all copies" in r.stderr
+    assert snapshot(out) == before
+
+
+def test_a_copy_whose_source_is_gone_fails(tb, out):
+    share(tb, "common-method", "widgets", "gadgets")
+    shutil.rmtree(tb / "shared")
+    r = run(tb, str(out))
+    assert r.returncode == 2
+    assert "held only by copies of shared/skills/common-method, which has no SKILL.md" in r.stderr
+
+
+def test_shared_alone_is_not_a_department(tb, out):
+    share(tb, "orphan-method")  # a source with no copy is not linked
+    r = run(tb, str(out))
+    assert r.returncode == 0, r.stderr
+    assert not os.path.lexists(out / "skills" / "orphan-method")
+
+
 def test_foreign_link_and_real_file_untouched(tb, out, tmp_path):
     run(tb, str(out))
     elsewhere = tmp_path / "elsewhere"

@@ -30,14 +30,14 @@ Used by name from other departments: `orchestration-workstream` and `orchestrato
 Each script runs by path, `python3 ~/.claude/skills/<skill>/scripts/<script>.py`, and prints `--help`. Nothing is installed.
 
 **`toolbox-audit-workstream`** (Python 3.11 with `pyyaml`)
-- `toolbox_audit_scan.py`: reads the toolbox before the session, reusing its `scripts/toolbox_check.py` and the scaffold lint, reports each agent file that drifts from the agent file standard (ADR 0003), and writes `scan.json`.
+- `toolbox_audit_scan.py`: reads the toolbox before the session, reusing its `scripts/toolbox_check.py` and the scaffold lint, judges each department by the pattern it is on (a plugin department by the plugin pattern of ADR 0004, every other one by the agent file standard of ADR 0003), checks copied skills against their sources, and writes `scan.json`.
 - `toolbox_audit_fix.py`: `open` makes the Run's worktree on a `toolbox-audit/fixes-<date>` branch, `verify` checks the diff against the fix rule, `commit` commits it there only after the checker's PASS and the toolbox check; never touches the live checkout, never merges or pushes.
 - `toolbox_audit_check.py`: whether an audit is due (`--precheck`) and whether a Run's audit is done (`--run`).
 - `toolbox_audit_record.py`: the Run's REPORT.md, the findings ledger, `runs.jsonl` and the task change set.
 
 **`skills-extract`** (standard library)
 - `session_pack.py`: condenses past sessions on one topic into a private data pack.
-- `skill_inventory.py`: lists every skill already installed and how often the sessions used it.
+- `skill_inventory.py`: lists every skill already installed (a toolbox checkout's plugin departments included) and how often the sessions used it.
 - `name_check.py`: flags private names, paths and numbers in drafts and their file paths, including the toolbox's external denylist; it reports file, line and kind, never what matched.
 
 **`skill-harvest-workstream`** (standard library)

@@ -1,5 +1,7 @@
 # The agent file standard
 
+This is the standard of a department that is not yet a plugin. A department whose folder holds `.claude-plugin/plugin.json` writes its agents from the plugin pattern's templates instead (the toolbox's `templates/main-agent.md`, `templates/reviewer.md` and `templates/worker.md`; ADR 0003 as amended on 2026-10-11, and ADR 0004).
+
 Every agent in the toolbox is written to one template, so a reader finds the same thing in the same place in every file and the toolbox audit can tell when one drifts. The decision is ADR 0003 in the toolbox's `docs/adr/`. The two templates are `templates/orchestrator.md` and `templates/sub-agent.md` beside this file; `orchestrator_scaffold.py generate` fills them from a spec, and a hand-written agent starts from a copy of one, replacing each `{{slot}}`.
 
 ## Agent or skill

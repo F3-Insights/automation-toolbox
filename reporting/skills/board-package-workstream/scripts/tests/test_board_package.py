@@ -437,3 +437,9 @@ def test_the_evidence_file_keeps_other_rows_byte_for_byte(tmp_path):
     assert bc.upsert_row(path, bc.EVIDENCE_COLUMNS, "review:finance", {"state": "failed"}) == "updated"
     assert bc.evidence_rows(path)["review:finance"]["state"] == "failed"
     assert path.read_bytes().startswith(before)
+
+
+def test_month_end_check_comes_from_this_checkout():
+    """The month-end-workstream check script is found through the toolbox checkout."""
+    script = Path(bc.MONTH_END_CHECK)
+    assert script.is_file() and SCRIPTS.parents[3] in script.parents

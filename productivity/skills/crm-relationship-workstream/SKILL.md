@@ -38,7 +38,7 @@ A pick carries one specific reason to write now, from the record: something they
 
 ## Last week's sent count
 
-For each draft the previous Run staged (the Portal's drafts with this orchestrator's `agent_slug`, created 7 to 14 days ago), count it sent when the draft's state is `sent` or the contact shows an outbound touch after the draft was created. Report sent, deleted or edited when visible, and still open. This is the pass's grade: drafts the owner does not send are the review load the pass exists to avoid.
+For each draft the previous Run staged (the Portal's drafts with this orchestrator's `agent_slug`, created 7 to 14 days ago; read drafts under both `crm-relationship-tending-orchestrator` and its new name `productivity-relationship-tender`, so the count survives the rename, until a month after productivity converts), count it sent when the draft's state is `sent` or the contact shows an outbound touch after the draft was created. Report sent, deleted or edited when visible, and still open. This is the pass's grade: drafts the owner does not send are the review load the pass exists to avoid.
 
 ## DONE checklist
 

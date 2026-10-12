@@ -195,3 +195,15 @@ def test_calendar_and_score_come_from_the_owning_skills_scripts(tmp_path, monkey
     check.write_text("print('STALE: the Portal could not be read')\n")
     with pytest.raises(c.PortalError, match="STALE"):
         c.stack_check(tmp_path / "t.json", TODAY)
+
+
+def test_the_agent_name_and_its_planned_new_name():
+    """Change sets carry the current name until productivity converts; the new one is named beside it."""
+    assert c.ORCHESTRATOR_NAMES == ("weekly-review-orchestrator", "productivity-weekly-review")
+    assert c.ORCHESTRATOR == c.ORCHESTRATOR_NAMES[0]
+
+
+def test_other_skills_scripts_come_from_this_checkout():
+    toolbox = c.SKILL_DIR.parents[2]
+    for path in (c.TASK_STACK_CHECK, c.TASK_STACK_APPLY, ga.CALENDAR_TIME):
+        assert path.is_file() and toolbox in path.parents, path

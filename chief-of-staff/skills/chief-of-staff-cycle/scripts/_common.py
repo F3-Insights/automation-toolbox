@@ -21,10 +21,11 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from _skill_paths import skill_file
+
 SKILL_DIR = Path(__file__).resolve().parents[1]
-SKILLS_HOME = Path("~/.claude/skills").expanduser()
-NOTIFY_SCRIPT = SKILLS_HOME / "comms-reply-to-email" / "scripts" / "notify_owner.py"
-PRODUCE_INSTRUCTIONS = SKILLS_HOME / "task-stack-produce" / "SKILL.md"
+NOTIFY_SCRIPT = skill_file("comms-reply-to-email", "scripts", "notify_owner.py")
+PRODUCE_INSTRUCTIONS = skill_file("task-stack-produce", "SKILL.md")
 
 SECTION = "chief-of-staff-cycle"
 OK, STOP, ERROR = 0, 3, 2
@@ -35,8 +36,42 @@ DECISION_PREFIX = "[{name}]"
 CYCLE_MARK = "<!-- chief-of-staff:cycle:{cycle_id} -->"
 DECISION_MARKER = "chief-of-staff:decision:{date}:{key}"
 OWN_SKILLS = ("chief-of-staff-cycle",)
-OWN_AGENTS = ("chief-of-staff-cycle-orchestrator",)
-CYCLE_AGENT = "chief-of-staff-cycle-orchestrator"
+# The cycle's own agent, by its current name and the one the department migration gives it
+# (remove the old name a month after chief-of-staff converts).
+OWN_AGENTS = ("chief-of-staff-cycle-orchestrator", "chief-of-staff-cycle")
+CYCLE_AGENT = OWN_AGENTS[0]
+# A main agent is launched, never dispatched as a doer. Today most end in -orchestrator; the
+# department migration gives them these names (software's already have them; daily-planner
+# covers a recurring-summaries plugin renamed daily). Drop the -orchestrator test a month
+# after the last department converts; keep this list until the cycle reads main agents from
+# each department's catalogue.
+RENAMED_MAIN_AGENTS = (
+    "accounting-audit-support", "accounting-collections-review", "accounting-firm-billing",
+    "accounting-firm-books-close", "accounting-intercompany-reconciliation",
+    "accounting-month-end-close", "accounting-product-costing-review", "accounting-questions",
+    "accounting-vendor-1099", "compliance-calendar-keeper", "compliance-entity-wind-down",
+    "compliance-it-governance", "daily-planner", "decision-playbooks-curator",
+    "finance-analysis", "finance-budget", "finance-cash-forecast", "finance-forecast",
+    "finance-investor-posting", "learning-community-host", "learning-seminar-builder",
+    "marketing-case-study-writer", "marketing-post-writer", "personal-finance-review-prep",
+    "personal-health-check-in", "personal-home-infrastructure-check",
+    "personal-household-keeper", "personal-tax-season-checklist",
+    "process-engineering-assessment-intake", "process-engineering-automation-scoping",
+    "process-engineering-discovery-synthesis", "process-engineering-process-flow",
+    "process-engineering-survey-analytics", "process-engineering-workshop",
+    "productivity-calendar-steward", "productivity-clerical-router", "productivity-crm-hygiene",
+    "productivity-email-replier", "productivity-follow-up", "productivity-meeting-preparer",
+    "productivity-relationship-tender", "productivity-task-capturer",
+    "productivity-task-clarifier", "productivity-task-reconciler", "productivity-time-study",
+    "productivity-transcript-processor", "productivity-weekly-review",
+    "projects-client-delivery", "projects-engagement-closeout", "projects-engagement-kickoff",
+    "projects-health-review", "projects-tech-portfolio", "recurring-summaries-daily-planner",
+    "recurring-summaries-nightly-sweep", "reporting-board-package", "reporting-client-update",
+    "reporting-weekly-report", "sales-lead-intake", "sales-pipeline-review",
+    "sales-proposal-writer", "software-developer", "software-issue-collector",
+    "software-release-prep", "software-weekly-review", "strategy-goal-alignment",
+    "toolbox-maintenance-auditor", "toolbox-maintenance-skill-harvester",
+)
 
 _NAME_OK = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .'&-]{0,39}$")
 UUID = r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"
@@ -311,7 +346,8 @@ def load_doers(path=None):
         if (route == "skill" and not spec["skill"]) or not spec["worker"] or bad:
             out["problems"].append(f"{name}: needs a valid skill or agent name")
             continue
-        if spec["skill"] in OWN_SKILLS or spec["worker"] in OWN_AGENTS or spec["worker"].endswith("-orchestrator"):
+        if (spec["skill"] in OWN_SKILLS or spec["worker"] in OWN_AGENTS or spec["worker"].endswith("-orchestrator")
+                or spec["worker"] in RENAMED_MAIN_AGENTS):
             out["problems"].append(f"{name}: an orchestrator is launched, never dispatched as a doer")
             continue
         try:

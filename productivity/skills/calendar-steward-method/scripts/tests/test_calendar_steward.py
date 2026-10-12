@@ -310,3 +310,14 @@ def test_the_ledger_refuses_a_file_with_other_columns(tmp_path):
     (tmp_path / "CALENDAR-STEWARD-ITEMS.csv").write_text("id,something\n1,x\n")
     with pytest.raises(c.Bad):
         c.Ledger(tmp_path).rows()
+
+
+def test_the_agent_name_and_its_planned_new_name():
+    """Change sets and the approval task carry the current name until productivity converts."""
+    assert c.ORCHESTRATOR_NAMES == ("calendar-steward-orchestrator", "productivity-calendar-steward")
+    assert c.ORCHESTRATOR == c.ORCHESTRATOR_NAMES[0]
+
+
+def test_task_stack_apply_comes_from_this_checkout():
+    toolbox = Path(ca.__file__).resolve().parents[4]
+    assert ca.TASK_STACK_APPLY.is_file() and toolbox in ca.TASK_STACK_APPLY.parents

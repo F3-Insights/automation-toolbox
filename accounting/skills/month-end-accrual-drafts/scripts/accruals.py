@@ -30,9 +30,9 @@ input is missing (the caller records a Waiting on row), 3 when the build refuses
 already there, the folder is not set up), 1 when a command or the lint failed, 2 on bad
 arguments. Standard library only. The commands it runs are plain scripts run with the same
 python3: card_export.py, cc_accrual.py and service_period_accrual.py beside this file, and
-je_import.py and je_import_check.py in the month-end-journal-entry skill, at
-~/.claude/skills/month-end-journal-entry/scripts/ (or under the skills folder
-ACCRUALS_SKILLS_DIR names, for tests and unlinked checkouts).
+je_import.py and je_import_check.py in the month-end-journal-entry skill, found in the
+toolbox checkout this file lives in (_skill_paths.py; ~/.claude/skills only as a last
+resort), or under the skills folder ACCRUALS_SKILLS_DIR names, for tests.
 """
 
 from __future__ import annotations
@@ -50,6 +50,8 @@ from datetime import date
 from pathlib import Path
 from statistics import median
 from typing import Any, Dict, List, Optional, Tuple
+
+from _skill_paths import skill_file
 
 ACCRUALS = ("cc", "vendor")
 SECTION_FIELDS = "Accruals"
@@ -959,11 +961,12 @@ def command(name: str) -> List[str]:
     if owner is None:
         path = Path(__file__).resolve().parent / script
     else:
-        skills = Path(os.environ.get("ACCRUALS_SKILLS_DIR") or "~/.claude/skills").expanduser()
-        path = skills / owner / "scripts" / script
+        given = os.environ.get("ACCRUALS_SKILLS_DIR")
+        path = (Path(given).expanduser() / owner / "scripts" / script if given
+                else skill_file(owner, "scripts", script))
     if not path.is_file():
         raise Bad(f"the command {name} is not at {path} (is the {owner or 'month-end-accrual-drafts'} "
-                  f"skill linked into ~/.claude/skills?)")
+                  f"skill in this toolbox checkout?)")
     return [sys.executable or "python3", str(path)]
 
 

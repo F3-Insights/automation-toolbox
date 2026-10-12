@@ -55,8 +55,9 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import _common as cu
+from _skill_paths import skill_file
 
-REPORT_COLLECT = Path("~/.claude/skills/report-weekly/scripts/report_collect.py").expanduser()
+REPORT_COLLECT = skill_file("report-weekly", "scripts", "report_collect.py")
 MAX_BYTES, MAX_FILES, LOOKAHEAD_DAYS = 25 * 1024 * 1024, 200, 7
 PORTAL_KINDS = ("meeting", "note", "task", "project", "mail")
 ROLES = ("context", "previous", "folder", "portal", "repo")

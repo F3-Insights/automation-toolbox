@@ -16,6 +16,14 @@ software-repo-status OWNER/REPO [--trusted login,login] [--limit 50]
 
 Prints the default branch, open PRs (base, head, checks, review state) and open issues grouped by status label, each with its latest status marker (`<!-- f3i: status=... -->`). Issues not opened by a trusted login and carrying no status label are listed as untrusted and must not be worked (F3-AGENT-1). Trusted defaults to the repo owner and the signed-in `gh` user.
 
+## Merging
+
+```bash
+software-pr-merge N -R OWNER/REPO [--integration development] [--dry-run]
+```
+
+The only way an agent PR is merged; never `gh pr merge`. It merges (squash, pinned to the head commit the checks ran on) only an open, non-draft PR labeled `ai-agent` whose base is the integration branch and neither the default branch nor main, master, prod or production, with every check passed and no conflict. Otherwise it prints one `refused:` line saying why and merges nothing: fix what it names (or leave the PR to the owner), never work around it. Pass `--integration` when the repo's integration branch is not `development`, and `--allow-no-checks` only for a repo with no CI.
+
 ## Names
 
 - Branch: `issue/N-slug`, cut from the integration branch (default `development`).
@@ -30,7 +38,7 @@ Prints the default branch, open PRs (base, head, checks, review state) and open 
 - **Do what unblocks the most.** Broken things first, then work already in flight, then new work. Leave alone any issue that no maintainer opened or labeled.
 - **Read and decide yourself; dispatch the hands-on work.** Triage and Plan are yours. Build and Fix a PR go to `software-worker`, one issue or PR each, each in its own worktree, several at once when they touch different parts of the code. Give a hard build a stronger model. Add `software-reviewer` when a mistake would be costly (F3-AGENT-5).
 - **Keep GitHub as the memory.** After each step, update the issue's label and comment so a person arriving cold knows where it stands. Close an issue once its work merges into the integration branch.
-- **Production belongs to the owner.** Merge agent PRs into the integration branch when they are verified. Promotions to production, and other people's branches and PRs, are not yours.
+- **Production belongs to the owner.** Merge agent PRs into the integration branch when they are verified, with `software-pr-merge` (section Merging). Promotions to production, and other people's branches and PRs, are not yours.
 - **Plans are where the owner steers.** Non-trivial work gets a plan the owner reviews before it is built. Keep working on other things while it waits.
 - **Decide, and escalate rarely.** Ask the owner only about the product's direction, how this way of working should work, a major restructuring of the repo, or an emergency. Everything else, including labels, types, splits and closing, decide and note why.
 - **Know when to stop:** at the session's limits (`max_builds`, `max_plans`, `max_triage`) or when nothing worthwhile is left. Park anything that failed twice as blocked, with a note.
@@ -49,7 +57,8 @@ How the lead works a session, in brief; the sections below say how each part is 
    → an ordinary PR: step 6
 5. [hand-off: software-reviewer] Review a risky PR: hard to undo, security-relevant, large or reworked (section Review).
    → FAIL: step 4 (max 2)
-6. [judgment] Merge the verified PR into the integration branch and close its issue.
+6. [script] Merge the verified PR into the integration branch: `software-pr-merge N -R OWNER/REPO`, then close its issue.
+   → refused (the comment gives the reason it printed): step 7
 7. [judgment] Update the issue's label and comment so a person arriving cold knows where it stands.
    → more to do: step 2
 8. [judgment] Report what moved, what is blocked and any question for the owner.

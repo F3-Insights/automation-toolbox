@@ -116,3 +116,23 @@ def test_trigger_items_can_come_from_a_file(tmp_path):
     assert json.loads(cy.read_items_arg(f"@{f}")) == ITEMS
     assert cy.read_items_arg(f"@{tmp_path / 'missing.json'}") == "@unreadable"
     assert cy.read_items_arg("[]") == "[]"
+
+
+def test_a_main_agent_by_its_new_name_is_never_a_doer(tmp_path):
+    """The department migration drops -orchestrator; the renamed main agents are still refused."""
+    registry = tmp_path / "doers.toml"
+    registry.write_text('[[doer]]\nname = "reconcile"\nroute = "agent"\nagent = "productivity-task-reconciler"\n\n'
+                        '[[doer]]\nname = "cycle"\nroute = "agent"\nagent = "chief-of-staff-cycle"\n\n'
+                        '[[doer]]\nname = "brief"\nroute = "agent"\nagent = "person-researcher"\n')
+    out = c.load_doers(registry)
+    assert set(out["doers"]) == {"brief"}
+    assert sum("orchestrator is launched" in p for p in out["problems"]) == 2
+    assert c.CYCLE_AGENT == "chief-of-staff-cycle-orchestrator" and "chief-of-staff-cycle" in c.OWN_AGENTS
+    assert not any(n.endswith("-orchestrator") for n in c.RENAMED_MAIN_AGENTS)
+
+
+def test_other_skills_scripts_come_from_this_checkout():
+    """Found through the toolbox checkout, not ~/.claude/skills (which goes away)."""
+    toolbox = SCRIPTS.parents[3]
+    for path in (c.NOTIFY_SCRIPT, c.PRODUCE_INSTRUCTIONS):
+        assert path.is_file() and toolbox in path.parents, path

@@ -10,9 +10,13 @@ argument-hint: "[spec.yaml] or [lint orchestrator-name]"
 
 Use it at step 6 of the design's build checklist, after the rules and procedures are written, the workstreams are listed, and the department READMEs have been searched for what already exists. Lint every orchestrator, new or old, before its dry run.
 
+## Which pattern
+
+This skill builds and lints the agent file standard's orchestrators (ADR 0003): the pattern of a department that is not yet a plugin. A department whose folder holds `.claude-plugin/plugin.json` follows the plugin pattern instead (ADR 0004, and ADR 0003 as amended on 2026-10-11): one main agent per job of about 40 lines, one read-only `<department>-reviewer`, at most one `<department>-worker`, and the job's procedure as `## Steps` in its skill. Write those from the toolbox's `templates/main-agent.md`, `templates/reviewer.md` and `templates/worker.md`, and convert a department by `docs/converting-a-department.md`. `lint NAME` still checks a plugin main agent's commands, skills and names, without asking for an `-orchestrator` name; the toolbox audit's scan judges it against the plugin pattern.
+
 ## The agent file standard
 
-Every agent, generated or written by hand, follows `references/agent-standard.md`, and starts from one of its two templates: `references/templates/orchestrator.md` or `references/templates/sub-agent.md`. In short:
+Every agent in a department that is not a plugin, generated or written by hand, follows `references/agent-standard.md`, and starts from one of its two templates: `references/templates/orchestrator.md` or `references/templates/sub-agent.md`. In short:
 
 - Frontmatter `name`, `description` (what it does, when to use it, when not, naming the sibling to use instead), `tools` (the narrowest set) and `model`.
 - One opening sentence saying what the agent owns, never "You are an expert". Then `## Goal`, `## Inputs`, `## Context`, `## Approach`, `## Boundaries`, `## Done when`, `## Output`, in that order.

@@ -12,7 +12,7 @@ Input: --title, the note's text on stdin or from --from FILE, and optionally --v
 Exit 1 when the note exists (without --next-free) or the text is empty; exit 2 when a
 setting is missing or the inbox is not a folder inside the vault.
 
-    python3 ~/.claude/skills/obsidian-workstream/scripts/vault_inbox_write.py --title "Video - Pricing talk" --from /tmp/run/note.md
+    python3 vault_inbox_write.py --title "Video - Pricing talk" --from /tmp/run/note.md
 """
 
 import argparse

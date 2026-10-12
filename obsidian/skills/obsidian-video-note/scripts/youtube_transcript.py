@@ -17,7 +17,7 @@ fails, a caption download is redirected, or --out points inside the owner's vaul
 vault_dir). Environment: YT_DLP, the command to run yt-dlp (default: yt-dlp on PATH, else
 python3 -m yt_dlp).
 
-    python3 ~/.claude/skills/obsidian-video-note/scripts/youtube_transcript.py https://www.youtube.com/watch?v=VIDEO_ID --out /tmp/run/transcript.txt
+    python3 youtube_transcript.py https://www.youtube.com/watch?v=VIDEO_ID --out /tmp/run/transcript.txt
 """
 
 import argparse

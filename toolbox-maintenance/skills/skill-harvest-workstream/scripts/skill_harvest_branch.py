@@ -39,9 +39,11 @@ import tomllib
 from datetime import date
 from pathlib import Path
 
+from _skill_paths import skill_file
+
 SKILL = "skill-harvest-workstream"
 BRANCH_PREFIX = "skill-harvest/"
-NAME_CHECK = "~/.claude/skills/skills-extract/scripts/name_check.py"
+NAME_CHECK = str(skill_file("skills-extract", "scripts", "name_check.py"))
 DEFAULT_DENYLIST = Path("~/.config/f3i-toolbox/denylist.txt").expanduser()
 
 

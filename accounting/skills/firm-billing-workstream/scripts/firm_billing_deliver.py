@@ -41,8 +41,9 @@ import sys
 from pathlib import Path
 
 import _common as c
+from _skill_paths import skill_file
 
-EMAIL_DELIVER = Path("~/.claude/skills/comms-reply-to-email/scripts/email_deliver.py").expanduser()
+EMAIL_DELIVER = skill_file("comms-reply-to-email", "scripts", "email_deliver.py")
 CHECK = Path(__file__).resolve().parent / "firm_billing_check.py"
 DELIVERY_FIELDS = ("draft_id", "check", "contact_id", "email_ref")
 SECRETS = re.compile(r"(?i)(bearer\s+\S+|authorization[\"'\s:=]+\S+|[?&](?:key|token|api_key|access_token)=[^\s&\"']+)")

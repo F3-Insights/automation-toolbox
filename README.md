@@ -273,6 +273,7 @@ New agents and skills start from [templates/](templates/): fill-in templates for
 - A **skill** is a folder in a department's `skills/` folder: the method for one piece of work, with anything only it uses, including its scripts and tests.
 - An **automation** is how a workflow is started on a schedule: a **prepare** step pulls data before the session, and a **finish** step applies the approved change set after it.
 - Pieces refer to each other by name, across departments. Names are unique repository-wide.
+- A **shared skill** is one several departments use, such as `orchestration-workstream`, `task-stack-workstream` or the `unslop` family. Its single source is in [shared/skills/](shared/skills/), and each department that uses it holds an identical, generated copy, so a department installs complete on its own. See [Shared skills](#shared-skills).
 
 The full vocabulary (Run, Automation, Context, rules file, change set, owner settings) is in [CONTEXT.md](CONTEXT.md).
 
@@ -351,7 +352,7 @@ The toolbox is kept in department folders so people can find things. Claude Code
 
 **Keeping it current.** The hooks from step 1 rerun the link script after every commit, merge, pull and branch switch, so a new, renamed or removed agent or skill shows up in the install without you doing anything. They print one line only when something changed, run only in the main clone (never in a git worktree), do nothing until step 2 has been done once, and never stop a git command. Without the hooks, rerun `python3 setup/link.py` after you pull.
 
-**Why `~/.claude/skills` appears in commands.** Agents and skills run a skill's scripts by a fixed path, `python3 ~/.claude/skills/<skill>/scripts/<script>.py`, and a runtime that reads skills by path uses the same folder. That path must reach the install, which step 3 does. A different setup, such as installing departments as Claude Code plugins, would need those paths to change too.
+**Why `~/.claude/skills` appears in commands.** Agents and skills run a skill's scripts by a fixed path, `python3 ~/.claude/skills/<skill>/scripts/<script>.py`, and a runtime that reads skills by path uses the same folder. That path must reach the install, which step 3 does. Scripts that run another skill's script do not need it: they find it through the clone they live in. A different setup, such as installing departments as Claude Code plugins, would need those paths to change too.
 
 **Removing it.** Delete the two `~/.claude` links, move your backups back, and delete `~/.local/share/f3i-toolbox`; the clone is untouched.
 
@@ -372,7 +373,7 @@ git config core.hooksPath .githooks       # once per clone
 python3 scripts/toolbox_check.py          # what the hook runs
 ```
 
-The check fails on private names (from lists kept outside the repository), machine details, real email addresses, secret-shaped strings, duplicate names, and broken agent or skill frontmatter.
+The check fails on private names (from lists kept outside the repository), machine details, real email addresses, secret-shaped strings, duplicate names, broken agent or skill frontmatter, and a copy of a [shared skill](#shared-skills) that differs from its source.
 
 To run the tests, make a virtual environment with `pytest`, `pyyaml`, `pypdf`, `openpyxl`, `python-docx` and `python-pptx`, then:
 
@@ -380,6 +381,21 @@ To run the tests, make a virtual environment with `pytest`, `pyyaml`, `pypdf`, `
 .venv/bin/python scripts/run_tests.py              # every skill, one pytest process each
 .venv/bin/python scripts/run_tests.py accounting   # one department
 ```
+
+## Shared skills
+
+A skill that several departments use has one source, `shared/skills/<name>/`, and a whole copy in every department that uses it, so each department is complete on its own as a plugin ([ADR 0004](docs/adr/0004-a-department-is-a-plugin.md)). `shared/` is not a department or a plugin. [shared/manifest.yaml](shared/manifest.yaml) lists, for each shared skill, the departments that get a copy, the one it came from first.
+
+- **Edit the source, never a copy.** A copy is marked by a `.shared-copy` file naming its source; everything else in it, `SKILL.md` included, is byte-identical to the source. Change `shared/skills/<name>/`, then run the build and commit the source and the copies together:
+
+  ```
+  python3 scripts/build_shared.py            # rewrite the copies (--check reports, changes nothing)
+  python3 scripts/build_bins.py <department> # for a plugin department whose copy has scripts
+  ```
+
+- **Giving a department a copy** is one line in the manifest, then the build. List a department only once its agents or skills use the skill. Removing a department from the line removes its copy.
+- **Commands.** A shared skill's scripts get one command name with no department prefix, the same in every copy: `task_stack_apply.py` is `task-stack-apply` in each plugin that holds it. A department's own scripts keep the `<department>-` prefix. A copy's command that clashes with a department's own is an error.
+- **The checks.** `scripts/toolbox_check.py` fails when a copy differs from its source, a listed copy is missing, or a marked copy is no longer listed. The install (`setup/link.py`) links each shared skill's source once, however many departments hold a copy, and still refuses two different skills with one name. `scripts/run_tests.py` tests the source once in place of its copies.
 
 ## Security: scanned with NVIDIA SkillSpector
 

@@ -22,8 +22,8 @@ this one, which reads a JSON request on stdin and prints JSON; set CONFIRM_PORTA
 another program in its place. Nothing here writes to anyone but the owner: an email is a draft
 made by the caller's drafting skill, and `record` only notes its id and subject. `relay` and
 `remind` send the owner one message through the comms-reply-to-email skill's script,
-`python3 ~/.claude/skills/comms-reply-to-email/scripts/notify_owner.py`; set CONFIRM_NOTIFY_CMD
-to run another program in its place. Nothing is looked up on PATH.
+notify_owner.py, found in the toolbox checkout this script lives in (`_skill_paths.py`); set
+CONFIRM_NOTIFY_CMD to run another program in its place. Nothing is looked up on PATH.
 
 Delivery is a setting. `relay`, the default, asks the owner to put the question to the person
 and records the request as waiting on them; `direct` lets the caller draft an email to the
@@ -47,6 +47,8 @@ import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+from _skill_paths import skill_file
 
 STORE_NAME = "CONFIRMATIONS.md"
 CHANNELS = ("owner", "task", "email")
@@ -262,7 +264,7 @@ def write_record(store: Path, req: Dict[str, str], state: str, answer: str, by: 
 # The Portal, through one command
 
 
-NOTIFY_SCRIPT = "~/.claude/skills/comms-reply-to-email/scripts/notify_owner.py"
+NOTIFY_SCRIPT = ("comms-reply-to-email", "scripts", "notify_owner.py")  # the skill, then its file
 
 
 def portal_argv() -> List[str]:
@@ -278,7 +280,7 @@ def notify_argv() -> List[str]:
     override = os.environ.get("CONFIRM_NOTIFY_CMD")
     if override:
         return shlex.split(override)
-    return [sys.executable or "python3", str(Path(NOTIFY_SCRIPT).expanduser())]
+    return [sys.executable or "python3", str(skill_file(*NOTIFY_SCRIPT))]
 
 
 def portal(command: str, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -678,8 +680,8 @@ def notify(title: str, bullets: List[str], record_ref: str = "", dry_run: bool =
     if dry_run:
         return {"sent": False, "dry_run": True, "reason": "dry run: nothing sent", "argv": argv}
     if not os.environ.get("CONFIRM_NOTIFY_CMD") and not Path(base[-1]).is_file():
-        raise Bad(f"{base[-1]} was not found; link the comms-reply-to-email skill into "
-                  "~/.claude/skills, or set CONFIRM_NOTIFY_CMD") from None
+        raise Bad(f"{base[-1]} was not found; the comms-reply-to-email skill should be in this "
+                  "toolbox checkout, or set CONFIRM_NOTIFY_CMD") from None
     try:
         done = subprocess.run(argv, capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
     except FileNotFoundError:

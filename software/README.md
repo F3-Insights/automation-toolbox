@@ -25,6 +25,10 @@ Or enable it for one project, so sessions in a software repository see the softw
 
 An Automation launches a main agent by name with `--plugin-dir <toolbox>/software`, which also puts the commands on PATH for the session. Allow the `Skill` and `Agent` tools, and the command rules as the agent's `tools:` line writes them (`Bash(software-repo-status:*)`). A prepare or finish step runs a command from `<toolbox>/software/bin/` (for example `software-issue-harvest-sync`, `software-issue-file`), or the same script by path. The overlay's `subagents:` lists `software-worker` and `software-reviewer`.
 
+### The merge guard
+
+`software-developer` merges agent PRs only through `software-pr-merge`, which reads the PR and the repository from GitHub and refuses a merge into the default branch or any of main, master, prod and production, a PR without the `ai-agent` label, a draft, and a PR whose checks are failing or pending. It exists because nothing else stops such a merge: branch protection (F3-BRANCH-4) is not available for private repositories on every GitHub plan, and a permission rule sees the command, not the PR's base. The agent file allows `software-pr-merge` and only the `gh pr` subcommands the loop needs (`view`, `diff`, `checks`, `list`, `create`, `edit`, `comment`, `ready`), so `gh pr merge` is not allowed by it. A runner that grants the session bare `Bash` (a Sentinel overlay's `extra_tools`) must also deny `Bash(gh pr merge:*)`, since a bare `Bash` grant would otherwise allow it again; the workers' calls are checked against the same list.
+
 ## Jobs and agents
 
 | Agent | Job | Dispatches | Needs |
@@ -40,7 +44,7 @@ An Automation launches a main agent by name with `--plugin-dir <toolbox>/softwar
 
 | Skill | What it does | Needs |
 |---|---|---|
-| `software-issue-loop` | Draft. The software factory's method: leading the loop, Triage, Plan, Build, Fix a PR, Review and the five-line return | `gh`, command `software-repo-status` |
+| `software-issue-loop` | Draft. The software factory's method: leading the loop, merging, Triage, Plan, Build, Fix a PR, Review and the five-line return | `gh`, commands `software-repo-status`, `software-pr-merge` |
 | `issue-harvest-workstream` | Steps (running the harvest), the five decisions, dedupe, the issue standard, Decide a batch and Check the proposals | Insights Portal |
 | `software-release-workstream` | Prepare, Write and Check a release; the range, files, GitHub drafts and DONE checklist | none |
 | `software-portfolio-review` | Map projects to repositories, Steward one repository per worker, the numbered list, the change set and DONE checklist | Insights Portal, commands `software-repo-sweep`, `software-detect-project-type` |
@@ -68,6 +72,7 @@ Each runs a script in its skill's `scripts/` folder and prints `--help`.
 | Command | Script | What it does |
 |---|---|---|
 | `software-repo-status` | `software-issue-loop/scripts/repo_status.py` | One repository's open issues and pull requests on one page, grouped by status label |
+| `software-pr-merge` | `software-issue-loop/scripts/pr_merge.py` | Merges one agent PR into the integration branch, and refuses (one line, exit 1) a PR without `ai-agent`, a draft, red or pending checks, or a base that is the default or a production branch |
 | `software-issue-harvest-sync` | `issue-harvest-workstream/scripts/issue_harvest_sync.py` | Gathers a Run's source items and each repository's issues before the session, read only |
 | `software-issue-file` | `issue-harvest-workstream/scripts/issue_file.py` | Files the Run's decided issues and comments on GitHub, the one writer, after the session |
 | `software-issue-harvest-record` | `issue-harvest-workstream/scripts/issue_harvest_record.py` | Records each queued item's outcome in the harvest ledger |
@@ -84,7 +89,7 @@ The portfolio review's approve pass leaves `RUN/changes.json` for the Automation
 
 The keys are described in [docs/settings.md](../docs/settings.md).
 
-- **Issue loop**: `gh`, signed in, and a local clone of the repository; the brief names where the design rules are. It reads no settings file.
+- **Issue loop**: `gh`, signed in, and a local clone of the repository; the brief names where the design rules are. It reads no settings file. The integration branch is `development` unless the brief names another (`software-pr-merge --integration`).
 - **Issue harvest**: `repos_file` under `[issue-harvest-workstream]` (the repo map) is required; `state`, `horizon_days`, `closed_days`, `public_denylist_files`, `private_terms` and the `sources` sub-tables are optional. It reads the Portal through `portal_mcp_config`, with the bearer in `INSIGHTS_PORTAL_ASSISTANT_TOKEN` or a `${VAR}` in the MCP config.
 - **Portfolio review**: `repos_root` under `[software-portfolio-review]`, or a folder argument to `software-repo-sweep`.
 - **Scaffold lint**: `F3I_TOOLBOX_DENYLIST` (files of private names, `:`-separated).

@@ -160,3 +160,7 @@ def test_a_private_name_in_the_run_folder_name_refuses_the_commit_message(setup,
     result = shb.stage(named, repo, checker=str(NAME_CHECK))
     assert result["state"] == "refused" and "commit message" in result["line"]
     assert "skill-harvest/" not in git(repo, "branch")
+
+
+def test_the_default_name_check_is_this_checkouts():
+    assert Path(shb.NAME_CHECK) == NAME_CHECK

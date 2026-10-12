@@ -106,3 +106,11 @@ def test_an_unreadable_delivery_file_is_exit_2(tmp_path):
     done = subprocess.run([sys.executable, str(SCRIPTS / "client_update_deliver.py"), NAME, "--week", WEEK,
                            "--week-dir", str(paths["week_dir"])], capture_output=True, text=True, cwd=SCRIPTS)
     assert done.returncode == 2 and "lacks check, contact_id, email_ref" in done.stderr
+
+
+def test_other_skills_scripts_come_from_this_checkout():
+    """email_deliver.py and report_collect.py are found through the toolbox checkout."""
+    import client_update_pack as cp
+    toolbox = SCRIPTS.parents[3]
+    for path in (cd.EMAIL_DELIVER, cp.REPORT_COLLECT):
+        assert path.is_file() and toolbox in path.parents, path

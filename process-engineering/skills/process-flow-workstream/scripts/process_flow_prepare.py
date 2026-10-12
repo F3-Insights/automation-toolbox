@@ -37,6 +37,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import _common as C
+from _skill_paths import skill_file
 
 
 def reference_model(name, eng):
@@ -47,8 +48,9 @@ def reference_model(name, eng):
         if (base / name).expanduser().is_file():
             return (base / name).expanduser()
     slug = name.strip().lower().replace(" ", "-").removesuffix(".md")
-    library = C.settings(C.SKILL).get("reference_models_dir") or "~/.claude/skills/reference-process-models"
-    cand = Path(library).expanduser() / f"{slug}.md"
+    library = C.settings(C.SKILL).get("reference_models_dir")
+    cand = (Path(library).expanduser() / f"{slug}.md" if library
+            else skill_file("reference-process-models", f"{slug}.md"))
     return cand if cand.is_file() else None
 
 

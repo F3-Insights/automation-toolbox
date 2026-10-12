@@ -32,9 +32,10 @@ import sys
 from pathlib import Path
 
 import _common as dc
+from _skill_paths import skill_file
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
-TASK_STACK_APPLY = Path("~/.claude/skills/task-stack-workstream/scripts/task_stack_apply.py").expanduser()
+TASK_STACK_APPLY = skill_file("task-stack-workstream", "scripts", "task_stack_apply.py")
 
 
 def gate(changes, pack):

@@ -9,9 +9,10 @@ Thanks for helping improve the toolbox. Issues, fixes and new pieces are all wel
 
 ## The rules a change must follow
 
-- **One home per piece.** Every agent and skill lives in exactly one department. There is no shared folder; other pieces refer to it by name.
+- **One home per piece.** Every agent and skill lives in exactly one department; other pieces refer to it by name. The exception is a shared skill, which several departments use: its one source is in `shared/skills/`, and each department that uses it holds a generated copy (see the README's "Shared skills").
+- **Never edit a copy of a shared skill.** A folder holding `.shared-copy` is generated. Edit `shared/skills/<name>/`, run `python3 scripts/build_shared.py`, then `python3 scripts/build_bins.py <department>` for any plugin department that holds a copy, and commit the source and the copies together.
 - **Names are unique across the repository.** The check enforces it.
-- **Agents follow one template**: an opening sentence, then Goal, Inputs, Context, Approach, Boundaries, Done when and Output. Start from [templates/](templates/).
+- **Agents follow one template per role.** In a department that is a plugin (it has `.claude-plugin/plugin.json`): one short main agent per job (Goal, Inputs, How to work, Done, Never), one read-only `<department>-reviewer` and at most one `<department>-worker`, with the job's procedure as `## Steps` in its skill; [docs/converting-a-department.md](docs/converting-a-department.md) says how to convert one. In any other department: an opening sentence, then Goal, Inputs, Context, Approach, Boundaries, Done when and Output. Start from [templates/](templates/).
 - **Scripts live in the skill that owns them**, in `scripts/`, import only the standard library, a few named packages and files in their own folder, and ship with tests in `scripts/tests/`.
 - **Invented examples only.** No real people, companies, clients, addresses, account numbers or figures, in prose, fixtures or tests. Swapping a real name is not enough: rewrite any example someone could trace back to real work.
 - **Nothing owner-specific.** Folders, thresholds and preferences are settings or rules files, never facts in the repository. Add any new setting to [docs/settings.md](docs/settings.md).
@@ -22,6 +23,7 @@ Thanks for helping improve the toolbox. Issues, fixes and new pieces are all wel
 
 ```bash
 git config core.hooksPath .githooks
+python3 scripts/build_shared.py --check
 python3 scripts/toolbox_check.py
 .venv/bin/python scripts/run_tests.py <department>
 ```
