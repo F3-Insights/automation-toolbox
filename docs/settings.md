@@ -321,7 +321,7 @@ Every key here except `state` is read from this table first and from the top lev
 
 ## Example
 
-A minimal settings file. Every value is a placeholder to replace with the owner's own.
+A minimal settings file. Every value is a placeholder to replace with the owner's own. [settings.example.toml](../settings.example.toml) at the toolbox root holds every key above, commented out, each with a one-line comment; start the file from it. A key added to or removed from this page changes that file in the same commit (`scripts/tests/test_settings_example.py` checks the two agree). [library.yaml](../library.yaml) declares the file to a runtime that keeps it in its own home and sets `F3I_TOOLBOX_SETTINGS` for what it runs ([ADR 0005](adr/0005-a-library-declares-its-settings.md)).
 
 ```toml
 # Shared by several skills

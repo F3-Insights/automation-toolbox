@@ -345,7 +345,7 @@ The toolbox is kept in department folders so people can find things. Claude Code
 
    Another agent runtime is pointed at the same two folders in its own configuration.
 
-4. **Fill in your settings**: `~/.config/f3i-toolbox/settings.toml`, described in [docs/settings.md](docs/settings.md).
+4. **Fill in your settings**: copy [settings.example.toml](settings.example.toml) to `~/.config/f3i-toolbox/settings.toml` and uncomment the keys you use; [docs/settings.md](docs/settings.md) describes each one.
 
 <details>
 <summary><b>Keeping it current, and removing it</b></summary>
@@ -362,7 +362,8 @@ The toolbox is kept in department folders so people can find things. Claude Code
 
 - **What each piece needs.** Every department README has a "Needs" column: nothing beyond Claude Code, a web search, the Insights Portal MCP server, Sage Intacct, a command, or an owner setting. Start with pieces that need nothing.
 - **The Insights Portal.** Many productivity, sales and project pieces read and write through F3 Insights' Portal MCP server. Without it, those pieces stop and say what they need; the finance core works from folders and, for ledger pulls, Sage Intacct.
-- **Settings and secrets.** Scripts read owner settings from `~/.config/f3i-toolbox/settings.toml` and secrets from environment variables only. [docs/settings.md](docs/settings.md) lists every key and variable, with an example file.
+- **Settings and secrets.** Scripts read owner settings from `~/.config/f3i-toolbox/settings.toml` (or the file `F3I_TOOLBOX_SETTINGS` names) and secrets from environment variables only. [docs/settings.md](docs/settings.md) lists every key and variable; [settings.example.toml](settings.example.toml) holds every key, commented out, with a one-line comment each.
+- **For a runtime.** [library.yaml](library.yaml) at the root declares the settings file to any runtime that runs these agents (Sentinel, for one): the variable that names it, where the scripts look without it, and the example. A runtime that keeps the file in its own home sets the variable for everything it starts ([ADR 0005](docs/adr/0005-a-library-declares-its-settings.md)).
 - **Your facts stay yours.** Voice guides, folders and rules files are inputs you supply; nothing here assumes a particular person or company.
 - **Status.** The scripts are tested against invented data and fake servers. See the [roadmap](docs/roadmap.md) for what has not yet been run against live systems.
 
@@ -427,6 +428,7 @@ A [GitHub workflow](.github/workflows/skillspector.yml) rescans every skill on e
 | [Getting started](docs/getting-started.md) | From clone to your first skill, then your first full workflow |
 | [CONTEXT.md](CONTEXT.md) | The vocabulary: department, agent, orchestrator, skill, Run, Automation, change set |
 | [docs/settings.md](docs/settings.md) | Every owner setting and environment variable, with an example file |
+| [settings.example.toml](settings.example.toml) and [library.yaml](library.yaml) | Every settings key, commented out, to start your file from; the declaration a runtime reads |
 | [docs/adr/](docs/adr/) | The design decisions and why they were made |
 | [Roadmap](docs/roadmap.md) | What is next, and what has not been proven yet |
 | [TOOLBOX-DESIGN-SUGGESTIONS.md](TOOLBOX-DESIGN-SUGGESTIONS.md) | The practices and research behind the next decisions |
