@@ -46,6 +46,6 @@ The words this repository uses, and what each one means here.
 
 **Owner.** The person the agents work for. Anything specific to one owner (their voice guide, their profile, their folders) is a setting outside this repository, never a fact written into it.
 
-**Owner settings.** `~/.config/f3i-toolbox/settings.toml`. Skills name a setting (`voice_guide`, `engagements_dir`) instead of a path. A skill whose setting is missing says what it needs and stops. Every key the scripts read, and every environment variable, is in [docs/settings.md](docs/settings.md).
+**Owner settings.** `~/.config/f3i-toolbox/settings.toml`, or the file `F3I_TOOLBOX_SETTINGS` names (a runtime such as Sentinel sets it to the copy in its home; `library.yaml` declares both, ADR 0005). Skills name a setting (`voice_guide`, `engagements_dir`) instead of a path. A skill whose setting is missing says what it needs and stops. Every key the scripts read, and every environment variable, is in [docs/settings.md](docs/settings.md).
 
 **Needs.** What a piece requires to run beyond Claude Code: nothing, the Insights Portal MCP server, Sage Intacct, a command, or an owner setting. Every department README lists it.

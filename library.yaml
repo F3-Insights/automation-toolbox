@@ -1,0 +1,10 @@
+# What this Library declares to a runtime that runs its agents and skills (docs/adr/0005).
+# A runtime reads it and never needs to know the toolbox: see the ADR for each key.
+name: f3i-toolbox
+settings:
+  # The environment variable the scripts read to find the owner's settings file.
+  env: F3I_TOOLBOX_SETTINGS
+  # Where the scripts look when the variable is not set.
+  default: ~/.config/f3i-toolbox/settings.toml
+  # Every key the scripts read, each commented out with a one-line comment above it.
+  example: settings.example.toml

@@ -1,0 +1,307 @@
+# Owner settings for the F3i automation toolbox: every key docs/settings.md lists.
+#
+# Copy this file to ~/.config/f3i-toolbox/settings.toml (or the file F3I_TOOLBOX_SETTINGS names),
+# then uncomment and fill in the keys you use. Every value below is a placeholder. Each key has one
+# comment line above it: what it is, and whether it is required. Secrets never go in this file.
+# A runtime that reads library.yaml lists these keys with that comment as their help.
+
+# Path to the MCP config file (JSON) whose mcpServers entry gives the Insights Portal URL and Authorization header (required, when a command that reads or writes the Portal runs).
+# portal_mcp_config = "~/path/to/mcp-config.json"
+# The name of the Portal's entry under mcpServers in that config file (optional; default "insights-portal").
+# portal_server = "insights-portal"
+# The folder that holds each skill's state in a subfolder: calendar-steward, chief-of-staff, comms-reply, daily-plan, goal-alignment, issue-harvest, meeting-processing, nightly-sweep, task-stack, weekly-review (required, for a command that keeps state, unless a --state or --home flag or the skill's own setting names the folder).
+# state_dir = "~/path/to/state"
+# The folder of Context YAML files, found by name (<name>.yaml or .yml) (required, when a Context is named rather than given by its path).
+# contexts_dir = "~/path/to/contexts"
+# The parent folder under which a new engagement's folders are created (required, when engagement-folders runs without --root).
+# engagements_dir = "~/path/to/engagements"
+# A list of private words refused in any filed issue, matched as whole words ignoring case; used only when [issue-harvest-workstream] has no private_terms of its own (optional).
+# private_terms = ["example-private-word"]
+# Path to the owner's voice guide: openings, closings, framing rules, forbidden phrases and register by recipient (required, for any agent that drafts in the owner's voice).
+# voice_guide = "~/path/to/voice-guide.md"
+# Path to the owner's profile: facts about the owner and their standing instructions, read and never quoted into a draft or message (optional).
+# owner_profile = "~/path/to/owner-profile.md"
+# Path to the owner's strategic goals document (optional).
+# goals_doc = "~/path/to/goals.md"
+# One sentence describing who the owner writes and presents for, such as "operations heads at regional hospitals" (optional).
+# audience = "operations heads at regional hospitals"
+# The training folder where seminars live, laid out as writing-seminar-builder's "The training folder" section defines (required, for a seminar run unless the caller names a folder).
+# training_dir = "~/path/to/training"
+# The owner's playbook folder of ratified decision rules, with its _inbox/ for proposals and meta/ for the queue (required, for playbook work; playbook-index needs it when no folder is passed).
+# playbooks_dir = "~/path/to/playbooks"
+# The ratification queue file, each item tagged with its function (optional; default meta/RATIFICATION-QUEUE.md inside playbooks_dir).
+# ratification_queue = "~/path/to/playbooks/meta/RATIFICATION-QUEUE.md"
+# The owner's Obsidian vault (required, for any command that reads the vault, unless --vault is given).
+# vault_dir = "~/path/to/vault"
+# The folder inside the vault, relative to vault_dir, where agents may put new notes for the owner to review; --inbox overrides it (required, to write to the vault).
+# vault_inbox = "_inbox"
+# A list of folders inside the vault that no agent reads or writes; the scripts never index them (optional).
+# vault_private_dirs = ["Private"]
+# Path to the owner's VAULT-RULES.md: note kinds, frontmatter keys, title prefixes and tags (optional).
+# vault_rules = "~/path/to/vault/VAULT-RULES.md"
+
+[board-package-workstream]
+# The folder of Context files for this skill, read before the top-level key (optional; default the top-level contexts_dir).
+# contexts_dir = "~/path/to/contexts"
+
+[calendar-steward-method]
+# The steward's home folder (item ledger, journal, one folder per list); --home overrides it (optional; default <state_dir>/calendar-steward).
+# home = "~/path/to/state/calendar-steward"
+# The daily plan's state folder, which calendar-steward-scan reads; --daily-plan-state overrides it (optional; default <state_dir>/daily-plan).
+# daily_plan_state = "~/path/to/state/daily-plan"
+# The IANA zone used when no zone is passed on the command line (optional; default "UTC").
+# timezone = "UTC"
+
+[chief-of-staff-cycle]
+# The chief of staff's charter: its role, authority and limits (optional: the decider names it missing).
+# charter = "~/path/to/charter.md"
+# The owner's profile, facts and not preferences; never written by the cycle (optional; default the top-level owner_profile).
+# owner_profile = "~/path/to/owner-profile.md"
+# The strategic goals; --goals on start overrides it (optional; default the top-level goals_doc).
+# goals_doc = "~/path/to/goals.md"
+# The owner's decision principles and hard rules; never written by the cycle (optional).
+# principles = "~/path/to/principles.md"
+# Markdown roster with an ## Active doers table (trust rung, cost and health per doer); the records script rewrites only the trust and health cells of doers dispatched this cycle (optional).
+# doer_roster = "~/path/to/doer-roster.md"
+# The event ledger of dated lines; the records script appends one line per cycle (optional).
+# event_ledger = "~/path/to/event-ledger.md"
+# A folder of strategy notes the decider may follow links into; --vault overrides it (optional; default the top-level vault_dir).
+# vault_dir = "~/path/to/strategy-notes"
+# An estate health probe's latest output; --health overrides it (optional).
+# health_probe = "~/path/to/health-probe.md"
+# The standing autonomy policy; --autonomy overrides it (optional).
+# autonomy_policy = "~/path/to/autonomy-policy.md"
+# The folder where one draft principle per cycle may be written for the owner to ratify (optional).
+# principles_inbox = "~/path/to/principles-inbox"
+# A TOML file of [[doer]] entries, the only doers a cycle may dispatch; references/doer-registry.example.toml in the skill is a start (required, for any doer to run).
+# doer_registry = "~/path/to/doer-registry.toml"
+# The voice guide produce-work packs as guidance with the source (optional; default the top-level voice_guide).
+# voice_guide = "~/path/to/voice-guide.md"
+# The name on the receipt title, the decision-task prefix and the messages; a value with brackets, a newline or over 40 characters falls back to the default (optional; default "Chief of Staff").
+# display_name = "Chief of Staff"
+# A list of earlier display names, so a rename never duplicates today's receipt or an open decision (optional).
+# former_names = ["Old Name"]
+# The Portal's web address, used for the receipt link in the message to the owner (optional).
+# portal_web_url = "https://portal.example.com"
+# "on" lets the cycle launch registered orchestrators; anything else reads off, and launches are only shown as what would have run (optional; default off).
+# fleet_launches = "off"
+# The most fleet launches a day across live cycles; a value that is not a whole number reads 12 (optional; default 12).
+# launch_backstop = 12
+# "off", "propose" (the change is filed as a decision) or "commit" (the change is made and committed in a worktree of improve_repo) (optional; default "propose").
+# improvements = "propose"
+# The toolbox repository whose linked worktree takes a committed improvement (required, for improvements = "commit").
+# improve_repo = "~/path/to/automation-toolbox"
+# The branch the improvement worktree commits on (optional; default "chief-of-staff/improvements").
+# improve_branch = "chief-of-staff/improvements"
+# The cycle's state folder; --state overrides it (optional; default <state_dir>/chief-of-staff).
+# state = "~/path/to/state/chief-of-staff"
+
+[client-update-workstream]
+# The folder of Context files for this skill, read before the top-level key (optional; default the top-level contexts_dir).
+# contexts_dir = "~/path/to/contexts"
+# A Word reference document that client-update-record passes to pandoc for the update's styles (optional).
+# reference_docx = "~/path/to/reference.docx"
+
+[content-scout-workstream]
+# The research folder of creator and channel folders; a working folder outside the vault, and the scout stops if it sits inside vault_dir (required, unless the caller names a folder).
+# research_dir = "~/path/to/research"
+# The owner's watchlist file naming each creator, a folder slug and each channel with its link (optional; default <research_dir>/_watchlist.md).
+# watchlist = "~/path/to/research/_watchlist.md"
+
+[crm-hygiene-workstream]
+# The Portal's GitHub repository as owner/name, where Portal defects are filed (required, when portal-issue-file runs).
+# portal_issue_repo = "example-org/portal"
+# A list of private words that stop an issue from being filed (whole word, any case); this skill does not read the top-level key (optional).
+# private_terms = ["example-private-word"]
+
+[daily-plan-method]
+# The owner's IANA zone for the day's plan (required, when neither --tz nor the Portal gives a zone).
+# timezone = "UTC"
+
+[decision-case-mining]
+# The decision store's SQLite file of sources, cases, playbooks and bullets (required, unless --db is given).
+# database = "~/path/to/decisions.sqlite"
+
+[erp-ledger-pull]
+# The Sage Intacct company id, used when SAGE_INTACCT_COMPANY_ID is not set (optional).
+# intacct_company_id = "example-company"
+# The Sage Intacct API user, used when SAGE_INTACCT_API_USER is not set (optional).
+# intacct_api_user = "api-user"
+
+[goal-alignment-workstream]
+# Path to GOAL-ALIGNMENT-RULES.md (required, for the pack pass of goal-alignment-gather, unless --rules is given).
+# rules_file = "~/path/to/GOAL-ALIGNMENT-RULES.md"
+# The strategic goals document, used when the rules file does not name one (optional).
+# telos_note = "~/path/to/goals.md"
+# The quarterly review template, used when the rules file does not name one (optional).
+# quarterly_template = "~/path/to/quarterly-template.md"
+# The time study's home folder, whose tables give the month's hours; --time-home overrides it (optional).
+# time_study_home = "~/path/to/time-study"
+# The Portal project (uuid) the alignment approval task goes in; --alignment-project overrides it (required, for goal-alignment-publish's pack pass, unless alignment_domain or a flag is given).
+# alignment_project = "00000000-0000-0000-0000-000000000000"
+# The Portal domain (uuid) whose catch-all project takes the alignment task when no project is set; --alignment-domain overrides it (optional).
+# alignment_domain = "00000000-0000-0000-0000-000000000000"
+
+[issue-harvest-workstream]
+# The repo map (YAML, JSON or TOML) listing the repositories the harvest may file on (required, unless --repos-file is given).
+# repos_file = "~/path/to/repos.yaml"
+# The harvest's state folder (ledger and run log); --state overrides it (optional; default <state_dir>/issue-harvest).
+# state = "~/path/to/state/issue-harvest"
+# The furthest back, in days, a Run reads (optional; default 14).
+# horizon_days = 14
+# How many days back a closed issue counts as recently closed for the duplicate check (optional; default 30).
+# closed_days = 30
+# A list of files of private names refused in a public repository (optional).
+# public_denylist_files = ["~/path/to/denylist.txt"]
+# A list of private words refused on every repository (whole word, any case) (optional; default the top-level private_terms).
+# private_terms = ["example-private-word"]
+# A sub-table of link templates per source, with {id} replaced by the item's id (optional).
+# source_links = { portal_notes = "https://portal.example.com/notes/{id}" }
+# Sub-table with enabled (default true), exclude_titles (patterns) and max_fetch (default 300) (optional; default enabled).
+# sources.portal_notes = { enabled = true, exclude_titles = [], max_fetch = 300 }
+# Sub-table with enabled (default true), exclude_senders and exclude_subjects (optional; default enabled).
+# sources.portal_email = { enabled = true, exclude_senders = [], exclude_subjects = [] }
+# Sub-table with enabled (default true) (optional; default enabled).
+# sources.portal_tasks = { enabled = true }
+# Sub-table with enabled (default true) and path, the folder of said-not-seen-*.json files, which is needed once the sub-table exists (optional; default not read unless the sub-table exists).
+# sources.said_not_seen = { enabled = true, path = "~/path/to/said-not-seen" }
+
+[meeting-scheduled-worker]
+# The earliest meeting start, as an ISO time, that the worker processes (required, when meeting-pending runs without --since).
+# since = "2026-01-01T00:00:00Z"
+# This skill's state folder; --state and MEETING_PROCESSING_STATE come before it (optional; default <state_dir>/meeting-processing).
+# state_dir = "~/path/to/state/meeting-processing"
+# The slug of the Portal agent that takes the enrichment tasks meeting-publish files; --agent-slug overrides it (optional; default "deep-researcher").
+# enrichment_agent = "deep-researcher"
+# The first line a runner puts on an answer it posts for the owner, so that comment is read as the owner's words (optional; default "" (none)).
+# relayed_answer_head = ""
+
+[nightly-sweep-workstream]
+# The owner's IANA zone; a date is the owner's local day, midnight to midnight (required, unless --tz is given).
+# timezone = "UTC"
+# The sweep's state folder (the ledger of dates swept, and its lock); --state overrides it (optional; default <state_dir>/nightly-sweep).
+# state = "~/path/to/state/nightly-sweep"
+# The executive assistant's address, whose mail is never noise and is read first; leave empty with no assistant (optional).
+# assistant_email = "assistant@example.com"
+# The sender of the Portal's own generated Brief, which is treated as noise (optional).
+# portal_brief_email = "brief@example.com"
+# A list of the owner's names: never distinctive words for matching, and they end a sent message's own words as a signature (optional).
+# owner_names = ["Dana"]
+# A list of the firm's names, never distinctive words for matching (optional).
+# firm_names = ["Example Firm"]
+# Days after which a VIP or High contact counts as stale for the relationship phase; a value that is not a whole number from 1 to 3650 falls back to 30 (optional; default 30).
+# vip_stale_days = 30
+# true writes the Daily Note as a private note that must read back private (optional; default false).
+# daily_note_private = false
+
+[orchestrator-fleet]
+# The owner's orchestrator registry (YAML) with its orchestrators: list (required, unless --registry is given).
+# registry = "~/path/to/orchestrators.yaml"
+# Where validate looks for each orchestrator's agent file; --agents-dir overrides it (optional; default ~/.claude/agents).
+# agents_dir = "~/.claude/agents"
+# The folder of Automation definitions; --automations-dir overrides it, and it is needed when launch_command uses {automation_path} (optional; default the registry's own automations_dir).
+# automations_dir = "~/path/to/automations"
+# The runner's command that prints its recent Runs as JSON, as a list of words or one string; run without a shell (required, for Run columns in the status and for a capped launch).
+# runs_command = ["runner", "runs", "--format", "json"]
+# The runner's command that queues one Run, with {automation}, {automation_path} and {by} filled in (required, to launch).
+# launch_command = ["runner", "launch", "{automation}"]
+# The words appended to launch_command for each launch param (optional; default ["--param", "{key}={value}"]).
+# param_args = ["--param", "{key}={value}"]
+# Param names the runner fills itself, which a launch may not carry (optional).
+# reserved_params = ["dry_run"]
+
+[playbook-ratification]
+# A table of function folder to heading for the playbook index, in index order, such as finance = "Finance: accounting, treasury, controls" (optional).
+# function_labels = { finance = "Finance: accounting, treasury, controls" }
+
+[pressure-test-method]
+# A YAML list of audit targets, each with name, last_audited and findings (optional: a missing setting is named in the note and the audit goes on).
+# rotation_ledger = "~/path/to/rotation-ledger.yaml"
+
+[process-flow-workstream]
+# The folder inside the client's folder where process drafts are delivered (optional; default "Process Flows").
+# client_subfolder = "Process Flows"
+# The owner's own delivery folder, used when the Context names no client folder; it must already exist (optional).
+# delivery_dir = "~/path/to/deliveries"
+# The library of reference process models that process-flow-prepare looks in (optional; default the reference-process-models skill in this toolbox checkout).
+# reference_models_dir = "~/path/to/reference-process-models"
+# A command template for process-flow-render's screenshot, with {url}, {out}, {width} and {height} filled in (optional; default headless Chrome or Chromium from PATH).
+# screenshot_command = "chromium --headless --screenshot={out} --window-size={width},{height} {url}"
+
+[product-costing-workstream]
+# Path to the cost-model layout JSON (required, when fg-pl-extract or costmodel-audit runs without --layout).
+# cost_model_layout = "~/path/to/cost-model-layout.json"
+# Path to a JSON file of extra header synonyms for sap-extract-normalize; --synonyms overrides it (optional).
+# extract_synonyms = "~/path/to/synonyms.json"
+
+[project-engagement-workstream]
+# A list of folder names created once per engagement (optional; default the built-in list in engagement-folders).
+# general_subfolders = ["Admin", "Deliverables"]
+# A list of folder names created in each workstream's month folder (optional; default the built-in list in engagement-folders).
+# workstream_subfolders = ["Working", "Final"]
+# The prefix of the working repository folder engagement-folders creates; --repo-prefix overrides it (optional; default "f3i").
+# repo_prefix = "f3i"
+
+[project-health-diagnose]
+# The folder of the project-health Runs, searched for the last one (required, when project-health-check runs with --last-run).
+# runs_dir = "~/path/to/project-health-runs"
+
+[recording-harvest]
+# A file of Loom share links or video ids, one per line, # for a comment (required, unless --videos is given).
+# video_list = "~/path/to/videos.txt"
+# The folder where transcripts and captions are kept (never video) (required, unless --archive is given).
+# archive_dir = "~/path/to/recordings"
+
+[report-time-study]
+# The time study's home folder (required, when time-study-check, time-study-collect or time-study-tool runs without a home argument).
+# home = "~/path/to/time-study"
+# The time-study tool's checkout; --repo overrides it (optional; default the home's parent folder, when it holds the timestudy package).
+# repo = "~/path/to/time-study-tool"
+# Path to the owner's domains CSV (required, when time-study-day-lint runs without --domains).
+# domains_csv = "~/path/to/domains.csv"
+
+[report-weekly]
+# The Word reference document report-render uses for the report's styles (optional).
+# reference_docx = "~/path/to/reference.docx"
+
+[review-register]
+# The name in the register's "Owed by" heading (optional; default "the owner").
+# owner_name = "the owner"
+
+[skill-harvest-workstream]
+# The toolbox checkout the harvest's review branch is cut from (required, unless --repo is given).
+# repo = "~/path/to/automation-toolbox"
+
+[skills-extract]
+# A list of folders holding past Claude Code sessions (one string is read as a list of one); --claude-dir overrides it (optional; default ["~/.claude/projects"]).
+# claude_session_dirs = ["~/.claude/projects"]
+# A list of folders holding past Codex sessions; --codex-dir overrides it (optional; default ["~/.codex/sessions"]).
+# codex_session_dirs = ["~/.codex/sessions"]
+# A list of toolbox checkouts whose departments' skills the skill inventory reads, plugin departments as plugins (one string is read as a list of one); --toolbox overrides it (optional).
+# toolbox_dirs = ["~/path/to/automation-toolbox"]
+
+[software-portfolio-review]
+# The folder repo-sweep searches for repositories (required, when repo-sweep runs without a ROOT argument).
+# repos_root = "~/path/to/repos"
+
+[task-stack-capture]
+# The list of capture sources, each with name, kind and path; used before sources_file (required, unless sources_file is set or --sources is given).
+# sources = [{ name = "notes", kind = "markdown-inbox", path = "~/path/to/inbox.md" }]
+# A YAML, TOML or JSON file holding the capture sources, read when sources is not set (optional).
+# sources_file = "~/path/to/capture-sources.yaml"
+
+[task-stack-workstream]
+# Portal contact ids, besides the owner, to whom task-stack-apply may assign work (optional).
+# assignable_contacts = ["00000000-0000-0000-0000-000000000000"]
+# Extra words that may come before a task's verb, such as the owner's first name, added to the built-in list (optional).
+# lead_words = ["dana"]
+
+[toolbox-audit-workstream]
+# The toolbox checkout the audit scans and cuts its fix branch from; the Run folder must sit outside it (required, unless --repo is given).
+# repo = "~/path/to/automation-toolbox"
+
+[weekly-review-workstream]
+# The Portal project (uuid) the weekly review's approval task goes in; --review-project overrides it (required, for weekly-review-publish's pack pass, unless review_domain or a flag is given).
+# review_project = "00000000-0000-0000-0000-000000000000"
+# The Portal domain (uuid) whose catch-all project takes the review task when no project is set; --review-domain overrides it (optional).
+# review_domain = "00000000-0000-0000-0000-000000000000"
