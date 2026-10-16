@@ -348,7 +348,8 @@ def build(corpus, today, domain="", project="", stale_days=STALE_DAYS, dup_thres
     meta = {ref("task", t): {"status": c.status_of(t) or None, "priority": t.get("priority"),
                              "created_at": t.get("created_at"), "updated_at": t.get("updated_at"),
                              "due": due_of(t).isoformat() if due_of(t) else None,
-                             "owner_contact_id": t.get("owner_contact_id"), "domain_id": task_domain(t, projects),
+                             "owner_contact_id": t.get("owner_contact_id"), "created_by": t.get("created_by"),
+                             "created_by_org_member_id": t.get("created_by_org_member_id"), "domain_id": task_domain(t, projects),
                              "project_id": str(t.get("project_id") or "") or None}
             for t in corpus.get("task", []) if c.is_open_task(t)}
     findings = {}
@@ -459,14 +460,17 @@ def as_text(result, sample=5):
     return "\n".join(lines)
 
 
-def owner_contact(client):
-    """The token's own contact from whoami, or None when it cannot be read."""
+def owner_identity(client):
+    """The token's owner from whoami (contact, member, addresses), or None when it cannot be read."""
     try:
-        who = client.call("whoami", {})
+        return c.owner_identity(client.call("whoami", {}))
     except Exception:
         return None
-    principal = (who or {}).get("principal") if isinstance(who, dict) else None
-    return str((principal or {}).get("contact_id") or "").strip() or None
+
+
+def owner_contact(client):
+    """The token's own contact from whoami, or None when it cannot be read."""
+    return (owner_identity(client) or {}).get("contact")
 
 
 def parse_args(argv=None):
@@ -530,7 +534,9 @@ def main(argv=None, client=None):
         result = build(corpus, today, args.domain, args.project, args.stale_days, args.dup_threshold, args.evidence)
     except c.Stop as exc:
         bad(exc)
-    result["owner_contact_id"] = owner_contact(client)
+    ident = owner_identity(client)
+    result["owner_contact_id"] = (ident or {}).get("contact")
+    result["owner_identity"] = ident
     result["generated_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
     result["portal_calls"] = getattr(client, "calls", None)
     if unreadable:

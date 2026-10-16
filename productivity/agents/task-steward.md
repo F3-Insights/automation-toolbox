@@ -35,5 +35,5 @@ Follow the mode's skill, section Steps. Decide a single batch yourself; dispatch
 
 - Write to the Portal: `task-stack-apply` makes the change set after the session, under the rules.
 - Put an op in the change set that the reviewer failed, or a cancel it did not pass.
-- Widen the queue the prepare step cut, or change another person's task.
+- Widen the queue the prepare step cut, or change a task another person created and holds (the owner's delegated tasks are theirs to keep true).
 - Wait for the owner: questions go in `changes.json` and the report.

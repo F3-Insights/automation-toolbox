@@ -22,6 +22,8 @@ import json
 import sys
 from pathlib import Path
 
+import _common as c
+
 TOOL, VERSION = "task-stack-queue", 1
 CLARIFY = ("filing", "next_action", "no_due_date", "waiting")
 COMPONENTS = ("filing", "next_action", "overdue", "stale", "no_due_date", "waiting", "duplicates",
@@ -63,6 +65,7 @@ def dom(row):
 
 def build(data, components=CLARIFY, owner=None, max_tasks=MAX_DEFAULT, batch_size=BATCH_DEFAULT, domain=""):
     owner = (owner or data.get("owner_contact_id") or "").strip().lower() or None
+    ident = dict(data.get("owner_identity") or {}, contact=owner)
     tasks = {}
     for comp in components:
         for f in (data.get("findings") or {}).get(comp) or []:
@@ -72,7 +75,8 @@ def build(data, components=CLARIFY, owner=None, max_tasks=MAX_DEFAULT, batch_siz
             row = tasks.setdefault(ref, {
                 "ref": ref, **{k: f.get(k) for k in ("title", "domain", "domain_id", "project", "project_id",
                                                      "status", "priority", "created_at", "updated_at", "due",
-                                                     "owner_contact_id")},
+                                                     "owner_contact_id", "created_by",
+                                                     "created_by_org_member_id")},
                 "lenses": [], "reasons": {}})
             row["lenses"].append(comp)
             row["reasons"][comp] = f.get("reason") or ""
@@ -80,8 +84,7 @@ def build(data, components=CLARIFY, owner=None, max_tasks=MAX_DEFAULT, batch_siz
     for row in tasks.values():
         if domain and not domain_matches(row, domain, data.get("domains") or []):
             continue
-        holder = str(row.get("owner_contact_id") or "").strip().lower()
-        if owner and holder and holder != owner:
+        if owner and not c.in_owners_stack(row, ident):
             others += 1
             continue
         eligible.append(row)

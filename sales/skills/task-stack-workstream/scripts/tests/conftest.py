@@ -89,7 +89,9 @@ class FakePortal:
         args = dict(args or {})
         self.calls.append((tool, args))
         if tool == "whoami":
-            return {"principal": {"contact_id": OWNER}}
+            return {"principal": {"contact_id": OWNER, "org_member_id": uid(902),
+                                  "primary_email": "Dana@northwind.test"},
+                    "inboxes": [{"address": "dana@northwind-ops.test"}]}
         if tool == "get":
             kind, ident = args["entity_type"], args["id_or_query"]
             if kind == "task":

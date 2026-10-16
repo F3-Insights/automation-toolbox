@@ -322,6 +322,23 @@ def test_comment_once(tmp_path):
     assert len(portal.comments[uid(1)]) == 1
 
 
+def test_a_task_the_owner_delegated_is_theirs_to_close(tmp_path):
+    portal = FakePortal([task(1, "Send pack", owner_contact_id=OTHER, created_by="dana@northwind.test"),
+                         task(2, "Send pack", owner_contact_id=OTHER, created_by_org_member_id=uid(902)),
+                         task(3, "Send pack", owner_contact_id=OTHER, created_by="someone@else.test")])
+    result = by_id(run(portal, changes(complete(1, op_id="a"), complete(2, op_id="b"), complete(3, op_id="c")),
+                       tmp_path))
+    assert result["a"]["outcome"] == "applied" and result["b"]["outcome"] == "applied"
+    assert result["c"]["code"] == "NOT_OWNER"
+
+
+def test_evidence_of_the_ask_lets_any_contact_be_assigned(tmp_path, no_owner_settings):
+    portal = FakePortal([task(1, "Chase the carrier")])
+    op = {"id": "e1", "op": "edit", "task": uid(1), "set": {"owner_contact_id": OTHER},
+          "evidence": f"portal://email/{EMAIL}", "reason": "Dana asked them by email"}
+    assert by_id(run(portal, changes(op), tmp_path))["e1"]["outcome"] == "applied"
+
+
 def test_work_is_assigned_only_to_the_owner_or_the_assignable_list(tmp_path, no_owner_settings):
     portal = FakePortal([task(1, "Chase the carrier")])
     op = {"id": "e1", "op": "edit", "task": uid(1), "set": {"owner_contact_id": OTHER}, "reason": "hand over"}

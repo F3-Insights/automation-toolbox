@@ -58,8 +58,10 @@ THE RULES (an op that fails one is refused whole, with a code; the other ops go 
 - goal_edit / goal_close: priority P1-P4, horizon, title, dates, open status (DEFERRED parks
   it); a close to ACHIEVED (needs evidence), CANCELLED or MISSED while no active project or
   sub-goal still serves it, unless an earlier op in the same set closed or relinked it.
-- Only the owner's own (or unowned) tasks, projects and goals move. Work is assigned only to
-  the owner or a contact in the setting [task-stack-workstream] assignable_contacts.
+- Only the owner's own (or unowned) projects and goals move, and the owner's own, unowned or
+  delegated tasks (held by someone else but created by the owner). Work is assigned to the
+  owner, a contact in the setting [task-stack-workstream] assignable_contacts, or anyone the
+  op's evidence or captured source shows the owner asked.
 - --domain limits every op to one domain; --max-changes caps the writes, the rest deferred.
 
 HAND EDITS: a field changed by anyone else in the last --hand-edit-days (7) is never
@@ -487,26 +489,32 @@ class Applier:
         self.closing = set()     # tasks this run closed (or would): a project close counts them closed
         self.done = []           # (op, result) in order: a later op may count an earlier one
         self._owner = self._journals = self._domains = self._open = self._projects = self._goals = None
+        self._identity = None
 
     # ---------------------------------------------------------------- reads
 
     def owner(self):
         if self._owner is None:
-            who = self.client.call("whoami")
-            principal = ((who or {}).get("principal") or {}) if isinstance(who, dict) else {}
-            contact = str(principal.get("contact_id") or "")
-            if not UUID.match(contact):
+            ident = c.owner_identity(self.client.call("whoami"))
+            if not UUID.match(ident["contact"] or ""):
                 raise c.Stop("whoami named no contact for the owner; nothing is written ownerless")
-            self._owner = contact.lower()
+            self._owner, self._identity = ident["contact"], ident
         return self._owner
 
-    def check_assignee(self, contact):
-        """Work goes only to the owner or a contact in the assignable_contacts setting."""
+    def identity(self):
+        self.owner()
+        return self._identity
+
+    def check_assignee(self, contact, op=None):
+        """Work goes to the owner, a contact in the assignable_contacts setting, or anyone the
+        op's evidence or captured source shows the owner asked (delegation already made)."""
         who = str(contact or "").lower()
-        if who and who not in {self.owner(), *(a.lower() for a in c.setting_list("assignable_contacts"))}:
-            raise Refused("NOT_ASSIGNABLE", f"{who} has not agreed to receive agent assignments (not the owner, "
-                                            "not in the [task-stack-workstream] assignable_contacts setting); "
-                                            "the first assignment is the owner's call")
+        if not who or (op and (op.get("evidence") or op.get("source"))):
+            return
+        if who not in {self.owner(), *(a.lower() for a in c.setting_list("assignable_contacts"))}:
+            raise Refused("NOT_ASSIGNABLE", f"{who} is not the owner or in the [task-stack-workstream] "
+                                            "assignable_contacts setting, and the op cites no evidence that "
+                                            "the owner asked them; assigning without it is the owner's call")
 
     def read(self, kind, ident, detail="full"):
         """One task, project or goal. A task carries its comments and hierarchy beside it under
@@ -655,10 +663,10 @@ class Applier:
         task = self.read_task(tid)
         if task.get("is_archived"):
             raise Refused("CLOSED", f"the {what} is archived")
-        owner = str(task.get("owner_contact_id") or "").lower()
-        if owner and owner != self.owner():
-            raise Refused("NOT_OWNER", f"the {what} is {task.get('owner_name') or 'another person'}'s; "
-                                       "only the owner's own tasks are changed")
+        if not c.in_owners_stack(task, self.identity()):
+            raise Refused("NOT_OWNER", f"the {what} is {task.get('owner_name') or 'another person'}'s and "
+                                       "the owner did not create it; only the owner's own and delegated "
+                                       "tasks are changed")
         dom = (task.get("_hierarchy") or {}).get("domain") or {}
         self.in_scope(dom.get("id") or task.get("domain_id"), f"the {what}")
         return task
@@ -771,7 +779,7 @@ class Applier:
         if want.get("priority") is not None:
             want["priority"] = norm("priority", want["priority"])
         change = {f: v for f, v in want.items() if norm(f, task.get(f)) != norm(f, v)}
-        self.check_assignee(change.get("owner_contact_id"))
+        self.check_assignee(change.get("owner_contact_id"), op)
         final_status = change.get("status", status)
         if final_status == "WAITING" and not (change["due_date"] if "due_date" in change else task.get("due_date")):
             raise Refused("WAITING_NO_FOLLOW_UP", "a WAITING task needs a due date, its follow-up date")
@@ -875,7 +883,7 @@ class Applier:
             project = str(general[0]["id"]).lower()
         self.in_scope(domain, "the new task's domain")
         owner = str(op.get("owner") or "").lower() or self.owner()
-        self.check_assignee(owner)
+        self.check_assignee(owner, op)
         mine = c.normalise_title(title)
         for t in self.listing("task"):
             if str(t.get("project_id") or "").lower() == project:

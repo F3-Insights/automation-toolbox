@@ -66,7 +66,7 @@ Each thing proposed is one review item:
 - **WAITING.** A follow-up date passed or is missing: the follow-up date and the party (`ok` as an edit of `due_date`, `waiting_on_contact_id` or `waiting_reason`), or `done` if the answer came.
 - **Someday candidates.** No goal, long untouched or long overdue: `park` is the default.
 
-Only the owner's own tasks and unowned ones; another person's task is a `findings` line.
+Only the owner's own, unowned and delegated tasks (held by someone else, created by the owner); a task another person created and holds is a `findings` line.
 
 ## Park
 

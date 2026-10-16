@@ -284,6 +284,31 @@ def is_active_goal(goal):
     return not goal.get("is_archived") and status_of(goal).lower() not in CLOSED_GOAL_STATUSES
 
 
+def owner_identity(who):
+    """The owner as whoami names them: their contact, their org member and every address they
+    hold (the principal's and each inbox's). A task created under any of these is the owner's."""
+    principal = ((who or {}).get("principal") or {}) if isinstance(who, dict) else {}
+    emails = {str(principal.get("primary_email") or "").strip().lower()}
+    emails |= {str(i.get("address") or "").strip().lower() for i in (who or {}).get("inboxes") or []
+               if isinstance(i, dict)} if isinstance(who, dict) else set()
+    return {"contact": str(principal.get("contact_id") or "").strip().lower() or None,
+            "member": str(principal.get("org_member_id") or "").strip().lower() or None,
+            "emails": sorted(e for e in emails if e)}
+
+
+def in_owners_stack(task, ident):
+    """Whether a task is the owner's to keep: theirs, nobody's, or one they created and handed to
+    someone else (delegated). Only a task another person created and holds is left alone."""
+    holder = str(task.get("owner_contact_id") or "").strip().lower()
+    if not holder or holder == (ident or {}).get("contact"):
+        return True
+    member = str(task.get("created_by_org_member_id") or "").strip().lower()
+    if member and member == (ident or {}).get("member"):
+        return True
+    creator = str(task.get("created_by") or "").strip().lower()
+    return bool(creator) and creator in set((ident or {}).get("emails") or [])
+
+
 def owner_of(project, tasks):
     """Whether anyone owns the project: its assignee, or the owner of an open task on it."""
     if str(project.get("assignee_contact_id") or "").strip():

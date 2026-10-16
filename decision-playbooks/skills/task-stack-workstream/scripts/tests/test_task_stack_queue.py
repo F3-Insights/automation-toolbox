@@ -14,21 +14,23 @@ def check_json():
     tasks = [task(1, "Rate card", priority="P1", updated=1), task(2, "Budget", priority="P3", created=200, updated=1),
              task(3, "Pricing", priority="P3", created=100, updated=1),
              task(4, "Stock count", project_id=P_AUDIT, domain_id=D_OPS, updated=1),
-             task(5, "Freight", owner_contact_id=OTHER, updated=1)]
+             task(5, "Freight", owner_contact_id=OTHER, updated=1),
+             task(6, "Pallets", owner_contact_id=OTHER, created_by="dana@northwind.test", created=300, updated=1)]
     data = ck.build({"domain": DOMAINS, "goal": goals(), "project": projects(), "task": tasks}, date(2030, 3, 4))
     data["owner_contact_id"] = OWNER
+    data["owner_identity"] = {"contact": OWNER, "member": None, "emails": ["dana@northwind.test"]}
     return data
 
 
-def test_queue_is_the_owners_tasks_worst_domain_first_then_priority_then_oldest():
+def test_queue_is_the_owners_and_delegated_tasks_worst_domain_first_then_priority_then_oldest():
     result = tq.build(check_json())
-    assert [r["ref"].rsplit("/", 1)[1] for r in result["tasks"]] == [uid(1), uid(2), uid(3), uid(4)]
-    assert result["others"] == 1 and result["queued"] == 4
+    assert [r["ref"].rsplit("/", 1)[1] for r in result["tasks"]] == [uid(1), uid(6), uid(2), uid(3), uid(4)]
+    assert result["others"] == 1 and result["queued"] == 5
 
 
 def test_queue_caps_and_batches():
     result = tq.build(check_json(), max_tasks=3, batch_size=2)
-    assert [r["batch"] for r in result["tasks"]] == ["b1", "b1", "b2"] and result["deferred"] == 1
+    assert [r["batch"] for r in result["tasks"]] == ["b1", "b1", "b2"] and result["deferred"] == 2
 
 
 def test_queue_domain_filter_and_nothing_line():

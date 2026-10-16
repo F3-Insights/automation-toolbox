@@ -5,7 +5,7 @@ description: "The daily GTD clarify pass, run by task-steward in mode clarify an
 
 # Clarifying a task
 
-Every open task on the owner's list is one they can work from without opening it. `orchestration-workstream` is the conduct and the return block; `task-stack-workstream` is the task stack's rules (read only, the owner's own tasks, hand edits stand, the change-set op shape); load them first. The owner's `TASK-STACK-RULES.md` wins over all three.
+Every open task on the owner's list is one they can work from without opening it. `orchestration-workstream` is the conduct and the return block; `task-stack-workstream` is the task stack's rules (read only, the owner's own and delegated tasks, hand edits stand, the change-set op shape); load them first. The owner's `TASK-STACK-RULES.md` wins over all three.
 
 ## What the Run has
 
@@ -53,11 +53,11 @@ Then, as needed: the contact (`get` contact: company, recent mail, open tasks an
    Set `project_id`, and `domain_id` to that project's domain, both as uuids.
 3. **The next action.** Rewrite the title as the next physical, visible action, verb first: "Send Acme the signed SOW", not "SOW"; "Call the carrier about the Q4 rate", not "Carrier rates". Keep every specific the old title had; add one only from the record; never invent a figure, a date or a person. One action per task: when the title holds two, keep the first and note the second in `findings`. Keep a leading bracketed tag (such as `[CRM Hygiene] `) as it is. At most 200 characters. A title that already starts with a real action stays as it is.
 4. **Owner.** An unowned task gets the owner's contact, unless the text plainly makes it another person's action. In order:
-   - an explicit delegation in the record (the owner asked someone to do it): the owner keeps it and it becomes WAITING on that person (step 5);
+   - an explicit delegation in the record (the owner asked someone to do it): `owner_contact_id` becomes that person, citing the mail or note as `evidence`, and it becomes WAITING on them (step 5);
    - another person's own commitment that the owner merely tracks: WAITING on them, owner kept;
    - otherwise the owner.
 
-   Never set `owner_contact_id` to another person; another person's task is not yours to change.
+   Set `owner_contact_id` to another person only on a record of the owner asking them. A task another person created and holds is theirs, not yours to change; one the owner created and handed to someone is delegated and yours to keep true.
 5. **WAITING.** A task whose next move is someone else's is WAITING. It names the party (`waiting_on_contact_id`, a contact uuid you found with `search` or the task's contact), says why in `waiting_reason` (one line: "Carrier is quoting the Q4 rate"), and its `due_date` is the follow-up date: the date the party promised, when the record has one; else one week from today in the owner's timezone (`whoami`). A WAITING task with no party you can name from the record is a question. A WAITING task whose wait is over (they answered, or the record shows the next step is now the owner's) goes back to TODO with the next action as its title. A wait whose promised date has passed with no answer stays WAITING with that date: it is due for a follow-up, which the follow-up loop chases.
 6. **Dates.** A due date comes from the record: a date the task, its email or its meeting states, a deadline the counterparty set, a period end the work serves. A task in a project with a due date or deadline still in the future, and no date of its own, gets the project's date as its latest date, unless the record gives an earlier one. A project date already past is no date for a task: an instantly overdue task helps nobody. Due dates cleared in bulk may be the owner's choice; re-add one only from the record. A task with no date in the record and no dated project keeps none: an invented date is worse than none.
 7. **Status.** TODO, IN_PROGRESS when the record shows it started, WAITING as above. Never DONE or CANCELLED by edit.
