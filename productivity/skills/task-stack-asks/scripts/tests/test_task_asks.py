@@ -147,3 +147,30 @@ def test_received_scope_reads_cc_and_ignore_is_case_insensitive(domain_file):
     assert item and item["counterparties"]["addresses"] == ["kim@fabrikam.test", "pat@fabrikam.test"]
     loud = dict(row, from_address="ALERTS@NOTIFY.Northwind.test")
     assert q.email_item(loud, "received", owner, ["dana@northwind.test"], scope, {}, {}) == (None, "ignored")
+
+
+def test_named_contacts_are_vips_beside_the_rules():
+    rules = [{"contacts": [STAFF, uid(900)]}, {"company": "Northwind Traders", "roles": ["board_member"], "titles": []}]
+    vips, warnings = q.resolve_vips(FakePortal(), rules, uid(900))
+    assert set(vips) == {STAFF, BOARD} and not warnings  # the owner is never a VIP
+    assert vips[STAFF] == {"contact_id": STAFF, "name": "Kim Lee", "why": "named in the domain file",
+                           "addresses": ["kim@northwind.test"]}
+
+
+def test_the_domain_file_reads_named_vips(tmp_path):
+    f = tmp_path / "d.md"
+    f.write_text(f"```yaml\nvip:\n  - {{contacts: [{STAFF.upper()}]}}  # Kim Lee\n```\n")
+    assert c.load_scope(f)["vip"] == [{"contacts": [STAFF]}]
+
+
+def test_a_deferred_ask_comes_back_even_after_the_overlap(tmp_path, domain_file):
+    out, data = queue(tmp_path, domain_file)
+    held = data["items"][-1]  # the oldest item
+    write_changes(out.parent, [{"source": i["key"], "decision": "defer" if i is held else "skip"}
+                               for i in data["items"]])
+    r.main(["--run", str(out.parent)])
+    later = (c.parse_time(AS_OF) + c.OVERLAP * 3).isoformat()
+    out2 = tmp_path / "later" / "asks-queue.json"
+    q.main(["--domain", "Northwind", "--domain-file", str(domain_file), "--as-of", later, "--out", str(out2)],
+           client=FakePortal())
+    assert [i["key"] for i in json.loads(out2.read_text())["items"]] == [held["key"]]

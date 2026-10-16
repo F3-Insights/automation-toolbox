@@ -9,8 +9,8 @@ mail and their Fellow meetings, keeps what is in the domain's scope, and marks w
 The scope is the first ```yaml block of --domain-file (see _common.py): `mail.inboxes` (mail in
 these inboxes), `mail.correspondent_domains` (mail or meetings with people at these domains, from
 any inbox), `ignore.senders` (glob patterns on a received message's sender) and `vip` (roles and
-titles at companies; the VIPs are resolved from each company's relationships in the CRM, never
-named in a file).
+titles at companies, resolved from each company's relationships in the CRM, and contacts the
+file names by id).
 
 Each item: `key` (asks:email:<id> or asks:meeting:<id>, the source a create carries), `ref`,
 `date` (UTC) and `local_date`, `direction` (sent, received or meeting), `subject`, `snippet`,
@@ -96,9 +96,16 @@ def find_domain(client, wanted):
 
 
 def resolve_vips(client, rules, owner):
-    """{contact id: {name, why, addresses}} from each rule's company relationships, and warnings."""
+    """{contact id: {name, why, addresses}} from each rule's company relationships or named
+    contacts, and warnings."""
     vips, warnings = {}, []
     for rule in rules:
+        if "contacts" in rule:
+            for cid in rule["contacts"]:
+                if cid != owner:
+                    vips.setdefault(cid, {"contact_id": cid, "name": None, "why": "named in the domain file",
+                                          "addresses": []})
+            continue
         found = client.call("list_entities", {"entity_type": "company", "limit": 25,
                                               "filters": {"search": rule["company"]}})
         rows = [r for r in (found.get("items") or []) if isinstance(r, dict)] if isinstance(found, dict) else []
@@ -118,7 +125,11 @@ def resolve_vips(client, rules, owner):
         if not hits:
             warnings.append(f"vip: nobody at {company['name']} holds {rule['roles'] + rule['titles']}")
     for cid, v in vips.items():
-        got = client.call("get", {"entity_type": "contact", "id_or_query": cid, "detail": "summary"})
+        try:
+            got = client.call("get", {"entity_type": "contact", "id_or_query": cid, "detail": "summary"})
+        except c.PortalError:
+            warnings.append(f"vip: no contact {cid}")
+            continue
         rec = got.get("contact") if isinstance(got, dict) and isinstance(got.get("contact"), dict) else got
         if isinstance(rec, dict):
             v["name"] = rec.get("full_name") or rec.get("name")

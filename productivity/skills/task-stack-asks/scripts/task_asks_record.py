@@ -5,16 +5,17 @@ deterministic steps and the session wrote in the Run folder:
 
 - asks-queue.json: the items task_asks_queue.py queued and deferred, and the cursor's path;
 - changes.json: its `asks` list, one decision per queued item, {"source": <key>,
-  "decision": "create" | "done" | "exists" | "skip" | "ask", "ops": [<op ids>], "reason": "..."};
+  "decision": "create" | "done" | "exists" | "skip" | "defer", "ops": [<op ids>], "reason": "..."};
 - apply.json (or apply-dry-run.json): what task-stack-apply did with each op.
 
-An item is decided when its decision is exists, skip or ask, or when every create it names was
+An item is decided when its decision is exists or skip, or when every create it names was
 applied, would apply, found unchanged by its marker or refused as a DUPLICATE. Anything else
-(no decision, a create refused, deferred or failed, an item deferred past the cap) is left for
-the next Run. The cursor's `since` moves to the newest instant up to which every item is
+(no decision, `defer` (an ask that becomes a task only if still open later), a create refused,
+deferred or failed, an item deferred past the cap) is left for the next Run. The cursor's `since` moves to the newest instant up to which every item is
 decided (the queue's `until` when all are), and `decided` keeps the decided keys dated at or
 after it less the queue's overlap (_common.OVERLAP), so a later Run neither skips an undecided
-item nor decides one twice, even re-reading the overlap. It never moves back.
+item nor decides one twice, even re-reading the overlap: the oldest item left holds `since`
+back, so it is read again however long it waits. It never moves back.
 
 A dry Run (--dry-run, or --dry-run-if true) writes RUN/asks-record-dry-run.json and leaves the
 cursor alone; a live one writes RUN/asks-record.json and the cursor.
@@ -36,7 +37,7 @@ import _common as c
 
 TOOL = "task-asks-record"
 DONE_OUTCOMES = ("applied", "would_apply", "unchanged")
-SETTLED = ("exists", "skip", "ask")
+SETTLED = ("exists", "skip")
 
 
 def _load(path):
@@ -61,6 +62,8 @@ def decided_keys(queue, changes, results):
         if not isinstance(d, dict) or d.get("source") not in queued:
             continue
         key, kind = d["source"], d.get("decision")
+        if kind == "defer":
+            continue
         if kind in SETTLED:
             out[key] = kind
             continue

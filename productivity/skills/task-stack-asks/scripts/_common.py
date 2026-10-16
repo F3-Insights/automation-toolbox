@@ -8,6 +8,7 @@ scope this command reads:
 
     vip:              # who is a VIP in this domain: a current relationship to the company
       - {company: "Northwind Traders", roles: [founder, board_member], titles: ["chief executive"]}
+      - {contacts: ["<contact uuid>"]}  # Kim Lee: named VIPs, whatever their role
     mail:
       inboxes: [dana@northwind.test]          # mail in these inboxes is in scope
       correspondent_domains: [northwind.test] # mail with these correspondents, from any inbox
@@ -15,7 +16,8 @@ scope this command reads:
       senders: ["*@notify.northwind.test"]   # glob patterns on the sender's address
 
 A contact is a VIP when any of its current relationships to the company has a type in `roles`
-or a title holding any of `titles` (case-insensitive). Every key is optional.
+or a title holding any of `titles` (case-insensitive), or when a `contacts` entry names it.
+Every key is optional.
 
 THE CURSOR
 ----------
@@ -125,8 +127,11 @@ def load_scope(path):
         raise Bad(f"the domain file {p}: its yaml block is not a mapping")
     vips = []
     for i, rule in enumerate(data.get("vip") or [], 1):
+        if isinstance(rule, dict) and "contacts" in rule:
+            vips.append({"contacts": [x.lower() for x in _strings(rule["contacts"], f"vip {i} contacts")]})
+            continue
         if not isinstance(rule, dict) or not str(rule.get("company") or "").strip():
-            raise Bad(f"the domain file {p}: vip {i} needs a company")
+            raise Bad(f"the domain file {p}: vip {i} needs a company or contacts")
         vips.append({"company": str(rule["company"]).strip(),
                      "roles": [r.lower() for r in _strings(rule.get("roles"), f"vip {i} roles")],
                      "titles": [t.lower() for t in _strings(rule.get("titles"), f"vip {i} titles")]})
