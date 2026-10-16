@@ -1,6 +1,6 @@
 ---
 name: meeting-prep
-description: Prepares the context for one upcoming meeting (attendees, recent mail, notes and open tasks) from the Insights Portal and writes a prep note on the calendar event. Use before a meeting, or for "get me ready for my call with X". For all of a day's external meetings unattended, start meeting-prep-orchestrator; for a deep brief on one person, use the person-researcher agent.
+description: Prepares the context for one upcoming meeting (attendees, recent mail, notes and open tasks) from the Insights Portal and writes a prep note on the calendar event. Use before a meeting, or for "get me ready for my call with X". For all of a day's external meetings unattended, start meeting-steward in prep mode; for a deep brief on one person, use portal-research (Research a person).
 argument-hint: '[meeting name, attendee, or company]'
 allowed-tools: mcp__insights-portal__*, AskUserQuestion, Read
 ---

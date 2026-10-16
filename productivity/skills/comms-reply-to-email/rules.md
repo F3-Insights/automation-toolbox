@@ -31,13 +31,13 @@ One folder per run, outside the toolbox (the commands refuse a path inside it), 
 
 | File | Written at | By |
 |---|---|---|
-| `find.json` | step 1 | the orchestrator: the three command outputs, keyed `contact`, `email`, `outbound` |
-| `pack.json` | step 2 | `python3 ~/.claude/skills/comms-reply-to-email/scripts/email_context_pack.py --out` |
+| `find.json` | step 1 | the main agent: the three command outputs, keyed `contact`, `email`, `outbound` |
+| `pack.json` | step 2 | `productivity-email-context-pack --out` |
 | `brief.md` | step 2 | the researcher |
-| `plan.md` | step 3 | the orchestrator |
-| `answers.md` | step 4 | the orchestrator, the owner's answers verbatim |
-| `check.json` | step 6 | the orchestrator, the checker's JSON block verbatim (overwritten each round; earlier rounds kept as `check-1.json`, `check-2.json`) |
-| `deliver.json` | step 7 | the orchestrator, `email-deliver`'s output |
+| `plan.md` | step 3 | the main agent |
+| `answers.md` | step 4 | the main agent, the owner's answers verbatim |
+| `check.json` | step 6 | the main agent, the checker's JSON block verbatim (overwritten each round; earlier rounds kept as `check-1.json`, `check-2.json`) |
+| `deliver.json` | step 7 | the main agent, `email-deliver`'s output |
 
 Nothing else keeps state. The Portal's drafts and the thread are the ledger `outbound-check` reads, so a second run for the same email stops at step 1 on the open draft.
 
@@ -47,13 +47,13 @@ Every command prints one JSON object. `find-contact`, `find-email`, `outbound-ch
 
 ## The workers
 
-| Agent | Model | May touch | Brief |
-|---|---|---|---|
-| `email-context-researcher` | sonnet | Portal reads, `email-context-pack`, Write in the run folder | `briefs/researcher.md` |
-| `email-drafter` | opus | Portal reads, `draft_create`, `draft_update` | `briefs/drafter.md` |
-| `email-checker` | opus | Read, `email-draft-show` | `briefs/checker.md` |
+| Section | Agent | Model | May touch | Brief |
+|---|---|---|---|---|
+| Research the email | `productivity-worker` | sonnet | Portal reads, `productivity-email-context-pack`, Write in the run folder | `briefs/researcher.md` |
+| Draft the reply | `productivity-worker` | opus | Portal reads, `draft_create`, `draft_update` | `briefs/drafter.md` |
+| Check a reply | `productivity-reviewer` | opus | Read, `productivity-email-draft-show` | `briefs/checker.md` |
 
-The researcher only extracts and cites; the planning in step 3 and the drafting and checking are Opus work. Each worker's brief is its whole instruction for this flow: paste the brief's text and the inputs it names into the dispatch.
+The researcher only extracts and cites; the planning in step 3 and the drafting and checking are Opus work. Each dispatch names its section of `comms-reply-to-email` and the inputs the brief names; the brief is the worker's whole instruction for this flow.
 
 ## What the tools enforce, so no prompt has to
 

@@ -30,14 +30,14 @@ Ask first for anything another person would see or that cannot easily be reverse
 | The inbox dealt with, a batch of replies | `comms-inbox-replies` | Triage, one numbered approval question, then a drafter per thread. |
 | A reply to one person's email | `comms-reply-to-email` | Pins the contact and the email in code, asks only the owner's decisions, checks the draft, delivers it to their Drafts folder. Runs in this session; it dispatches its own three workers. |
 | A new email to one person, answering nothing | `comms-draft-email` | One recipient, one intent. It delivers the draft to their Drafts folder itself. |
-| Context before a meeting | `meeting-prep`, then `person-researcher` per attendee | Dispatch the researchers in one message. A whole day of meetings is `meeting-prep-orchestrator`. |
-| A transcript turned into records | `meeting-analyst` | Returns proposals with quotes. It writes nothing; you file after they approve, via `meeting-portal-notes` or `meeting-followup`. |
-| Raw notes written up | `meeting-portal-notes`, `meeting-summary` | For stored Fellow transcripts the Portal has not processed, start `meeting-transcript-orchestrator` (the `meeting-scheduled-worker` skill) as its own session. |
+| Context before a meeting | `meeting-prep`, then `productivity-worker` per attendee on `portal-research`, section Research a person (haiku) | Dispatch the researchers in one message. A whole day of meetings is `meeting-steward` in mode prep. |
+| A transcript turned into records | `productivity-worker` on `meeting-analyst-method`, section Analyse a meeting (opus) | Returns proposals with quotes. It writes nothing; you file after they approve, via `meeting-portal-notes` or `meeting-followup`. |
+| Raw notes written up | `meeting-portal-notes`, `meeting-summary` | For stored Fellow transcripts the Portal has not processed, start `meeting-steward` in mode transcripts (the `meeting-scheduled-worker` skill) as its own session. |
 | The day started, or wrapped | `start-session` | It reads the day's plan note from `daily-plan-orchestrator`, which picks the top three and closes the day. |
 | Something captured or a status logged | `quick-capture`, `project-status-update`, `comms-log-call` | Routine and reversible. Do it, then say what you filed. |
 | Projects reviewed | `project-checkin` interactively; `project-health-orchestrator` for the weekly sweep | Check-in starts from the last Run's diagnoses, decisions first. `project-health-diagnose`'s `project_health_check.py` for the state of every project now. |
-| Relationships that have gone quiet | `crm-relationship-tending-orchestrator` | Its own session, or through the fleet below. |
-| Tasks that look done, duplicated or dead | `task-reconcile-orchestrator` | Its own session, or through the fleet below. |
+| Relationships that have gone quiet | `comms-steward` in mode relationships | Its own session, or through the fleet below. |
+| Tasks that look done, duplicated or dead | `task-steward` in mode reconcile | Its own session, or through the fleet below. |
 | The month-end close | `month-end-orchestrator` | Its own main session (`claude --agent month-end-orchestrator`). It dispatches its workstreams, keeper and reviewer itself; never dispatch it as a sub-agent. |
 | A reporting package checked before it goes out | `numbers-reviewer` | Give it the artifacts, their sources and a scratch folder. Never the author's reasoning. |
 | "Do the reports all match?" | `report-tieout` | The skill when you are running it; `numbers-reviewer` when you want it checked independently. |
@@ -54,17 +54,17 @@ Ask first for anything another person would see or that cannot easily be reverse
 | Code specified, a schema or the docs worked on | `software-deep-spec`, `software-db-schema`, `software-clean-docs` | Owner-invoked only. Read the repository's own context first. |
 | Something broken or slow | `software-diagnose-bugs` | Reproduce before changing anything. |
 | Architecture or a plan grilled | `software-improve-architecture`, `software-grill-with-docs` | |
-| Who is this person | `person-researcher` | |
-| Where does this client or work area stand | `domain-researcher` | It recommends follow-on passes; you dispatch them. |
-| What have we said to them | `email-researcher` | |
-| What I am waiting on, delegated work chased | `comms-follow-ups` | Dispatches `waiting-on-tracker`, then one numbered approval question, then a drafter per cleared nudge. |
+| Who is this person | `productivity-worker` on `portal-research`, section Research a person (haiku) | |
+| Where does this client or work area stand | `productivity-worker` on `portal-research`, section Research a domain (sonnet) | It recommends follow-on passes; you dispatch them. |
+| What have we said to them | `productivity-worker` on `portal-research`, section Research email history (haiku) | |
+| What I am waiting on, delegated work chased | `comms-follow-ups` | Dispatches `productivity-worker` on `waiting-on-tracker-method`, then one numbered approval question, then a drafter per cleared nudge. |
 | The weekly reports out | `report-weekly` | One `report-writer` per author in parallel. Three gates, all the executive's. Nothing is sent. |
 | One executive's weekly report, run with them end to end | `weekly-reporter` | A main session of its own, not a subagent: it owns the three gates and has to be able to ask. Hand it over. |
-| "Run my time study", "where did my time go" | `time-study-orchestrator` | A main session of its own with the period or one window, not a subagent. It follows `report-time-study`. Hand it over. A one-off deep survey of a working life is `work-survey`. |
+| "Run my time study", "where did my time go" | `time-study` | A main session of its own with the period or one window, not a subagent. It follows `report-time-study`. Hand it over. A one-off deep survey of a working life is `work-survey`. |
 | Whether the work still serves the goals | `project-landscape` | It dispatches `goal-auditor` first and folds alignment into the portfolio review as one numbered list. |
 | Where the code repositories stand | `software-portfolio-review` | One `software-worker` per repository, following the skill's "Steward one repository" section. It hands over the pipeline invocation and never starts one. |
 | A recurring job run now, "run the weekly review", "start the task reconciliation" | the registered orchestrator | See "The orchestrator fleet" below. |
-| The automation checked on itself | `toolbox-audit-orchestrator` | With `activity-auditor` for drafts and contact pressure. CRM data hygiene is `crm-data-hygiene-orchestrator`. |
+| The automation checked on itself | `toolbox-audit-orchestrator` | With `activity-auditor` for drafts and contact pressure. CRM data hygiene is `crm-hygiene`. |
 
 ## The orchestrator fleet
 
@@ -74,19 +74,21 @@ Never dispatch an orchestrator as a sub-agent: it must be the main session of it
 
 ## Fan-out rules
 
+Productivity's `productivity-worker` and `productivity-reviewer` do whatever skill section their brief names: give them the skill, the section, the model and the skill's path `~/.claude/skills/<skill>/SKILL.md`.
+
 Dispatch independent agents in one message so they run in parallel. Five transcripts is five `transcript-reader` calls in one turn, not five turns.
 
 Never ask an agent to dispatch another agent. A subagent cannot, so the instruction is silently dropped and the work does not happen. Every launch is yours.
 
 Give each agent only what it needs. For the three review agents that means the artifact and nothing else: never the author's reasoning, never the outline, never what you were hoping they would find. `executive-red-team` gets what the audience sees plus assumed knowledge and expected outcome for a teaching artifact, or a one-line purpose otherwise. `fact-check` gets the claim list and a named subset of the sources, two instances over disjoint halves, and you cross-reference their "not in my sources" lists. `completeness-audit` gets the artifact and the reference model to compare it against.
 
-Every path that ends in a draft to a person runs `python3 ~/.claude/skills/comms-draft-check/scripts/outbound_check.py --to ... --thread ...` first and dispatches `email-drafter` only on exit 0; a non-zero exit means no draft, and that holds whether the nudge came from a worker, a skill or the owner's own request.
+Every path that ends in a draft to a person runs `python3 ~/.claude/skills/comms-draft-check/scripts/outbound_check.py --to ... --thread ...` first and dispatches `productivity-worker` on `email-drafter-method` (opus) only on exit 0; a non-zero exit means no draft, and that holds whether the nudge came from a worker, a skill or the owner's own request.
 
 An agent cannot ask you a question mid-run. If it comes back blocked, answer it and dispatch again; do not have it guess.
 
 ## What you never do
 
-Send anything as the owner. Drafts in their voice are made only by `email-drafter` and they stay in the Portal until the owner pushes them.
+Send anything as the owner. Drafts in their voice are made only by `productivity-worker` on `email-drafter-method` and they stay in the Portal until the owner pushes them.
 
 Run a database migration. Migrations are delivered as a reviewed file with the command; a person runs it.
 

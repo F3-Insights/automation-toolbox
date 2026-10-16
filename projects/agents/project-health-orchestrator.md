@@ -39,16 +39,18 @@ A Run is done when the change set is written and every project in the worklist h
 | Agent | Does | Model |
 |---|---|---|
 | `project-health-diagnoser` | A few projects: one diagnosis word each, the smallest step, the ops that take it and fix the gaps, nudges, questions | opus |
-| `task-clarify-worker` | The drain batch: files each bucket task in the real project it belongs to (the task-clarify method), or leaves it in the bucket with a reason | opus |
-| `waiting-on-tracker` | What the stalled projects wait on from other people, one proposed action per item | sonnet |
-| `task-reconcile-checker` | Independent PASS or FAIL on each medium-confidence task op, from the task and the record only | opus |
+| `productivity-worker` (`task-stack-clarify`, Clarify a batch) | The drain batch: files each bucket task in the real project it belongs to (the task-clarify method), or leaves it in the bucket with a reason | opus |
+| `productivity-worker` (`waiting-on-tracker-method`) | What the stalled projects wait on from other people, one proposed action per item | sonnet |
+| `productivity-reviewer` (`task-stack-workstream`, Check task-stack ops) | Independent PASS or FAIL on each medium-confidence task op, from the task and the record only | opus |
+
+`productivity-worker` and `productivity-reviewer` are productivity's: brief them with the skill, the section, the model and the skill's path `~/.claude/skills/<skill>/SKILL.md`.
 
 ## Each session
 
 1. **Orient.** `whoami`; read the rules file, `RUN/health.json` and `RUN/before.json`.
 2. **Plan.** Cut the worklist into diagnoser batches: two projects per batch for `stalled` and `dead`, five for `gaps`. For each batch gather once what every diagnoser would otherwise read again: the active goals and the other projects of its domains. Write `RUN/plan.json`: the batches, the drain batch, and the projects with WAITING tasks for the tracker.
-3. **Dispatch, in one message:** a `project-health-diagnoser` per batch (op-id prefix the batch id); one `task-clarify-worker` with the drain batch, the open projects of those domains (not the buckets) and the instruction that a task stays in its bucket when no real project plainly fits; and, when any worklist project has WAITING tasks, one `waiting-on-tracker` scoped to those projects (staleness 7 days, silence 3 business days). Save each return as `RUN/returns/<id>.json` the moment it arrives; a reply without its json block goes back once for it.
-4. **Check the doubtful.** Every `medium` task op, and every `complete` or `cancel`, goes to `task-reconcile-checker` with the ops only (never a worker's reasoning), the rules file's path and the owner's contact id. A FAIL drops the op, and where the worker had a best guess it becomes a question. A `medium` project op (a goal link, an owner) is not checked: it becomes a question.
+3. **Dispatch, in one message:** a `project-health-diagnoser` per batch (op-id prefix the batch id); one `productivity-worker` on Clarify a batch with the drain batch, the open projects of those domains (not the buckets) and the instruction that a task stays in its bucket when no real project plainly fits; and, when any worklist project has WAITING tasks, one `productivity-worker` on `waiting-on-tracker-method` scoped to those projects (staleness 7 days, silence 3 business days). Save each return as `RUN/returns/<id>.json` the moment it arrives; a reply without its json block goes back once for it.
+4. **Check the doubtful.** Every `medium` task op, and every `complete` or `cancel`, goes to `productivity-reviewer` (Check task-stack ops) with the ops only (never a worker's reasoning), the rules file's path and the owner's contact id. A FAIL drops the op, and where the worker had a best guess it becomes a question. A `medium` project op (a goal link, an owner) is not checked: it becomes a question.
 5. **Decide.** Build the change set:
    - the `high` ops and the checked `medium` ones, one decision per project, task ops before their project's `project_close`;
    - a `project_close` (`CANCELLED`) for every `close_eligible` project, reason "No goal, no open task, no activity since <last_activity>";

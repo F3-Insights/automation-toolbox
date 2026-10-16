@@ -223,7 +223,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
-| [Personal Productivity](productivity/) | Email, meetings, tasks, calendar, CRM upkeep, weekly planning | 39 / 37 |
+| [Personal Productivity](productivity/) | Email, meetings, tasks, calendar, CRM upkeep, weekly planning | 10 / 39 |
 | [Recurring Summaries](recurring-summaries/) | The nightly sweep and the daily plan: the night's Daily Note, the morning's three, the evening close | 11 / 4 |
 | [Chief of Staff](chief-of-staff/) | Routes requests to the right piece and runs an unattended daily cycle over the owner's agents, with start-of-day, quick capture, status and work-survey tools | 8 / 6 |
 | [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 5 |
@@ -232,19 +232,17 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Personal](personal/) | Household, health check-ins, home infrastructure, personal finance review, tax season | 11 / 6 |
 
 <details>
-<summary><b>Orchestrators for the operator</b> (24)</summary>
+<summary><b>Orchestrators for the operator</b> (19)</summary>
 
 - **Productivity**
-  - `email-reply-orchestrator`: replies to one person's email in the owner's voice
-  - `comms-follow-up-orchestrator`: chases what the owner is owed and closes what they owe
-  - `comms-clerical-routing-orchestrator`: routes clerical mail (scheduling, files, intros) to the right place
-  - `meeting-prep-orchestrator`: prepares one day's external meetings
-  - `meeting-transcript-orchestrator`: processes stored meeting transcripts, oldest first
-  - `calendar-steward-orchestrator`: stewards the next two weeks of calendar each weekday
-  - `task-capture-orchestrator`, `task-clarify-orchestrator`, `task-reconcile-orchestrator`: capture, clarify and reconcile the task stack
-  - `weekly-review-orchestrator`: prepares the GTD weekly review for a 30-minute approval
-  - `crm-data-hygiene-orchestrator`, `crm-relationship-tending-orchestrator`: keep the CRM clean and relationships warm
-  - `time-study-orchestrator`: measures where a month's time went
+  - `email-replier`: replies to one person's email in the owner's voice
+  - `comms-steward`: chases follow-ups, routes clerical mail to the assistant and keeps relationships warm (one mode each)
+  - `meeting-steward`: prepares the day's external meetings and processes stored transcripts (one mode each)
+  - `calendar-steward`: stewards the next two weeks of calendar each weekday
+  - `task-steward`: captures, clarifies and reconciles the task stack (one mode each)
+  - `gtd-weekly-review`: prepares the GTD weekly review for a 30-minute approval
+  - `crm-hygiene`: keeps the CRM clean
+  - `time-study`: measures where a month's time went
 - **Recurring Summaries**
   - `nightly-sweep-orchestrator`: sweeps each finished day into tasks, notes and a Daily Note
   - `daily-plan-orchestrator`: plans and closes the workday, twice a weekday

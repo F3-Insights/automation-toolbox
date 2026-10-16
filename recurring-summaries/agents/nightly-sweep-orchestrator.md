@@ -1,6 +1,6 @@
 ---
 name: nightly-sweep-orchestrator
-description: Runs the owner's nightly sweep, one date at a time, oldest first, at most three. For each day not yet swept it has five phase workers file the day's email as tasks and notes, complete tasks the sent mail finished, pick five relationships to tend, prep the external meetings of the day just starting and write the Daily Note; it checks each proposed plan with a dry run and leaves the plans for the finish step to write. Start it as the main session or through the nightly-sweep Automation. Use when the scheduled sweep runs, or for "sweep last night" or one named date. Not for the daily plan (daily-plan-orchestrator) or a whole-stack task truth pass (task-reconcile-orchestrator).
+description: Runs the owner's nightly sweep, one date at a time, oldest first, at most three. For each day not yet swept it has five phase workers file the day's email as tasks and notes, complete tasks the sent mail finished, pick five relationships to tend, prep the external meetings of the day just starting and write the Daily Note; it checks each proposed plan with a dry run and leaves the plans for the finish step to write. Start it as the main session or through the nightly-sweep Automation. Use when the scheduled sweep runs, or for "sweep last night" or one named date. Not for the daily plan (daily-plan-orchestrator) or a whole-stack task truth pass (task-steward, mode reconcile).
 model: opus
 color: green
 skills: [nightly-sweep-workstream]
@@ -85,7 +85,7 @@ Every worker runs on opus. Each worker's instructions are its brief in `~/.claud
 - Writes only in `RUN`, always by absolute path.
 - Before you act on a branch, read the evidence the command or worker gave; when it contradicts what the branch assumes, record the reason and the evidence verbatim in the date's outcome and take the branch for a failure. Nothing is guessed: the note writer reports a missing phase as missing.
 - When no one is present, everything runs the same and nothing waits on a person. What needs the owner (possible completions, stale tasks, defaulted routing, a meeting the cap dropped, a refused plan, a date left unswept) goes in the Daily Note's Priority Actions and in the finishing block's `for_owner`, which the runner shows them. Nothing that is the owner's decision is guessed: a task is never cancelled, a medium match is never completed, a defaulted route is listed. Never end with a `needs_owner` block.
-- Not for the daily plan (daily-plan-orchestrator) or a whole-stack task truth pass (task-reconcile-orchestrator).
+- Not for the daily plan (daily-plan-orchestrator) or a whole-stack task truth pass (task-steward, mode reconcile).
 
 ## Done when
 

@@ -1,14 +1,14 @@
 ---
 name: comms-inbox-replies
-description: "Triage the inbox and draft replies in one pass: the email-triager agent classifies what came in and proposes a reply intent per thread, the owner says which to draft, then one drafter per thread stages a Portal draft delivered to Outlook Drafts. Nothing is sent. Use for \"go through my inbox\", \"what needs a reply\" or a batch of mail since a time. Not for one email; use comms-reply-to-email. Routing clerical mail to the assistant is comms-clerical-routing-orchestrator."
+description: "Triage the inbox and draft replies in one pass: a productivity-worker on email-triager-method classifies what came in and proposes a reply intent per thread, the owner says which to draft, then one drafter per thread stages a Portal draft delivered to Outlook Drafts. Nothing is sent. Use for \"go through my inbox\", \"what needs a reply\" or a batch of mail since a time. Not for one email; use comms-reply-to-email. Routing clerical mail to the assistant is comms-steward in mode clerical."
 argument-hint: "[window, e.g. 'since 5pm yesterday'] [scope: one inbox, domain or contact]"
-allowed-tools: Task, Bash, Read, mcp__insights-portal__whoami, mcp__insights-portal__draft_push,
+allowed-tools: Agent, Bash(productivity-outbound-check:*), Read, mcp__insights-portal__whoami, mcp__insights-portal__draft_push,
   mcp__insights-portal__draft_compose_url
 ---
 
 # Inbox replies
 
-Two agents and one question in the middle. `email-triager` reads the mail and says what needs an answer, with Portal context on each sender. You approve. `email-drafter`, one per thread, writes the replies. Then each draft goes into the owner's own Drafts folder, where they read it and send it. Nothing here sends anything.
+Two kinds of worker and one question in the middle. A `productivity-worker` on `email-triager-method` reads the mail and says what needs an answer, with Portal context on each sender. You approve. One `productivity-worker` per thread, on `email-drafter-method`, writes the replies. Then each draft goes into the owner's own Drafts folder, where they read it and send it. Nothing here sends anything.
 
 For a reply to a single email, stop here and run `comms-reply-to-email` instead. That skill is one email, one reply, checked before the same delivery at the end. This one is the batch, and it exists because triage and drafting both flood a main context if done inline.
 
@@ -16,21 +16,22 @@ For a reply to a single email, stop here and run `comms-reply-to-email` instead.
 
 ## Step 1: triage
 
-Parse `$ARGUMENTS` into a window and an optional scope. With no window, the default is since the start of the previous business day in the owner's timezone, and the agent resolves that itself from `whoami`.
+Parse `$ARGUMENTS` into a window and an optional scope. With no window, the default is since the start of the previous business day in the owner's timezone, and the worker resolves that itself from `whoami`.
 
-Dispatch one `email-triager`:
+Dispatch one `productivity-worker` (model opus) with the Agent tool:
 
 ```
-Task(
-    subagent_type="email-triager",
+Agent(
+    subagent_type="productivity-worker",
+    model="opus",
     description="Triage inbound mail",
     prompt="""
-Triage inbound email.
+Follow the skill email-triager-method, from Inputs to Return: triage inbound email.
 
 Window: <the window, or "default: since the start of the previous business day">
 Scope: <one inbox, one domain, one contact, or "all inboxes I may read">
 
-Return your standard report: counts by class, then one block per REPLY thread, then the
+Return its report: counts by class, then one block per REPLY thread, then the
 compact DELEGATE and FYI lists.
 """
 )
@@ -40,7 +41,7 @@ It comes back with counts and up to fifteen REPLY blocks, each carrying the emai
 
 ## Step 2: ask the owner, once, as a numbered list
 
-Show the REPLY list and nothing else. One numbered line per thread: sender, subject, urgency and the proposed reply intent in the agent's words. Where the intent came back `UNKNOWN`, show the question instead, marked so it stands out.
+Show the REPLY list and nothing else. One numbered line per thread: sender, subject, urgency and the proposed reply intent in the triager's words. Where the intent came back `UNKNOWN`, show the question instead, marked so it stands out.
 
 Ask one question, phrased so it can be answered in a line:
 
@@ -59,7 +60,7 @@ Print the DELEGATE and FYI lists below the question so the owner sees them while
 For every thread the owner approved, run the gate first:
 
 ```bash
-python3 ~/.claude/skills/comms-draft-check/scripts/outbound_check.py --to <recipient email> --thread <the email _ref> --json
+productivity-outbound-check --to <recipient email> --thread <the email _ref> --json
 ```
 
 Exit 0 is ALLOW and you dispatch a drafter. Any non-zero exit means do not draft: exit 3 is a rule tripping, exit 2 means the check could not run. The command reads the Portal's own drafts and sent mail and answers whether a draft to this person on this thread may be created now, which is the duplicate protection that used to be a request in a prompt.
@@ -75,32 +76,31 @@ Exit 2 is not a pass. A gate that could not run has not been satisfied: report i
 
 ## Step 4: fan out the drafters
 
-Dispatch one `email-drafter` per thread that came back ALLOW or that the owner overrode, **all in a single message** so they run in parallel. One draft per agent is the contract; do not hand one agent several threads.
+Dispatch one `productivity-worker` (model opus) per thread that came back ALLOW or that the owner overrode, **all in a single message** so they run in parallel. One draft per agent is the contract; do not hand one agent several threads.
 
 Each prompt carries the triager's block verbatim plus the owner's answer:
 
 ```
-Task(
-    subagent_type="email-drafter",
+Agent(
+    subagent_type="productivity-worker",
+    model="opus",
     description="Draft reply",
     prompt="""
-Draft a reply in the owner's voice.
+Follow the skill email-drafter-method: draft a reply in the owner's voice.
 
 <the triager's REPLY block, pasted unchanged, including Ref, Inbox, From, Asked,
  Reply intent, Urgency and Drafter needs to know>
 
 the owner's answer: <their instruction for this number, verbatim; or "draft as proposed">
 
-Follow your standard process: read the owner's voice guide (setting voice_guide), resolve the recipient, find the source
-email from the Ref so the draft threads, sample prior sent mail, draft, run the voice check,
-create the draft with draft_create, and return the terse summary.
+Work through its Procedure and return its terse summary.
 """
 )
 ```
 
 Where the reply intent was UNKNOWN and the owner answered, put their answer in the `the owner's answer` line and leave the UNKNOWN text in the block so the drafter can see what was being decided. Where the intent was UNKNOWN and they did not answer, do not dispatch; the thread stays open.
 
-An agent that returns `BLOCKED:` did not create a draft. Relay the blocking question and move on; do not re-dispatch it with a guess.
+A worker that returns `BLOCKED:` did not create a draft. Relay the blocking question and move on; do not re-dispatch it with a guess.
 
 ## Step 5: deliver each draft to the mailbox it belongs in
 
@@ -165,5 +165,5 @@ Close with the counts: how many came in, how many were drafted, how many are sti
 - **Every path that ends in a draft goes through `outbound-check` first.** No exceptions for a thread that looks obviously fine, because "obviously fine" is what every job that drafted a duplicate believed.
 - **Never show a draft body.** The Portal is the source of truth for draft content. Showing it here invites edits that do not sync back.
 - **Never decide for the owner.** An UNKNOWN intent with no answer is not drafted, in an interactive run or a headless one.
-- **Drafts in the owner's voice come only from `email-drafter`.** Do not write a reply in this skill's own context, however short it looks.
+- **Drafts in the owner's voice come only from `email-drafter-method`, run by a worker.** Do not write a reply in this skill's own context, however short it looks.
 - **Portal write safety**: the drafters create Portal records. They follow the portal-write-safety skill; so do you if you touch anything else.

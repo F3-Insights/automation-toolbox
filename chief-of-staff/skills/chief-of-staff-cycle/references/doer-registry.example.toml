@@ -19,21 +19,25 @@ when = "A meeting today or tomorrow has real stakes and thin prep."
 
 [[doer]]
 name = "person-brief"
-route = "agent"
-agent = "person-researcher"
+route = "skill"
+skill = "portal-research"
+section = "Research a person"
+worker = "productivity-worker"
 args = "FOCUS"
 purpose = "A read-only brief on one person, returned to the receipt."
 when = "Someone the owner meets soon needs context nobody has gathered."
 
 [[doer]]
 name = "domain-brief"
-route = "agent"
-agent = "domain-researcher"
+route = "skill"
+skill = "portal-research"
+section = "Research a domain"
+worker = "productivity-worker"
 args = "FOCUS"
 purpose = "A read-only status picture of one domain, returned to the receipt."
 when = "One area is visibly drifting and nothing has surfaced why."
 
 # A doer that became an orchestrator is retired here and launched instead.
 [retired]
-relationship-check = "replaced by crm-relationship-tending-orchestrator; propose a launch of it"
-task-reconcile = "replaced by task-reconcile-orchestrator; propose a launch of it"
+relationship-check = "replaced by comms-steward (mode relationships); propose a launch of it"
+task-reconcile = "replaced by task-steward (mode reconcile); propose a launch of it"

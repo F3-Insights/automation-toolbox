@@ -91,7 +91,7 @@ def classify(decision, registry, max_dispatches=MAX_DISPATCHES):
             skipped.append((doer, f"over the cap of {max_dispatches} dispatches per cycle"))
             continue
         accepted.append({"doer": doer, "args": args or spec["default_args"], "route": spec["route"],
-                         "skill": spec.get("skill", ""), "worker": spec["worker"],
+                         "skill": spec.get("skill", ""), "section": spec.get("section", ""), "worker": spec["worker"],
                          "confidence": c.flat(entry.get("confidence"), 20).lower() or "unstated",
                          "reason": c.flat(entry.get("reason"), MAX_FIELD)})
     return accepted, skipped

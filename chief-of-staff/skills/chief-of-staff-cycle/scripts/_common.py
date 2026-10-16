@@ -59,11 +59,8 @@ RENAMED_MAIN_AGENTS = (
     "process-engineering-assessment-intake", "process-engineering-automation-scoping",
     "process-engineering-discovery-synthesis", "process-engineering-process-flow",
     "process-engineering-survey-analytics", "process-engineering-workshop",
-    "productivity-calendar-steward", "productivity-clerical-router", "productivity-crm-hygiene",
-    "productivity-email-replier", "productivity-follow-up", "productivity-meeting-preparer",
-    "productivity-relationship-tender", "productivity-task-capturer",
-    "productivity-task-clarifier", "productivity-task-reconciler", "productivity-time-study",
-    "productivity-transcript-processor", "productivity-weekly-review",
+    "calendar-steward", "comms-steward", "crm-hygiene", "email-replier", "gtd-weekly-review",
+    "meeting-steward", "task-steward", "time-study",
     "projects-client-delivery", "projects-engagement-closeout", "projects-engagement-kickoff",
     "projects-health-review", "projects-tech-portfolio", "recurring-summaries-daily-planner",
     "recurring-summaries-nightly-sweep", "reporting-board-package", "reporting-client-update",
@@ -336,7 +333,8 @@ def load_doers(path=None):
             spec.update(skill="task-stack-produce", worker="chief-of-staff-producer")
             spec["args"] = spec["args"] or PRODUCE_TARGET
         elif route == "skill":
-            spec.update(skill=flat(raw.get("skill"), 80), worker=flat(raw.get("worker"), 80) or "chief-of-staff-readonly-doer")
+            spec.update(skill=flat(raw.get("skill"), 80), worker=flat(raw.get("worker"), 80) or "chief-of-staff-readonly-doer",
+                        section=flat(raw.get("section"), 80))
         elif route == "agent":
             spec.update(skill="", worker=flat(raw.get("agent"), 80))
         else:

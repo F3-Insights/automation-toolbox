@@ -1,13 +1,28 @@
 ---
 name: calendar-steward-method
-description: "How the owner's calendar is stewarded: what a focus block, a conflict fix, a decline, a move and a prep task must satisfy before being proposed, the proposal file shared with the daily plan's focus-block proposals, and the approval rules calendar-apply enforces. Loaded by the calendar-steward agents after orchestration-workstream. Use it by hand for \"is my calendar in shape for the next two weeks\"; for the weekday pass, start calendar-steward-orchestrator. Not for today's plan; use daily-plan-method."
+description: "How the owner's calendar is stewarded, loaded by calendar-steward and the productivity-reviewer it dispatches: what a focus block, a conflict fix, a decline, a move and a prep task must satisfy before being proposed, the proposal file shared with the daily plan's focus-block proposals, the approval rules calendar-apply enforces, and the sections Propose the changes and Check the proposals. Use it by hand for \"is my calendar in shape for the next two weeks\"; for the weekday pass, start calendar-steward. Not for today's plan; use daily-plan-method. Not for where meeting time went; use calendar-time."
 ---
 
 # Stewarding the owner's calendar
 
-Load `orchestration-workstream` from `~/.claude/skills/orchestration-workstream/SKILL.md` if it is not loaded; keep its conduct and return its block. This skill is only what the calendar adds. The owner's rules come first: `TASK-STACK-RULES.md` (calendar events: propose, then make only what they approved) and the steward's settings file beside it (working hours, focus target, scope, what is worth proposing). They override this file.
+This skill extends `orchestration-workstream`: keep its conduct and return its block. Load it if it is not loaded. The owner's rules come first: `TASK-STACK-RULES.md` (calendar events: propose, then make only what they approved) and the steward's settings file beside it (working hours, focus target, scope, what is worth proposing). They override this file.
 
-Tools: `calendar-steward-scan` (the facts, computed before the session), `python3 ~/.claude/skills/calendar-steward-method/scripts/calendar_apply.py publish` (the approval list on their task, after the session), `python3 ~/.claude/skills/calendar-steward-method/scripts/calendar_apply.py apply` (the approved changes, journaled, with an undo) and `calendar-steward-check` (whether the pass is done). Those commands hold the proposal file's contract.
+Commands: `productivity-calendar-steward-scan` (the facts, before the session), `productivity-calendar-apply publish` (the approval list on the owner's task, after it), `productivity-calendar-apply apply` (the approved changes of earlier lists, journaled, with an undo) and `productivity-calendar-steward-check DATE --run RUN` (whether the pass is done). They hold the proposal file's contract. The steward never writes the Portal or the calendar itself.
+
+## Steps
+
+For `calendar-steward`.
+
+1. [judgment] Orient. `whoami`; read the rules and settings and `RUN/scan.json`. Note the findings by kind, the open items of earlier lists and the read gaps. When the scan's line says `STALE`, read the calendar yourself (`list_entities` calendar_event for the window) and say so.
+   → pass `approve`: step 5
+2. [judgment] Propose the changes (section Propose the changes) and save the draft as `RUN/returns/proposals-draft.json`.
+3. [hand-off: productivity-reviewer] Check every proposal and the coverage (section Check the proposals), with the draft and the scan's path only. Save its return as `RUN/returns/checker.json`. Revise a FAIL once with the fix; a proposal still failing is dropped and its finding dismissed with the reason.
+   → FAIL: step 2 (max 1)
+4. [judgment] Write `RUN/proposals.json`: the proposals with `tool: "calendar-steward"`, `version: 1`, `date` (the scan's) and `dry_run`. At most twelve; an empty list is fine on a calm fortnight, but every finding still needs its dismissal.
+5. [judgment] Report: the fortnight in two lines, the list as the owner will see it (numbered, one line each), the findings left alone in one line per group, the answers the finish step will apply, what could not be read. Say plainly that approved changes become tasks with an `.ics` file while the Portal has no calendar write. Never claim the list was published or a change made.
+   → reported: done
+
+After the session the Automation runs `productivity-calendar-apply apply`, `productivity-calendar-apply publish` and `productivity-calendar-steward-check`. A dry run writes `"dry_run": true` and the finish step writes nothing. With no one present everything runs the same; a question goes in `proposals.json`, never live.
 
 ## The standard
 
@@ -41,8 +56,30 @@ Every proposal names its finding's reason in `why`, a sentence the owner would a
 
 ## The proposal file
 
-`RUN/proposals.json`, whose contract the calendar-steward commands hold: `tool`, `version`, `date`, `dry_run`, `summary`, `proposals` (`id`, `kind`, `date`, `start`, `end`, `title`, `why`, and `event`, `to`, `for`, `draft`, `prepare`, `due`, `source`, `from` by kind), `findings` (each `{ids: [...], proposal: <id>}` or `{ids: [...], dismissed: <reason>}`, so every finding id in the scan is covered), `questions`, `notes`. A focus block is the daily plan's `focus-block` proposal with `date` added: the two share one shape. A worker returns the same object in `extra.proposals` of its return block. Times are local `HH:MM`; every `event` is a `portal://calendar_event/` ref from the scan, never made up.
+`RUN/proposals.json`, whose contract the calendar-steward commands hold: `tool`, `version`, `date`, `dry_run`, `summary`, `proposals` (`id`, `kind`, `date`, `start`, `end`, `title`, `why`, and `event`, `to`, `for`, `draft`, `prepare`, `due`, `source`, `from` by kind), `findings` (each `{ids: [...], proposal: <id>}` or `{ids: [...], dismissed: <reason>}`, so every finding id in the scan is covered), `questions`, `notes`. A focus block is the daily plan's `focus-block` proposal with `date` added: the two share one shape. Times are local `HH:MM`; every `event` is a `portal://calendar_event/` ref from the scan, never made up.
 
 ## What happens after
 
-`python3 ~/.claude/skills/calendar-steward-method/scripts/calendar_apply.py publish` numbers the list and files it on the approval task; it refuses a proposal whose slot is not free, whose event is not in the scan, or that moves a meeting with others. `python3 ~/.claude/skills/calendar-steward-method/scripts/calendar_apply.py apply` acts on `ok` answers only, reads the calendar again first (expired, no longer free and gone are refused), never deletes and never sends. Where no calendar backend exists it makes each approved change a task with its times and writes an `.ics` file and a paste list beside it; say so in the report rather than claiming the calendar changed.
+`productivity-calendar-apply publish` numbers the list and files it on the approval task; it refuses a proposal whose slot is not free, whose event is not in the scan, or that moves a meeting with others. `productivity-calendar-apply apply` acts on `ok` answers only, reads the calendar again first (expired, no longer free and gone are refused), never deletes and never sends. Where no calendar backend exists it makes each approved change a task with its times and writes an `.ics` file and a paste list beside it; say so in the report rather than claiming the calendar changed.
+
+## Propose the changes
+
+Done by `calendar-steward` itself, from the scan.
+
+1. Read the settings and the findings. Group what is alike: every instance of a recurring meeting is one decision.
+2. For a finding that might deserve a change, read what the scan does not settle: the meeting in full (`get`), its context (`meeting_prep`) for a decline or a prep line, the task a focus block is for. A decline needs a reason the owner would give themselves.
+3. Draft the proposals by the kinds above, the most valuable first, at most twelve. Check each time against the scan's `free` and events before writing it.
+4. Cover every finding id: a proposal, or a one-line dismissal. A question only the owner can answer (which of two clashing client meetings they keep) goes in `questions` with `of: owner`.
+
+## Check the proposals
+
+For `productivity-reviewer`, given the draft proposals and the scan's path, nothing else. Nothing reaches the list that would surprise the owner if they said yes without reading it twice. For each proposal:
+
+- **The facts.** Every `event` is in the scan and still on the calendar (`get` it). Every new time (a focus block's `start`-`end`, a move's `to`) overlaps no meeting or hold that day in the scan, and lies in the future.
+- **focus-block**: in working hours, long enough to be worth it; `for` is a real task when given.
+- **move**: the event has no attendee besides the owner. One that does is a FAIL.
+- **decline**: the owner is not the organizer; the reason holds up (optional, large audience, no purpose for them, or it loses a clash to the decision meeting); the draft is polite, short, commits them to nothing new and is written as theirs.
+- **prep**: the meeting is external, has no prep note, and `due` leaves time to prepare.
+- **coverage**: every finding id in the scan appears once in `findings`, with a proposal or a specific dismissal.
+
+Return the `orchestration-workstream` block: one `items` row per proposal (`test: review`, `item` the proposal id, `state` PASS or FAIL, `note` the fix for a FAIL), and `findings` for any coverage gap.

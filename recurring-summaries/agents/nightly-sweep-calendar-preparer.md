@@ -1,6 +1,6 @@
 ---
 name: nightly-sweep-calendar-preparer
-description: Phase 4 of the nightly sweep. Lists the events of the day after the swept date (on the scheduled run, today) in the owner's local day, ranks the external ones, gathers context with meeting_prep for at most five, checks for existing prep notes, and returns the prep notes it proposes and every meeting it skipped or the cap dropped, as one JSON block. It writes nothing; the finish step does. Dispatched by nightly-sweep-orchestrator with briefs/calendar-prep.md. Not for the fuller prep pack (meeting-prep-orchestrator).
+description: Phase 4 of the nightly sweep. Lists the events of the day after the swept date (on the scheduled run, today) in the owner's local day, ranks the external ones, gathers context with meeting_prep for at most five, checks for existing prep notes, and returns the prep notes it proposes and every meeting it skipped or the cap dropped, as one JSON block. It writes nothing; the finish step does. Dispatched by nightly-sweep-orchestrator with briefs/calendar-prep.md. Not for the fuller prep pack (meeting-steward, mode prep).
 model: opus
 color: yellow
 maxTurns: 30

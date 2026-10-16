@@ -121,9 +121,9 @@ def test_trigger_items_can_come_from_a_file(tmp_path):
 def test_a_main_agent_by_its_new_name_is_never_a_doer(tmp_path):
     """The department migration drops -orchestrator; the renamed main agents are still refused."""
     registry = tmp_path / "doers.toml"
-    registry.write_text('[[doer]]\nname = "reconcile"\nroute = "agent"\nagent = "productivity-task-reconciler"\n\n'
+    registry.write_text('[[doer]]\nname = "reconcile"\nroute = "agent"\nagent = "task-steward"\n\n'
                         '[[doer]]\nname = "cycle"\nroute = "agent"\nagent = "chief-of-staff-cycle"\n\n'
-                        '[[doer]]\nname = "brief"\nroute = "agent"\nagent = "person-researcher"\n')
+                        '[[doer]]\nname = "brief"\nroute = "agent"\nagent = "productivity-worker"\n')
     out = c.load_doers(registry)
     assert set(out["doers"]) == {"brief"}
     assert sum("orchestrator is launched" in p for p in out["problems"]) == 2

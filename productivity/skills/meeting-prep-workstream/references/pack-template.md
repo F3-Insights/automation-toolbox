@@ -1,6 +1,6 @@
 # The meeting-prep pack template
 
-The body of each prep note meeting-prep-orchestrator drafts. Every attendee line, open item and owed item carries its ref.
+The body of each prep note meeting-steward drafts in prep mode. Every attendee line, open item and owed item carries its ref.
 
 ```markdown
 ## Meeting: <Title>

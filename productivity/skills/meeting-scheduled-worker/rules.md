@@ -4,13 +4,13 @@ The first half is the owner's current settings for this job: theirs to change, i
 
 ## The owner's settings
 
-**Recordings per run: 5.** `python3 ~/.claude/skills/meeting-scheduled-worker/scripts/meeting_pending.py --limit 5`. Oldest first, so the scheduled runs drain any backlog before they reach this week's meetings. A request may name another limit.
+**Recordings per run: 5.** `productivity-meeting-pending --limit 5`. Oldest first, so the scheduled runs drain any backlog before they reach this week's meetings. A request may name another limit.
 
 **Cut-off: meetings that started on or after the date this job went live.** The `since` setting under `[meeting-scheduled-worker]` holds it (`<YYYY-MM-DD>T00:00:00Z`), and `meeting-pending --since` overrides it for one run. Earlier recordings are a deliberate backfill: run with an earlier `--since` when the owner asks for one.
 
 **Length cap: 3 hours.** A recording longer than that is not analysed. `meeting-fetch` reports `over_cap`, the ledger marks that revision permanent, and the report flags it so the owner can decide what to do with it.
 
-**Retries: 3 attempts, 6 hours apart.** A recording skipped for any reason is tried again on a run at least 6 hours later, and after 3 attempts without being acknowledged it is parked and listed in every report until the owner clears it (`python3 ~/.claude/skills/meeting-scheduled-worker/scripts/meeting_skip.py RID --clear`). A recording skipped for a reason no retry can cure (the cap, an empty transcript, a cancelled admin task) is marked permanent for that revision. The Portal being unreachable is not the recording's fault: it defers the recording for the same 6 hours and counts no attempt, at whichever step it happens.
+**Retries: 3 attempts, 6 hours apart.** A recording skipped for any reason is tried again on a run at least 6 hours later, and after 3 attempts without being acknowledged it is parked and listed in every report until the owner clears it (`productivity-meeting-skip RID --clear`). A recording skipped for a reason no retry can cure (the cap, an empty transcript, a cancelled admin task) is marked permanent for that revision. The Portal being unreachable is not the recording's fault: it defers the recording for the same 6 hours and counts no attempt, at whichever step it happens.
 
 **Revision rounds: 2.** An invalid plan or a checker FAIL goes back to the analyst with the errors or the numbered fixes, at most twice. A third failure skips the recording for this run.
 
@@ -24,7 +24,7 @@ The first half is the owner's current settings for this job: theirs to change, i
 
 Not the owner's decisions, so never asked, and flagged in the note instead: an unaccepted proposal whose speaker is uncertain (it stays an unattributed proposal), questions the meeting left open for the participants to pursue, poor audio, unreliable speaker labels, and anything the Portal context answers.
 
-**Enrichment goes to the Portal's research agent.** `python3 ~/.claude/skills/meeting-scheduled-worker/scripts/meeting_publish.py --agent-slug
+**Enrichment goes to the Portal's research agent.** `productivity-meeting-publish --agent-slug
 <slug>` names the Portal agent (for example `deep-researcher`) whose queue takes `Enrich contact:` and `Enrich company:` tasks. The admin task is
 assigned to no agent: it is the job's record, not work for another worker.
 
@@ -39,20 +39,20 @@ The recording folder, in the order the steps write it:
 
 | File | Written at | By |
 |---|---|---|
-| `existing.json` | step 3 | `python3 ~/.claude/skills/meeting-scheduled-worker/scripts/meeting_existing.py --out` |
+| `existing.json` | step 3 | `productivity-meeting-existing --out` |
 | `source.json`, `transcript.txt` | step 4 | `meeting-fetch` |
-| `plan.json` | step 5 | the orchestrator, the analyst's JSON block verbatim (earlier rounds `plan-1.json`, `plan-2.json`) |
-| `check.json` | step 7 | the orchestrator, the checker's JSON block verbatim (earlier rounds `check-1.json`, `check-2.json`) |
+| `plan.json` | step 5 | the main agent, the analyst's JSON block verbatim (earlier rounds `plan-1.json`, `plan-2.json`) |
+| `check.json` | step 7 | the main agent, the checker's JSON block verbatim (earlier rounds `check-1.json`, `check-2.json`) |
 | `answers.md` | step 3 | `meeting-existing`, the owner's comments on the admin task verbatim (and its description when they moved it to TODO); `meeting-publish` reads it whenever it is there |
 | `publish.json` | step 8 | `meeting-publish` (`publish-dry-run.json` and `note-preview.md` in a dry run); `notes_written` holds a fingerprint of every note text it wrote and `questions_written` of every questions section it put on the admin task, carried from run to run |
 
 When the owner answers, `meeting-existing` moves `plan.json` and `check.json` to the next free `plan-N.json` and `check-N.json`, so the analyst starts again with the answers.
 
-The Portal is the ledger of what was written; the folder is a cache. Delete a recording folder and the next run rebuilds it and finds every task it made by marker. One thing goes with the folder: `notes_written` and `questions_written`. A note this job already wrote then reads as edited by someone else (NOTE_EDITED, marked permanent) and is left alone, until the owner removes the marker line from it and clears the recording with `python3 ~/.claude/skills/meeting-scheduled-worker/scripts/meeting_skip.py RID --digest D --clear`; and an earlier questions section on the admin task is kept as it stands, with any new questions added below it, rather than replaced.
+The Portal is the ledger of what was written; the folder is a cache. Delete a recording folder and the next run rebuilds it and finds every task it made by marker. One thing goes with the folder: `notes_written` and `questions_written`. A note this job already wrote then reads as edited by someone else (NOTE_EDITED, marked permanent) and is left alone, until the owner removes the marker line from it and clears the recording with `productivity-meeting-skip RID --digest D --clear`; and an earlier questions section on the admin task is kept as it stands, with any new questions added below it, rather than replaced.
 
 ## The ledger
 
-`ledger.json` in the state folder, one entry per recording revision: attempts, the last attempt's time and reason, `permanent`, and the admin task a WAITING recording waits on. `meeting-existing` counts an attempt (also when its lookup fails, except when the Portal was unreachable, which defers the recording without counting); `meeting-fetch`, `meeting-publish` and `meeting-acknowledge`, when the Portal is unreachable, defer the recording and take that attempt back; `meeting-fetch` marks the cap and an empty transcript permanent; `meeting-publish` records the admin task a `waiting` result waits on and marks permanent a note edit no retry cures; `meeting-skip` adds the reason the orchestrator saw. `meeting-pending` reads it and never writes it. Every write to it, and every publish, waits at most 10 seconds for its lock and then skips that recording with the reason. Losing it costs nothing but retries.
+`ledger.json` in the state folder, one entry per recording revision: attempts, the last attempt's time and reason, `permanent`, and the admin task a WAITING recording waits on. `meeting-existing` counts an attempt (also when its lookup fails, except when the Portal was unreachable, which defers the recording without counting); `meeting-fetch`, `meeting-publish` and `meeting-acknowledge`, when the Portal is unreachable, defer the recording and take that attempt back; `meeting-fetch` marks the cap and an empty transcript permanent; `meeting-publish` records the admin task a `waiting` result waits on and marks permanent a note edit no retry cures; `meeting-skip` adds the reason the main agent saw. `meeting-pending` reads it and never writes it. Every write to it, and every publish, waits at most 10 seconds for its lock and then skips that recording with the reason. Losing it costs nothing but retries.
 
 ## Markers
 
@@ -71,16 +71,16 @@ The listing has no `source_reference` filter and its search does not match `sour
 
 Every command prints one JSON object. Exit 0 to go on, 3 to skip this recording (or, for `meeting-pending`, `not_local_owner`), 2 when it could not run. A command that could not run skips that recording, never the run, except `meeting-pending`, which has nothing to skip. `meeting-skip` exits 0 or 2.
 
-`python3 ~/.claude/skills/meeting-scheduled-worker/scripts/meeting_pending.py --precheck` prints `NOTHING` or `WORK: <n> recordings to process` on its first line and exits 0, so a scheduler can skip waking a model.
+`productivity-meeting-pending --precheck` prints `NOTHING` or `WORK: <n> recordings to process` on its first line and exits 0, so a scheduler can skip waking a model.
 
 ## The workers
 
-| Agent | Model | May touch | Brief |
-|---|---|---|---|
-| `meeting-analyst` | opus | Portal reads, Read | `briefs/analyst.md`, returning `briefs/plan.schema.json` |
-| `meeting-checker` | opus | Portal reads, Read | `briefs/checker.md`, returning `briefs/checker.schema.json` |
+| Section | Agent | Model | May touch | Brief |
+|---|---|---|---|---|
+| Analyse a recording | `productivity-worker` | opus | Portal reads, Read | `briefs/analyst.md`, returning `briefs/plan.schema.json` |
+| Check a meeting plan | `productivity-reviewer` | opus | Portal reads, Read | `briefs/checker.md`, returning `briefs/checker.schema.json` |
 
-Neither writes anything; every write is `meeting-publish`'s. The analysis and the independent check both read the whole transcript, so both are Opus work. Each brief is the worker's whole instruction for this job: paste its text and the paths it names into the dispatch.
+Neither writes anything; every write is `meeting-publish`'s. The analysis and the independent check both read the whole transcript, so both are Opus work. Each dispatch names its section of `meeting-scheduled-worker` and the paths the brief names; the brief is the whole instruction for this job.
 
 ## What the tools enforce, so no prompt has to
 

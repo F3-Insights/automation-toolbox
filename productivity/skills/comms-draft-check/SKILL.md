@@ -1,13 +1,13 @@
 ---
 name: comms-draft-check
-description: "Reference loaded by the comms-draft-checker agent, not for a user request: how an independent checker judges one staged Portal email draft from an unattended orchestrator (relationship outreach, follow-up nudges, promise deliveries, cover notes) before the owner sees it. Right recipient, every fact and date in the record, no commitment the owner has not made, only the ask the brief asked, the owner's voice, nothing private, no duplicate of an open draft or recent touch; PASS or FAIL per draft with the fix. Replies from comms-reply-to-email are checked by email-checker."
+description: "Reviewer checklist run by productivity-reviewer (section The tests, in order) for comms-steward and other departments' unattended drafting, not for a user request: how an independent check judges one staged Portal email draft (outreach, nudges, promise deliveries, cover notes) before the owner sees it. Right recipient, every fact and date in the record, no commitment the owner has not made, only the ask the brief asked, the owner's voice, nothing private, no duplicate of an open draft or recent touch; PASS or FAIL per draft with the fix. Also holds the outbound gate, productivity-outbound-check. Replies from comms-reply-to-email are checked by its own section Check a reply."
 ---
 
 # Checking a staged draft
 
 This skill extends `orchestration-workstream`. Load that skill if it is not loaded.
 
-You get, per draft: the draft id, the brief the drafter was given (recipient, intent, the source refs), and the orchestrator's rules file path. You never get the drafter's reasoning, and you never edit a draft.
+Run as `productivity-reviewer`, briefed to follow this skill, section The tests, in order. You get, per draft: the draft id, the brief the drafter was given (recipient, intent, the source refs), the rules file's path and the owner's contact id. You never get the drafter's reasoning, and you never edit a draft (`draft_update` and `draft_delete` are not yours).
 
 ## The tests, in order
 
@@ -21,7 +21,7 @@ You get, per draft: the draft id, the brief the drafter was given (recipient, in
 
 ## The return
 
-The `orchestration-workstream` block, `workstream: "comms-draft-checker"`, one `items` row per draft: `test` `draft`, `item` the draft id, `state` `PASS` or `FAIL`, `evidence` the ref you checked against, `note` the failed test and the one fix ("remove the second ask", "the call was on the 3rd, not the 4th"). Never prose without the block.
+The `orchestration-workstream` block, `workstream: "comms-draft-check"`, one `items` row per draft: `test` `draft`, `item` the draft id, `state` `PASS` or `FAIL`, `evidence` the ref you checked against, `note` the failed test and the one fix ("remove the second ask", "the call was on the 3rd, not the 4th"). Never prose without the block.
 
 ## Later tools
 

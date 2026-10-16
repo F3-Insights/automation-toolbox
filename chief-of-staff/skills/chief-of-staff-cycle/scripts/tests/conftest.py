@@ -29,18 +29,20 @@ args = "FOCUS"
 
 [[doer]]
 name = "person-brief"
-route = "agent"
-agent = "person-researcher"
+route = "skill"
+skill = "portal-research"
+section = "Research a person"
+worker = "productivity-worker"
 args = "FOCUS"
 default_args = "next meeting"
 
 [[doer]]
 name = "bad-one"
 route = "agent"
-agent = "task-reconcile-orchestrator"
+agent = "month-end-orchestrator"
 
 [retired]
-relationship-check = "replaced by crm-relationship-tending-orchestrator; launch it"
+relationship-check = "replaced by comms-steward (mode relationships); launch it"
 """
 
 

@@ -54,7 +54,7 @@ First run the two deterministic commands:
 
 ```bash
 python3 ~/.claude/skills/project-landscape/scripts/project_scoreboard.py --json
-python3 ~/.claude/skills/calendar-steward-method/scripts/calendar_time.py --json --since <14 days ago> --until <today>
+python3 ~/.claude/skills/calendar-time/scripts/calendar_time.py --json --since <14 days ago> --until <today>
 ```
 
 The scoreboard returns one object per active project with `project_id`, `name`, `domain`, `goal`, task counts and `flags` such as `NO_GOAL`, `NO_OWNER`, `NO_TASKS`, `NO_NEXT_TASK` and `STALE_30D`, computed in code over the whole portfolio in a fixed number of Portal reads. Pass that JSON to the auditor as its `scoreboard` input so it spends its own reads on the goal side instead of walking the hierarchy for facts already in hand. If the command fails, dispatch without it and say in your report that the auditor walked the hierarchy instead.
@@ -77,7 +77,7 @@ Goals document: <the path the caller supplied, or "none supplied">
 scoreboard: <the JSON from `python3 ~/.claude/skills/project-landscape/scripts/project_scoreboard.py --json`, verbatim, or "not supplied:
 python3 ~/.claude/skills/project-landscape/scripts/project_scoreboard.py failed with <the error>">
 
-calendar_time: <the JSON from `python3 ~/.claude/skills/calendar-steward-method/scripts/calendar_time.py --json`, verbatim, one block per scope with the
+calendar_time: <the JSON from `python3 ~/.claude/skills/calendar-time/scripts/calendar_time.py --json`, verbatim, one block per scope with the
 --scope-domain or --scope-title it was run with, or "not supplied: calendar-time failed with
 <the error>">
 

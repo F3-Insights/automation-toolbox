@@ -35,7 +35,7 @@ The shared block with item test `session-file` (item: the file name; state `writ
 2. Every agenda item cites a member's request or is marked as the owner's pick; the minutes fit the duration.
 3. `invitation.md` exists, under 150 words, with date, time, timezone and link (or "link to follow"), no prices, and no member's name beyond those the rules allow.
 4. The invitation is ready at least the rules' lead time before the session, or the lateness is a question for the owner.
-5. Channel `email` and not a dry run: one Portal draft staged by `email-drafter`, its id recorded; nothing sent.
+5. Channel `email` and not a dry run: one Portal draft staged by `productivity-worker` on `email-drafter-method`, its id recorded; nothing sent.
 
 ## DONE: recap (the orchestrator checks each item and cites its evidence)
 

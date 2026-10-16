@@ -4,7 +4,7 @@ The commands, the window's layout, the workers, the checks and the privacy rules
 
 ## The tool and its home
 
-The tool is a separate time-study program, standard-library Python 3.11 or later, run as `python -m timestudy`. Its home H holds the owner's data and is ignored by that program's git as a whole; by default it is `private/` inside the program's folder. The Run is given H as the Time-study home input, and every call goes through a command that takes H as an argument, so no path is written here and every call is one plain command: `python3 ~/.claude/skills/report-time-study/scripts/time_study_tool.py H
+The tool is a separate time-study program, standard-library Python 3.11 or later, run as `python -m timestudy`. Its home H holds the owner's data and is ignored by that program's git as a whole; by default it is `private/` inside the program's folder. The Run is given H as the Time-study home input, and every call goes through a command that takes H as an argument, so no path is written here and every call is one plain command: `productivity-time-study-tool H
 <command>` runs the tool from the checkout `--repo` names, else the `repo` setting under
 `[report-time-study]`, else the folder beside H. Read the tool's `README.md` for the data model when a check below is not enough.
 
@@ -12,13 +12,13 @@ The tool is a separate time-study program, standard-library Python 3.11 or later
 
 | Command | Writes | Used at |
 |---|---|---|
-| `python3 ~/.claude/skills/report-time-study/scripts/time_study_check.py H [--period P] [--window W] [--format json] [--precheck] [--out FILE]` | nothing (or `--out`) | step 1, step 14, a scheduler's precheck and finish |
-| `python3 ~/.claude/skills/report-time-study/scripts/time_study_collect.py H [--period P] [--window W] [--dry-run-if true]` | `W/signals/`, `recordings.json`, segmenter inputs and transcripts, `coverage.md` for each window not yet collected, through the tool's `collect` | a scheduler's prepare step; step 1 when started by hand |
-| `python3 ~/.claude/skills/report-time-study/scripts/time_study_tool.py H build` | `H/data/*.csv`, `H/out/mapping_changes.csv` | steps 7 and 11 |
-| `python3 ~/.claude/skills/report-time-study/scripts/time_study_tool.py --save FILE H summary` | FILE | step 11 |
-| `python3 ~/.claude/skills/report-time-study/scripts/time_study_tool.py H dashboard` | `H/out/dashboard.html` | step 11 |
-| `python3 ~/.claude/skills/report-time-study/scripts/time_study_day_lint.py W/days/D --domains H/domains.csv [--topics H/topics.csv]` | nothing | the day assembler and the topic classifier, before they return |
-| `python3 ~/.claude/skills/report-time-study/scripts/time_study_said_not_seen.py W [--review FILE]` | `H/out/said-not-seen-<window>.json` | step 12 |
+| `productivity-time-study-check H [--period P] [--window W] [--format json] [--precheck] [--out FILE]` | nothing (or `--out`) | step 1, step 14, a scheduler's precheck and finish |
+| `productivity-time-study-collect H [--period P] [--window W] [--dry-run-if true]` | `W/signals/`, `recordings.json`, segmenter inputs and transcripts, `coverage.md` for each window not yet collected, through the tool's `collect` | a scheduler's prepare step; step 1 when started by hand |
+| `productivity-time-study-tool H build` | `H/data/*.csv`, `H/out/mapping_changes.csv` | steps 7 and 11 |
+| `productivity-time-study-tool --save FILE H summary` | FILE | step 11 |
+| `productivity-time-study-tool H dashboard` | `H/out/dashboard.html` | step 11 |
+| `productivity-time-study-day-lint W/days/D --domains H/domains.csv [--topics H/topics.csv]` | nothing | the day assembler and the topic classifier, before they return |
+| `productivity-time-study-said-not-seen W [--review FILE]` | `H/out/said-not-seen-<window>.json` | step 12 |
 
 The Run's scope (`time-study-check` and `time-study-collect` share it): the period, by default the last full month, widened back to the day after the latest window when that window ended before the period began, and never past yesterday; or the one window named. The days of the span that no window holds become new windows of at most 14 days, cut evenly, at most 45 days in one Run (the newest; the rest are named in the notes). A window that already exists keeps its dates, even across a month's edge.
 
@@ -54,14 +54,14 @@ Each segmenter's input file holds that one recording's entry plus `output` (`W/m
 
 ## Workers
 
-| Worker | Agent | Brief | Model | Tools | One per | Writes |
+| Worker | Run by | Section | Brief | Model | One per | Writes |
 |---|---|---|---|---|---|---|
-| meeting segmenter | `time-study-meeting-segmenter` | `briefs/meeting-segmenter.md` | sonnet | Read, Grep, Write, the Portal's `get_fellow_recording` and `get` | recording | `meetings/<recording_id>.md` |
-| day assembler | `time-study-day-assembler` | `briefs/day-assembler.md` | opus | Read, Grep, Glob, Write, `time-study-day-lint` | day | `days/<date>/slots.csv`, `days/<date>/day.md` |
-| topic classifier | `time-study-topic-classifier` | `briefs/topic-classifier.md` | sonnet | Read, Grep, Write, `time-study-day-lint` | day | `days/<date>/topics.csv` |
-| checker | `time-study-checker` | `briefs/checker.md` | sonnet | Read, Grep, Glob; no Write, no Edit | window | nothing; returns one JSON block |
+| meeting segmenter | `productivity-worker` | Segment a recording | `briefs/meeting-segmenter.md` | sonnet | recording | `meetings/<recording_id>.md` |
+| day assembler | `productivity-worker` | Assemble a day | `briefs/day-assembler.md` | opus | day | `days/<date>/slots.csv`, `days/<date>/day.md` |
+| topic classifier | `productivity-worker` | Classify a day's topics | `briefs/topic-classifier.md` | sonnet | day | `days/<date>/topics.csv` |
+| checker | `productivity-reviewer` | Check sampled slots | `briefs/checker.md` | sonnet | window | nothing; returns one JSON block |
 
-Each worker is a registered agent, because each meets the tests for one in `DESIGN.md`: the segmenter reads a whole transcript (bulk reading), the segmenters, assemblers and classifiers run one per item (fan-out), the checker must not see the assemblers' reasoning (independence), and each has an allowlist the harness enforces (a tool boundary). The agent file pins the model and the tools and points at the brief; the brief is the single copy of the instructions. The dispatch prompt is the worker's own input paths only. A runtime without these agents runs the same brief as a general-purpose sub-agent whose prompt is the brief's full text followed by those paths. A worker writes only the files in its row and its own `work/<worker>-<date or recording_id>/` folder, runs no script it did not write, and returns BLOCKED with the exact denial when a hook or a permission rule refuses a call. The orchestrator runs on the session's model (Opus).
+The main agent dispatches each with the model in its row and a prompt naming this skill's section and the worker's own input paths only; the brief is the single copy of the instructions. The checker runs as the department's reviewer so it cannot write and never sees the assemblers' reasoning. A worker writes only the files in its row and its own `work/<worker>-<date or recording_id>/` folder, runs no script it did not write, and returns BLOCKED with the exact denial when a hook or a permission rule refuses a call. The main agent runs on the session's model (Opus).
 
 The workers' Write is fenced by the session, not by the agent files: a scheduled run should grant Write and Edit on the home and nothing else, so a write outside it is refused and the worker returns BLOCKED naming the path. Started by hand, the session's own permissions are the fence. The segmenter, assembler and classifier load `orchestration-workstream` for its conduct; their return is still the brief's fixed block.
 
@@ -163,7 +163,7 @@ From the first full week, where the independent checker's flags were the evidenc
 - **A segment check uses the recording date from `recordings.json`,** never a date found inside the file; booking dates appear in the text.
 - **The owner prefers one short list.** The handful of questions that need the owner, then "accept every other proposed answer and every checker flag", and one re-run that applies the flags and the answers together.
 
-From the pilot's worker runs. Every brief and every worker agent file carries these.
+From the pilot's worker runs. Every brief carries these.
 
 - **A worker's scratch lives only in its own folder.** Scratch files and scripts go in `W/work/<worker>-<date or recording_id>/`, never in a shared scratch folder, where one worker can run another day's script and rewrite that day's file.
 - **A worker never runs a script it did not write.** A script found in `work/` or anywhere else belongs to another worker and another day.

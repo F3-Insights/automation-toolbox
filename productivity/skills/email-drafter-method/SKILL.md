@@ -1,13 +1,69 @@
 ---
 name: email-drafter-method
-description: "Reference loaded by the email-drafter agent, not for a user request: the step-by-step procedure for writing one email in the owner's voice and staging it as a Portal draft. Covers loading the voice guide, resolving the recipient, finding the source email for a reply, sampling the owner's sent mail to that recipient, drafting, the mandatory voice-check pass, draft_create and the terse summary returned to the parent, with a worked example. Never sends. Not for drafting a new email interactively; use comms-draft-email, or comms-reply-to-email for a checked reply."
+description: "Reference run by productivity-worker (dispatched with model opus), one draft per dispatch, for comms-steward, comms-follow-ups, comms-inbox-replies, comms-reply-to-email and other departments' drafting, not for a user request: the procedure for writing one email in the owner's voice and staging it as a Portal draft. Covers loading the voice guide, resolving the recipient, finding the source email for a reply, sampling the owner's sent mail to that recipient, drafting, the mandatory voice-check pass, draft_create and the terse summary returned to the parent. Never sends. Not for drafting a new email interactively; use comms-draft-email, or comms-reply-to-email for a checked reply."
 ---
 
 # Email drafter: the procedure
 
-This is the procedure the `email-drafter` agent works through, in order, every invocation. The agent file holds the goal, the inputs (the triager block and the pinned reply), the judgment calls, the hard rules and the return format; where a pinned brief from `comms-reply-to-email` applies, it replaces Steps 2 and 3 here.
+Write one email that genuinely sounds like the owner, and stage it as a Portal draft. Run it as `productivity-worker` with model opus, one draft per dispatch, briefed to follow this skill. This is the only place drafts in the owner's voice are made. You never send: `draft_create` (and `draft_update` on a draft you were told to revise) are your only writes; the caller owns delivery.
 
-## Steps
+## Inputs
+
+The parent (skill or user) should give you:
+
+- **Recipient** (name and/or email; may be ambiguous)
+- **Intent**: what the owner wants to say, in their words or as a summary
+- **Optional context**: meeting notes, a source email to reply to, action items to include, deadline, subject line hint
+- **Optional Memo context**: a scoped packet of positions, relationship context, and cross-channel conversation state, or a local file path to that packet. It is local private data, not a complete Portal search.
+
+### A triager block
+
+The common batch case is a REPLY block produced by a triage on `email-triager-method`, passed to you verbatim. It carries the fields you need under other names, so map them straight across:
+
+| Triager field | What you do with it |
+|---|---|
+| `Ref` | the source email. Dereference or `get` it; this is your `related_email_id`. |
+| `Inbox` | which of the owner's accounts the reply goes out from. Mention it in your summary. |
+| `From` | the recipient. The relationship note tells you the register to start from. |
+| `Context` | who this person is to the owner, read from the Portal: priority, company, open tasks, the last and next meeting, unanswered mail. It sets the register and it is why a line like "ahead of Tuesday" can be written at all. It is not a fact to repeat back at them. |
+| `Asked` | what the reply has to address. Every point here gets answered or acknowledged. |
+| `Reply intent` | the intent. If it reads `UNKNOWN`, the caller must supply the owner's decision alongside the block; draft nothing on an unanswered UNKNOWN and say so instead. |
+| `Urgency` | whether the message proposes a date or asks for one. |
+| `Drafter needs to know` | attachments, deadlines, prior commitments. Honour every one. |
+
+### A pinned reply (comms-reply-to-email)
+
+When the brief comes from `comms-reply-to-email` it names a **pinned contact id** and a **pinned email ref**, and gives you the paths of `brief.md`, `plan.md` and `answers.md` in a run folder. That brief (`briefs/drafter.md` in the skill) replaces Steps 2 and 3 below and narrows the rest:
+
+- Read those three files with `Read`. Every fact in the draft comes from `brief.md` or `answers.md`; a decision the plan marks as the owner's is written only as `answers.md` states it.
+- The recipient is the pinned contact, at the address the pinned email came from. Do not search for the person or resolve anyone by name. No Cc, no Bcc.
+- `related_contact_id` is the pinned contact id and `related_email_id` the pinned email's bare id. Leave `thread_id` unset.
+- On a revision round you are given the draft id and numbered fixes: apply them with `draft_update` on that draft, subject and body only, and never create a second draft. `draft_update` is for that and nothing else.
+
+`email-deliver` refuses a draft tied to any other contact or email, addressed to anyone else, or carrying a Cc or Bcc, so a draft that strays from the pin is simply never delivered.
+
+**You cannot ask the caller a question.** If something critical is missing, or the recipient resolves to two equally plausible contacts, or an UNKNOWN intent arrived with no decision, do not guess and do not create a draft. Return the blocking question as your whole summary, prefixed `BLOCKED:`, and stop. One round trip through the caller is cheaper than a wrong draft in the owner's name.
+
+## Reference sources
+
+Your three reference sources are:
+
+1. **The owner's voice guide (setting `voice_guide`)**: openings, closings, framing rules, forbidden phrases and register by recipient. Read it first, every time. If the setting is missing, say so and stop.
+2. **Recent sent emails**: the owner's actual corpus for per-recipient tone calibration
+3. **The `unslop-email` skill**: load it with the Skill tool. It is the editing standard for a message: the opening sentence test, one decision stated as choices, words a forwarded reader could take badly, and the mechanics (no dashes, ranges spelled out, sentence case). Where it and the voice guide disagree, the voice guide wins, because it describes this writer and `unslop-email` describes the genre.
+
+Where a Memo packet or cross-channel state is supplied, newer correspondence and the owner's corrections win over it: latest captured does not mean independently verified current.
+
+## Rules
+
+- **Never send.** `draft_create`, and `draft_update` on a draft you were told to revise, are your only writes, you don't approve, and you don't push; the parent skill owns delivery, gated on the user's explicit yes. Where a hook enforces this, never try to work around it.
+- **Read the voice guide every invocation**: you don't have persistent memory across calls.
+- **No fabrication**: if you don't have the prior email corpus or can't resolve the recipient, return `BLOCKED:` with what is missing. Never invent a fact, a date, a number, or a commitment the owner has not made.
+- **Never decide for the owner.** Price, scope, a yes or no to a person, a commitment of their time: if the intent does not carry their answer, you do not have it. `BLOCKED:` and stop.
+- **Output cap**: your summary to the parent is at most 500 chars. The draft body lives in the Portal.
+- **One draft per invocation**: if the parent asks for multiple drafts, handle them sequentially, one summary per draft.
+
+## Procedure
 
 ### Step 1: Load the Voice Guide (ALWAYS)
 
@@ -95,9 +151,11 @@ draft_create(
 )
 ```
 
+Pass `agent_slug` (and `trigger_ref`) exactly as the brief gives them: a caller counts its own drafts by that slug.
+
 (`recipient_cc` / `recipient_bcc` exist if the intent calls for them.)
 
-### Step 8: Return a Terse Summary to the Parent
+### Step 8: Return a terse summary to the caller (the Return)
 
 **Output format (at most 500 chars):**
 
@@ -143,3 +201,7 @@ Do NOT return the draft body in your summary, it lives in the Portal. The user r
    Subject: Follow up: today's call
    Voice notes: Used "Hi Sarah," matching 9/10 prior opens; 3 short paragraphs with bulleted recap; clear scheduling ask at end; "Cheers, Pat" close (the made-up owner of this example is Pat).
    ```
+
+## Done when
+
+One voice-checked draft exists in the Portal (created with `draft_create`, or revised with `draft_update` on the draft you were told to revise) and the summary below has been returned; or the whole summary is a `BLOCKED:` question and no draft was created.

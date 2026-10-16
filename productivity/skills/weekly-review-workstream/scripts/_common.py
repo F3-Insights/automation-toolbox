@@ -802,7 +802,7 @@ HOME_NAME = "weekly-review"
 # the department migration gives it. task-stack-apply treats the two as one agent (same
 # checks, same markers). When productivity converts, ORCHESTRATOR becomes the second name; remove
 # the first a month after that.
-ORCHESTRATOR_NAMES = ("weekly-review-orchestrator", "productivity-weekly-review")
+ORCHESTRATOR_NAMES = ("weekly-review-orchestrator", "gtd-weekly-review")
 ORCHESTRATOR = ORCHESTRATOR_NAMES[0]
 REVIEW_SCHEMA = "weekly-review/review@1"
 PASS_SCHEMA = "weekly-review/pass@1"

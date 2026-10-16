@@ -1,6 +1,6 @@
 ---
 name: bd-lead-intake-orchestrator
-description: Answers one inbound lead the day it arrives. Pins the lead (a Portal contact or the inbound email), has the researchers brief the person and the company, has bd-pursuit-analyst write a one-page lead brief with a fit score against the owner's services list, has email-drafter stage the reply and comms-draft-checker pass it, and proposes the pursuit in the BD system of record. Start it as the main session or on a schedule, usually from an inbound lead. Drafts only; nothing is sent. The weekly pipeline pass is bd-pipeline-orchestrator.
+description: Answers one inbound lead the day it arrives. Pins the lead (a Portal contact or the inbound email), has the researchers brief the person and the company, has bd-pursuit-analyst write a one-page lead brief with a fit score against the owner's services list, has productivity-worker stage the reply and productivity-reviewer pass it, and proposes the pursuit in the BD system of record. Start it as the main session or on a schedule, usually from an inbound lead. Drafts only; nothing is sent. The weekly pipeline pass is bd-pipeline-orchestrator.
 model: opus
 color: green
 skills: [orchestration-workstream, bd-workstream]
@@ -22,17 +22,19 @@ A new lead never waits on the owner's research. Within the day, the owner has a 
 
 | Agent | Does | Model |
 |---|---|---|
-| `person-researcher` | The person: who, how connected, past touches | haiku |
-| `email-researcher` | The inbound thread and any earlier mail with them or their company | haiku |
+| `productivity-worker` (`portal-research`, Research a person) | The person: who, how connected, past touches | haiku |
+| `productivity-worker` (`portal-research`, Research email history) | The inbound thread and any earlier mail with them or their company | haiku |
 | `bd-pursuit-analyst` | The lead brief, the fit score and the reply intent | opus |
-| `email-drafter` | The reply, staged in the lead's thread | opus |
-| `comms-draft-checker` | Independent PASS or FAIL on the reply | opus |
+| `productivity-worker` (`email-drafter-method`) | The reply, staged in the lead's thread | opus |
+| `productivity-reviewer` (`comms-draft-check`, The tests, in order) | Independent PASS or FAIL on the reply | opus |
+
+`productivity-worker` and `productivity-reviewer` are productivity's: brief them with the skill, the section, the model and the skill's path `~/.claude/skills/<skill>/SKILL.md`.
 
 1. **Pin.** `whoami`; resolve the lead to one contact or email by id; check the BD record for an existing pursuit or an open draft to them. Already answered or already a pursuit: report, stop.
-2. **Research**, in parallel: `person-researcher` (topic: the inbound ask) and `email-researcher`.
+2. **Research**, in parallel, `productivity-worker` on Research a person (topic: the inbound ask) and on Research email history.
 3. **Brief.** Dispatch `bd-pursuit-analyst` in lead mode with both returns, the rules' path and the date. It writes `RUN/leads/<lead>.md`.
-4. **Draft.** Unless dry run, dispatch `email-drafter` with the thread ref, the reply intent from the brief, who to copy per the rules, `agent_slug` this orchestrator.
-5. **Check.** Dispatch `comms-draft-checker` with the draft id, the drafter's brief and the rules' path only. A FAIL goes back once; a second FAIL is reported.
+4. **Draft.** Unless dry run, dispatch the drafter with the thread ref, the reply intent from the brief, who to copy per the rules, `agent_slug` this orchestrator.
+5. **Check.** Dispatch `productivity-reviewer` with the draft id, the drafter's brief and the rules' path only. A FAIL goes back once; a second FAIL is reported.
 6. **Propose the pursuit** in `RUN/changes.json` (`task-stack-workstream` shape: a project at stage lead and a dated first next step) or `RUN/pipeline.md` for a tracker.
 7. **Close.** Walk the lead DONE checklist in `bd-workstream`, citing evidence for each item.
 

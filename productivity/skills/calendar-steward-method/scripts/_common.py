@@ -24,7 +24,7 @@ THE HOME (--home, else the setting [calendar-steward-method] home, else <state_d
                                      undo.jsonl, EVENTS.md and events.ics
         superseded-<stamp>/          an earlier unanswered list the same day replaced
 
-THE PROPOSAL FILE (RUN/proposals.json, written by the orchestrator)
+THE PROPOSAL FILE (RUN/proposals.json, written by the calendar steward)
 
     {"tool": "calendar-steward", "version": 1, "date": "2026-10-05", "dry_run": false,
      "summary": "one line on the fortnight",
@@ -618,7 +618,7 @@ SCAN_TOOL = "calendar-steward-scan"
 # the department migration gives it. task-stack-apply treats the two as one agent (same
 # checks, same markers). When productivity converts, ORCHESTRATOR becomes the second name; remove
 # the first a month after that.
-ORCHESTRATOR_NAMES = ("calendar-steward-orchestrator", "productivity-calendar-steward")
+ORCHESTRATOR_NAMES = ("calendar-steward-orchestrator", "calendar-steward")
 ORCHESTRATOR = ORCHESTRATOR_NAMES[0]
 PASSES = ("auto", "propose", "approve")
 KINDS = ("focus-block", "move", "decline", "prep")

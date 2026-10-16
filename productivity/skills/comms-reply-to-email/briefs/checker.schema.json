@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "comms-reply-to-email check record",
-  "description": "What email-checker returns and email-deliver validates. email-deliver refuses unless verdict is PASS and draft_id, content_hash, contact_id and email_ref match the draft being delivered.",
+  "description": "What productivity-reviewer returns on comms-reply-to-email section Check a reply, and productivity-email-deliver validates. It refuses unless verdict is PASS and draft_id, content_hash, contact_id and email_ref match the draft being delivered.",
   "type": "object",
   "required": ["verdict", "draft_id", "content_hash", "contact_id", "email_ref"],
   "properties": {

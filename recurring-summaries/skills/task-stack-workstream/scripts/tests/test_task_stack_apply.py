@@ -255,7 +255,15 @@ def test_the_reconcilers_new_name_also_needs_the_checkers_pass(tmp_path):
                    orchestrator="productivity-task-reconciler")
     r = by_id(run(portal, data, tmp_path))["s1"]
     assert r["code"] == "UNCHECKED" and portal.tasks[uid(1)]["status"] == "TODO"
-    assert set(ap.CHECKED_CANCELS) == {"task-reconcile-orchestrator", "productivity-task-reconciler"}
+    assert {"task-reconcile-orchestrator", "productivity-task-reconciler"} <= set(ap.CHECKED_CANCELS)
+
+
+def test_every_task_steward_mode_needs_the_checkers_pass_on_a_cancel(tmp_path):
+    for mode in ("task-steward-capture", "task-steward-clarify", "task-steward-reconcile"):
+        portal = FakePortal([task(1, "Call the old supplier", updated=90)])
+        data = changes({"id": "s1", "op": "cancel", "task": uid(1), "reason": "stale"}, orchestrator=mode)
+        r = by_id(run(portal, data, tmp_path / mode))["s1"]
+        assert r["code"] == "UNCHECKED" and portal.tasks[uid(1)]["status"] == "TODO", mode
 
 
 def test_a_renamed_agent_writes_the_same_markers_as_its_old_name():

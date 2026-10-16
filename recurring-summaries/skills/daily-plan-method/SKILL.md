@@ -1,6 +1,6 @@
 ---
 name: daily-plan-method
-description: "How the owner's day is planned and closed: the pick-three rubric (goal leverage, time decay, top of mind), fitting work to free calendar slots and focus blocks, conflicts and meetings that need prep, focus-block proposals the owner approves, and the evening accounting of each planned item with evidence, its re-date or carry-over, and tomorrow's three. Loaded by the daily-plan agents after orchestration-workstream and task-stack-workstream. Use it by hand for \"what should I do today\", for today's brief (the plan note's morning block) or for the day's recap (its evening block); unattended, start daily-plan-orchestrator. Not for the weekly review; use weekly-review-orchestrator."
+description: "How the owner's day is planned and closed: the pick-three rubric (goal leverage, time decay, top of mind), fitting work to free calendar slots and focus blocks, conflicts and meetings that need prep, focus-block proposals the owner approves, and the evening accounting of each planned item with evidence, its re-date or carry-over, and tomorrow's three. Loaded by the daily-plan agents after orchestration-workstream and task-stack-workstream. Use it by hand for \"what should I do today\", for today's brief (the plan note's morning block) or for the day's recap (its evening block); unattended, start daily-plan-orchestrator. Not for the weekly review; use gtd-weekly-review."
 ---
 
 # Planning and closing the owner's day

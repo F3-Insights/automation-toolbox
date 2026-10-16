@@ -13,7 +13,7 @@ The Automation's finish step (skipped on a dry run). The first line printed is o
   HELD: <reason>                   client_update_check.py for the week is not done.
   DELIVERED: <link>, WOULD DELIVER: ... (--dry-run) or REFUSED: <code> <reason>
         from comms-reply-to-email's email_deliver.py, run with delivery.json's draft_id, check
-        (the email-checker's record), contact_id and email_ref. Every guard lives there: the
+        (productivity-reviewer's Check a reply record), contact_id and email_ref. Every guard lives there: the
         check record must be a PASS for this exact draft content, addressed only to the pinned
         contact, answering the pinned email, past outbound-check. A delivery is written to
         work/delivery-result.json, never over an existing one; a dry run or a refusal writes

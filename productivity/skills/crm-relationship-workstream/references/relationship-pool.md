@@ -1,6 +1,6 @@
 # Building the week's candidate pool
 
-How the relationship-tending orchestrator finds who is going cold and picks the week's candidates, before the filters in `SKILL.md` ("Who may be picked") narrow them. It reads only and writes nothing.
+How comms-steward, in mode relationships, finds who is going cold and picks the week's candidates, before the filters in `SKILL.md` ("Who may be picked") narrow them. It reads only and writes nothing.
 
 ## Health thresholds
 

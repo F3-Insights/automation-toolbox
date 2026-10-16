@@ -314,7 +314,7 @@ def test_the_ledger_refuses_a_file_with_other_columns(tmp_path):
 
 def test_the_agent_name_and_its_planned_new_name():
     """Change sets and the approval task carry the current name until productivity converts."""
-    assert c.ORCHESTRATOR_NAMES == ("calendar-steward-orchestrator", "productivity-calendar-steward")
+    assert c.ORCHESTRATOR_NAMES == ("calendar-steward-orchestrator", "calendar-steward")
     assert c.ORCHESTRATOR == c.ORCHESTRATOR_NAMES[0]
 
 

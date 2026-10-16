@@ -1,36 +1,37 @@
 ---
 name: comms-follow-ups
-description: Chase what the owner is waiting on, interactively. The waiting-on-tracker agent finds work sitting with other people and threads nobody answered and proposes one action each; the owner says which to act on; one drafter per approved nudge writes it, and the drafts land in the owner's Outlook Drafts folder. Nothing is sent. Use for "what am I waiting on", "chase my follow-ups" or "nudge whoever owes me". For the unattended pass, start comms-follow-up-orchestrator.
+description: Chase what the owner is waiting on, interactively. A productivity-worker on waiting-on-tracker-method finds work sitting with other people and threads nobody answered and proposes one action each; the owner says which to act on; one drafter per approved nudge writes it, and the drafts land in the owner's Outlook Drafts folder. Nothing is sent. Use for "what am I waiting on", "chase my follow-ups" or "nudge whoever owes me". For the unattended pass, start comms-steward in mode follow-up.
 argument-hint: "[staleness days] [silence business days] [scope: a project, a domain or a person]"
-allowed-tools: Task, Bash, Read, mcp__insights-portal__whoami, mcp__insights-portal__draft_push,
+allowed-tools: Agent, Bash(productivity-outbound-check:*), Read, mcp__insights-portal__whoami, mcp__insights-portal__draft_push,
   mcp__insights-portal__draft_compose_url, mcp__insights-portal__create_task,
   mcp__insights-portal__update_task, mcp__insights-portal__create_note
 ---
 
 # Follow-ups
 
-One agent and one question in the middle. `waiting-on-tracker` finds the work that has left the owner's hands and not come back, and proposes one action per item. You approve. `email-drafter`, one per approved nudge, writes the messages, and each draft goes into the owner's own Drafts folder. Nothing here sends anything.
+One worker and one question in the middle. A `productivity-worker` on `waiting-on-tracker-method` finds the work that has left the owner's hands and not come back, and proposes one action per item. You approve. One `productivity-worker` per approved nudge, on `email-drafter-method`, writes the messages, and each draft goes into the owner's own Drafts folder. Nothing here sends anything.
 
-This is the outbound twin of `comms-inbox-replies`. That skill answers what came in; this one chases what went out. Both end at the same two places: `outbound-check` in front of every draft, and `email-drafter` as the only writer of one.
+This is the outbound twin of `comms-inbox-replies`. That skill answers what came in; this one chases what went out. Both end at the same two places: `productivity-outbound-check` in front of every draft, and `email-drafter-method` as the only way one is written.
 
 **User provided:** $ARGUMENTS
 
 ## Step 1: find what is outstanding
 
-Parse `$ARGUMENTS` into a staleness window in days (default 7), a silence window in business days (default 3) and an optional scope. Dispatch one `waiting-on-tracker`:
+Parse `$ARGUMENTS` into a staleness window in days (default 7), a silence window in business days (default 3) and an optional scope. Dispatch one `productivity-worker` (model sonnet) with the Agent tool:
 
 ```
-Task(
-    subagent_type="waiting-on-tracker",
+Agent(
+    subagent_type="productivity-worker",
+    model="sonnet",
     description="Find what is outstanding",
     prompt="""
-Find the work the owner is waiting on.
+Follow the skill waiting-on-tracker-method, from Inputs to Return.
 
 Staleness window: <n> days
 Silence window: <n> business days
 Scope: <a project, a domain, a person, or "everything the owner can see">
 
-Return your standard report: the header counts, one block per item with its evidence,
+Return its report: the header counts, one block per item with its evidence,
 context and proposed action, then the nudge array between the two marker lines.
 """
 )
@@ -40,7 +41,7 @@ It comes back with up to fifteen items across its three lenses, each carrying wh
 
 ## Step 2: ask the owner, once, as a numbered list
 
-One numbered line per item, in the agent's words, short enough to scan:
+One numbered line per item, in the tracker's words, short enough to scan:
 
 ```
 <n>. <what is being waited on> · <who> · <how long> · proposed: <the action>
@@ -56,14 +57,14 @@ Ask one question, phrased so it can be answered in a line:
 
 Then wait. Nothing is drafted, created or updated before the answer arrives.
 
-Where the proposed action was **convert to a decision the owner must make**, put the question itself in the numbered line, with the options the agent said the evidence supports. That is the one line on the list where their answer is the work rather than the permission for it.
+Where the proposed action was **convert to a decision the owner must make**, put the question itself in the numbered line, with the options the tracker said the evidence supports. That is the one line on the list where their answer is the work rather than the permission for it.
 
 ## Step 3: check each approved nudge before drafting
 
 For every item the owner approved whose action is a nudge, run the gate first:
 
 ```bash
-python3 ~/.claude/skills/comms-draft-check/scripts/outbound_check.py --to <recipient email> --thread <the thread _ref, if there is one> --subject "<subject>" --json
+productivity-outbound-check --to <recipient email> --thread <the thread _ref, if there is one> --subject "<subject>" --json
 ```
 
 Pass `--thread` when the nudge carries a `thread_ref` and `--subject` in either case, so the check has something to match on when there is no thread. Exit 0 is ALLOW and you dispatch a drafter. Any non-zero exit means do not draft: exit 3 is a rule tripping, exit 2 means the check could not run, and a gate that could not run has not been satisfied.
@@ -76,14 +77,15 @@ The three rules, and what each one means here:
 
 ## Step 4: fan out the drafters
 
-Dispatch one `email-drafter` per cleared nudge, **all in a single message** so they run in parallel. One draft per agent is the contract; do not hand one agent several nudges.
+Dispatch one `productivity-worker` (model opus) per cleared nudge, **all in a single message** so they run in parallel. One draft per agent is the contract; do not hand one agent several nudges.
 
 ```
-Task(
-    subagent_type="email-drafter",
+Agent(
+    subagent_type="productivity-worker",
+    model="opus",
     description="Draft follow-up",
     prompt="""
-Draft a follow-up in the owner's voice.
+Follow the skill email-drafter-method: draft a follow-up in the owner's voice.
 
 Recipient: <recipient_name> <<recipient_email>>
 Thread: <thread_ref, or "no thread: this is a new message">
@@ -94,16 +96,14 @@ Context the tracker found: <the item's Context line>
 
 the owner's answer: <their instruction for this number, verbatim; or "chase as proposed">
 
-Follow your standard process: read the owner's voice guide (setting voice_guide), resolve the recipient, find the source
-email from the thread ref so the draft threads, sample prior sent mail, draft, run the voice
-check, create the draft with draft_create, and return the terse summary.
+Work through its Procedure and return its terse summary.
 """
 )
 ```
 
 This is a chase, not a complaint. The owner still has to work with this person next week, so the intent you pass says what is needed and by when, never that they are late.
 
-An agent that returns `BLOCKED:` did not create a draft. Relay the blocking question and move on; do not re-dispatch it with a guess.
+A worker that returns `BLOCKED:` did not create a draft. Relay the blocking question and move on; do not re-dispatch it with a guess.
 
 ## Step 5: deliver each draft to the mailbox it belongs in
 
@@ -138,7 +138,7 @@ One line per draft, ending in where it now is:
 
 Then a line for every push that failed and why. Then a line per nudge that was held or blocked, naming the `outbound-check` rule that caused it. Then one line per non-email action taken, naming the task or note id. Then the items the owner skipped, in one line each.
 
-Close with the counts: how many items came back, how many were acted on, how many are still waiting on a decision, and how many the agent left out of its own report.
+Close with the counts: how many items came back, how many were acted on, how many are still waiting on a decision, and how many the tracker left out of its own report.
 
 ## When no one is present
 
@@ -152,6 +152,6 @@ Close with the counts: how many items came back, how many were acted on, how man
 - **Nothing is ever sent.** The Portal holds no send scope and neither do you. A push puts the draft in the owner's own Drafts folder; they read it and press Send themselves.
 - **One question, once.** Step 2 is the only time this skill asks anything, with one exception: a `RECENT_CONTACT` hold in an interactive run, which is a yes or no about one nudge.
 - **Every path that ends in a draft goes through `outbound-check` first.** No exceptions for a nudge that looks obviously fine.
-- **Drafts in the owner's voice come only from `email-drafter`.** Do not write a chase in this skill's own context, however short it looks.
+- **Drafts in the owner's voice come only from `email-drafter-method`, run by a worker.** Do not write a chase in this skill's own context, however short it looks.
 - **Never show a draft body.** The Portal is the source of truth for draft content.
 - **Never decide for the owner.** An item the tracker turned into a decision is theirs to answer. It is not drafted, acted on or closed until they do.

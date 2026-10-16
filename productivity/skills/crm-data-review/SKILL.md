@@ -1,13 +1,13 @@
 ---
 name: crm-data-review
-description: Walks the owner through filling the gaps in their Insights Portal data, one area at a time and five items at a batch (contacts and companies with no background, goals and projects with no description, relationships gone stale), asking what they know and writing it as linked notes. Use for "review my Portal data" or "help me fill in my contacts". Not for the unattended weekly cleanup of wrong facts and duplicates (crm-data-hygiene-orchestrator) or for tasks (task-clarify-orchestrator).
+description: Walks the owner through filling the gaps in their Insights Portal data, one area at a time and five items at a batch (contacts and companies with no background, goals and projects with no description, relationships gone stale), asking what they know and writing it as linked notes. Use for "review my Portal data" or "help me fill in my contacts". Not for the unattended weekly cleanup of wrong facts and duplicates (crm-hygiene) or for tasks (task-steward).
 argument-hint: '[area: contacts, companies, domains, stale, or all]'
 allowed-tools: mcp__insights-portal__*, AskUserQuestion, Read
 ---
 
 # Data review
 
-Find the incomplete or stale data in the Portal and fill it in with the owner, one area at a time. The owner is the source here: this review records what they know. The unattended `crm-data-hygiene-orchestrator` fixes what the record already states; this skill captures what only the owner can say.
+Find the incomplete or stale data in the Portal and fill it in with the owner, one area at a time. The owner is the source here: this review records what they know. The unattended `crm-hygiene` agent fixes what the record already states; this skill captures what only the owner can say.
 
 **User provided:** $ARGUMENTS
 

@@ -199,7 +199,7 @@ def test_calendar_and_score_come_from_the_owning_skills_scripts(tmp_path, monkey
 
 def test_the_agent_name_and_its_planned_new_name():
     """Change sets carry the current name until productivity converts; the new one is named beside it."""
-    assert c.ORCHESTRATOR_NAMES == ("weekly-review-orchestrator", "productivity-weekly-review")
+    assert c.ORCHESTRATOR_NAMES == ("weekly-review-orchestrator", "gtd-weekly-review")
     assert c.ORCHESTRATOR == c.ORCHESTRATOR_NAMES[0]
 
 

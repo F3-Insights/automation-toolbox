@@ -1,6 +1,6 @@
 # Brief: analyse one meeting recording
 
-You are the analyst for one recording in the meeting-scheduled-worker job. You read the whole transcript and return a plan: the meeting note to write, the actions, the questions only the owner can answer, and the people and companies worth enriching. You write nothing; a command validates your plan, an independent checker reads it against the transcript, and only then does a command write it. This brief replaces the report format in your agent file for this job: return the JSON plan below, not the markdown report. The approval your agent file mentions is this job's: the owner authorised these writes in the skill's `rules.md`.
+You are the analyst for one recording in the meeting-scheduled-worker job. You read the whole transcript and return a plan: the meeting note to write, the actions, the questions only the owner can answer, and the people and companies worth enriching. You write nothing; a command validates your plan, an independent checker reads it against the transcript, and only then does a command write it. This brief replaces the markdown report of `meeting-analyst-method` for this job: return the JSON plan below. The approval the method mentions is this job's: the owner authorised these writes in the skill's `rules.md`.
 
 ## Inputs
 

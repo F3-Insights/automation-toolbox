@@ -1,11 +1,32 @@
 ---
 name: comms-clerical-routing-workstream
-description: Reference loaded by comms-clerical-routing-orchestrator and comms-routing-checker, not for a user request; what routing the owner's clerical mail to their executive assistant adds to orchestration-workstream. Covers CLERICAL-ROUTING-RULES.md and its go switch (the assistant's agreement), the routing rule (scheduling, forwarding a file already on disk, intros and cc routing, the named confirmations), precision over recall, one batched Portal task a day for the assistant, ageing items, cover notes the owner sends themselves as drafts, the DONE checklist and the shapes.
+description: Routing the owner's clerical mail to their executive assistant, run by comms-steward in mode clerical and by the productivity-worker and productivity-reviewer it dispatches, not for a user request; adds to orchestration-workstream. Covers CLERICAL-ROUTING-RULES.md and its go switch (the assistant's agreement), the Steps, the routing rule (scheduling, forwarding a file already on disk, intros and cc routing, the named confirmations), precision over recall, one batched Portal task a day for the assistant, ageing items, cover notes the owner sends themselves as drafts, the reviewer's section Check routed threads, the DONE checklist and the shapes.
 ---
 
 # Routing clerical mail
 
-This skill extends `orchestration-workstream`. Load that skill if it is not loaded.
+Take the clerical half of the owner's mail off their desk without ever handing their assistant something that was theirs to answer. Each Run, every clerical thread of the day is routed to the assistant in one clear task, kept with the owner for a stated reason, or answered by a cover note the owner sends themselves. This skill extends `orchestration-workstream`.
+
+## Inputs
+
+- `routing_rules`: CLERICAL-ROUTING-RULES.md; `rules_file`: TASK-STACK-RULES.md. Read both first.
+- `date` (optional): the day of mail to route. Default: yesterday in the owner's timezone.
+- `instructions` (optional) and `dry_run`. `RUN` is the working folder; write only there.
+
+## Steps
+
+1. [judgment] `whoami`; read both rules files. Note whether routing is on; if not, this Run is a rehearsal (classify and report only).
+2. [hand-off: productivity-worker] Triage the day's mail: model opus, `email-triager-method` from Inputs to Return, with the date's window, the inboxes in scope, and the routing rule pasted as its DELEGATE definition, with "suggested owner: the assistant" for threads that fit it.
+   → no DELEGATE thread: step 5
+3. [judgment] Decide each DELEGATE thread: routed, kept with the owner (and why), or cover note.
+4. [hand-off: productivity-reviewer] Check the routed threads (this skill, section Check routed threads), with their refs and the rules path only. A FAIL stays with the owner.
+5. [judgment] Carry: find the open routed items of earlier days (the assistant's open tasks with `source` `clerical:`), their age, and the ones to return to the owner.
+   → dry run, rehearsal or no cover note: step 8
+6. [hand-off: productivity-worker] Draft each cover note: model opus, `email-drafter-method`, `agent_slug` `comms-steward-clerical`.
+7. [hand-off: productivity-reviewer] Check the cover notes (`comms-draft-check`, section The tests, in order), with the draft ids and briefs only.
+   → FAIL: step 6 (max 1)
+8. [judgment] Write `RUN/routing.json` and `RUN/done.json` (the DONE checklist, cited) and, unless rehearsal, `RUN/changes.json` with at most one create op for the assistant's task. Report; a note that failed twice is listed, not delivered.
+   → written: done
 
 ## The rules file first
 
@@ -28,12 +49,29 @@ One Portal task a day, as a `create` op in the `task-stack-workstream` change-se
 
 ## Cover notes
 
-For a forwarding ask the owner must answer themselves (the rules say which senders), a cover note may be staged by `email-drafter`: short, the file named, nothing promised. It is checked by `comms-draft-checker` like any draft. Never sent.
+For a forwarding ask the owner must answer themselves (the rules say which senders), a cover note may be staged by a worker on `email-drafter-method`: short, the file named, nothing promised. It is checked on `comms-draft-check` like any draft. Never sent.
+
+## Check routed threads
+
+For `productivity-reviewer`: whether handing each thread to the assistant is safe, from the thread and the routing rules only, never the classifier's reasoning. Read the routing rules file first, then each thread in full (`get` the email, `email_bodies` for the bodies). PASS only when it fits one routing class (scheduling, forwarding a file already in the record, intro or cc routing, a named confirmation) and none of the exclusions: it asks the owner nothing, names no price, scope, deadline or deliverable, is not a client's question about the work, and is not from an excluded sender. When torn, FAIL: precision over recall.
+
+Return the `orchestration-workstream` block, `workstream: "comms-clerical-routing-workstream"`, one `items` row per thread: `test` `route`, `item` the email ref, `state` PASS or FAIL, `evidence` the sentence that decided it, `note` one line.
+
+## Report
+
+Counts routed, kept and covered; the routed list as it will read in the assistant's task; carried and returned items; cover-note draft ids; reviewer FAILs; any question for the owner as one numbered list.
+
+## Never
+
+- Route anything while the rules say routing is off.
+- Route a thread that asks the owner anything, touches price, scope, a deadline or a deliverable, or is a client's question about the work.
+- Contact anyone outside, send, or push a draft.
+- Write a Portal task in the session; the task goes in the change set.
 
 ## DONE checklist
 
 - [ ] Every thread the triager classed DELEGATE has a decision: routed, kept with the owner, or cover note, each with its reason.
-- [ ] Every routed thread passed `comms-routing-checker` (checked); a FAIL stays with the owner.
+- [ ] Every routed thread passed the reviewer's Check routed threads (checked); a FAIL stays with the owner.
 - [ ] At most one task create for the assistant, with carried items first, or none when routing is off or nothing qualified.
 - [ ] The week's routed minutes stay under the assistant's cap, or the excess stays with the owner.
 - [ ] Nothing was sent, no external person was contacted, and no task was written in the session.
@@ -50,7 +88,7 @@ For a forwarding ask the owner must answer themselves (the rules say which sende
  "returned_to_owner": [], "questions": [], "notes": []}
 ```
 
-`RUN/changes.json` is the `task-stack-workstream` change set, `orchestrator` `comms-clerical-routing-orchestrator`.
+`RUN/changes.json` is the `task-stack-workstream` change set, `orchestrator` `comms-steward-clerical`.
 
 ## Later tools
 

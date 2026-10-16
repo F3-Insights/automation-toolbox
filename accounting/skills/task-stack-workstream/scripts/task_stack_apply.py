@@ -12,7 +12,7 @@ nothing, a re-run writes nothing twice, and every write is logged so it can be u
   python3 task_stack_apply.py --undo RUN/undo.jsonl [--op OP_ID] [--dry-run]
 
 THE CHANGE SET
-  {"tool": "task-stack-changes", "version": 1, "orchestrator": "task-reconcile-orchestrator",
+  {"tool": "task-stack-changes", "version": 1, "orchestrator": "task-steward-reconcile",
    "dry_run": false,
    "ops": [
     {"id": "c1", "op": "complete", "task": "portal://task/<uuid>", "evidence": "portal://email/<uuid>",
@@ -45,8 +45,8 @@ THE RULES (an op that fails one is refused whole, with a code; the other ops go 
   gets a comment carrying the duplicate's text and any MERGE_FILL field it lacks; the
   duplicate is completed with "Duplicate of <ref>".
 - cancel: with evidence, or without only when the task has had no update for
-  --stale-cancel-days (60) and links to no goal. A cancel by task-reconcile-orchestrator
-  (or its new name, productivity-task-reconciler) carries "check": "PASS" from its checker
+  --stale-cancel-days (60) and links to no goal. A cancel by task-steward (any mode, or
+  the reconciler's old names) carries "check": "PASS" from its checker
   or is refused UNCHECKED.
 - create: a verb-first title, an owner (the op's, else the token's own contact), a project
   or a domain whose catch-all project takes it, and no open task in that project already is
@@ -105,6 +105,19 @@ RENAMED_AGENTS = {
     "productivity-task-clarifier": "task-clarify-orchestrator",
     "productivity-task-reconciler": "task-reconcile-orchestrator",
     "productivity-weekly-review": "weekly-review-orchestrator",
+    # The final names. A merged agent signs its change set per mode (task-steward-<mode>,
+    # comms-steward-<mode>) so each mode's markers stay those of the agent it replaced; the
+    # bare names map to the main job they took over.
+    "calendar-steward": "calendar-steward-orchestrator",
+    "gtd-weekly-review": "weekly-review-orchestrator",
+    "task-steward": "task-reconcile-orchestrator",
+    "comms-steward": "comms-follow-up-orchestrator",
+    "comms-steward-follow-up": "comms-follow-up-orchestrator",
+    "comms-steward-clerical": "comms-clerical-routing-orchestrator",
+    "comms-steward-relationships": "crm-relationship-tending-orchestrator",
+    "task-steward-capture": "task-capture-orchestrator",
+    "task-steward-clarify": "task-clarify-orchestrator",
+    "task-steward-reconcile": "task-reconcile-orchestrator",
     "projects-client-delivery": "client-delivery-orchestrator",
     "projects-engagement-closeout": "project-engagement-closeout-orchestrator",
     "projects-engagement-kickoff": "project-engagement-kickoff-orchestrator",
@@ -115,9 +128,10 @@ RENAMED_AGENTS = {
     "strategy-goal-alignment": "goal-alignment-orchestrator",
     "toolbox-maintenance-auditor": "toolbox-audit-orchestrator",
 }
-# The reconciler, by its current name and its new one (remove the old a month after
-# productivity converts).
-CHECKED_CANCELS = ("task-reconcile-orchestrator", "productivity-task-reconciler")
+# Whose cancels need the checker's PASS whatever their confidence: the reconciler by its old
+# names, and every mode of task-steward (remove the old names a month after productivity converts).
+CHECKED_CANCELS = ("task-reconcile-orchestrator", "productivity-task-reconciler", "task-steward",
+                   "task-steward-capture", "task-steward-clarify", "task-steward-reconcile")
 PROJECT_OPS = ("project_edit", "project_close")
 GOAL_OPS = ("goal_edit", "goal_close")
 OPS = ("complete", "edit", "merge", "cancel", "create", "comment") + PROJECT_OPS + GOAL_OPS
@@ -710,7 +724,7 @@ class Applier:
 
     def op_cancel(self, op, by, marker):
         if by in CHECKED_CANCELS and str(op.get("check") or "").upper() != "PASS":
-            raise Refused("UNCHECKED", f"{by}'s cancels go through task-reconcile-checker whatever their "
+            raise Refused("UNCHECKED", f"{by}'s cancels go through the reviewer (task-stack-workstream, Check task-stack ops) whatever their "
                                        "confidence; this one carries no \"check\": \"PASS\"")
         evidence = f"\nEvidence: {op['evidence']}" if op.get("evidence") else ""
         return self.close(op, by, marker, "CANCELLED", f"Cancelled: {op['reason']}{evidence}")

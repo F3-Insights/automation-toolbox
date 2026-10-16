@@ -103,7 +103,8 @@ def test_the_cap_can_be_lowered_never_raised_and_defaults_fill_in():
                            {"doer": "produce-work", "args": f"task:{TASK}"}]}
     out = decide(json.dumps(many), max_dispatches=9)
     assert len(out["accepted"]) == 2 and out["accepted"][0]["args"] == "next meeting"
-    assert out["accepted"][0]["worker"] == "person-researcher" and out["accepted"][0]["route"] == "agent"
+    assert out["accepted"][0]["worker"] == "productivity-worker" and out["accepted"][0]["route"] == "skill"
+    assert out["accepted"][0]["skill"] == "portal-research" and out["accepted"][0]["section"] == "Research a person"
     assert len(decide(json.dumps(many), max_dispatches=1)["accepted"]) == 1
 
 

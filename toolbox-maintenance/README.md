@@ -21,6 +21,7 @@ Keeps an agent toolbox healthy as it grows. A weekly toolbox audit reads the who
 |---|---|---|
 | `toolbox-audit-workstream` | The audit's sections, finding shape, ranking, fix rule, and its four scripts (reference for the workers) | `pyyaml`; setting `repo` |
 | `skills-extract` | Owner-started: find repeated manual work in past sessions, map it to existing skills, draft what the owner picks | none (session folders are settings with defaults) |
+| `pressure-test-method` | Red-teams one of the owner's systems per run from a rotation ledger: steelman, goal fit, external practice, ranked verdict | Insights Portal; settings `goals_doc`, `playbooks_dir`, `owner_profile`, `rotation_ledger` under `[pressure-test-method]` |
 | `skill-harvest-workstream` | The monthly harvest loop, inbox review, DONE checklists and the review-branch script (reference for the workers) | setting `repo` under `[skill-harvest-workstream]` |
 
 Used by name from other departments: `orchestration-workstream` and `orchestrator-scaffold` (software), `task-stack-apply` in `task-stack-workstream` (productivity), which files the audit's owner tasks after the Run.

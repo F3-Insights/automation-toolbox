@@ -74,10 +74,10 @@ S/chief_of_staff_cycle.py finish CYCLE --status ok|failed
    → `invalid`: step 7
    → `would_save`: step 7
    → the command could not run: step 7
-11. [hand-off: the dispatch's worker] Dispatch the agent the dispatch names as `worker` (a doer agent such as `chief-of-staff-readonly-doer` or `chief-of-staff-meeting-prep-doer`) with `briefs/doer.md`, the dispatch's `skill`, `args` and `reason`. It runs that skill headless and returns at most twelve lines, findings first. Record the result with `chief_of_staff_cycle.py record` (status `dispatched` with its first line as the outcome, or `failed` with why).
+11. [hand-off: the dispatch's worker] Dispatch the agent the dispatch names as `worker` (a doer agent such as `chief-of-staff-readonly-doer` or `chief-of-staff-meeting-prep-doer`) with `briefs/doer.md`, the dispatch's `skill`, its `section` when one is given, `args` and `reason`. It runs that skill (or that section of it) headless and returns at most twelve lines, findings first. Record the result with `chief_of_staff_cycle.py record` (status `dispatched` with its first line as the outcome, or `failed` with why).
    → a result: step 7
    → BLOCKED or no result: step 7
-12. [hand-off: the dispatch's worker] Dispatch the agent the dispatch names as `worker` directly (a worker agent the owner's registry lists, such as `person-researcher`) with `briefs/doer.md`, the dispatch's `args` and `reason`. Record the result as in step 11.
+12. [hand-off: the dispatch's worker] Dispatch the agent the dispatch names as `worker` directly (a worker agent the owner's registry lists) with `briefs/doer.md`, the dispatch's `args` and `reason`. Record the result as in step 11.
    → a result: step 7
    → BLOCKED or no result: step 7
 13. [script] Run `chief_of_staff_improve.py check CYCLE`. In a dry run it answers `would_apply` and nothing is edited; under `improvements = "propose"` (the default), or with no `improve_repo` set, it answers `proposed` and the receipt files the change as a decision.
@@ -138,7 +138,7 @@ The last message of a run is one fenced JSON block:
 ```json
 {"status": "done", "cycle_id": "2030-03-04/061502", "date": "2030-03-04",
  "dry_run": false,
- "launches": [{"orchestrator": "task-reconcile-orchestrator", "mode": "dry-run", "status": "launched",
+ "launches": [{"orchestrator": "task-steward", "mode": "dry-run", "status": "launched",
                "why": "stall: no Run in three days while the stack scores WORK"}],
  "dispatches": [{"doer": "produce-work", "args": "task:...", "status": "prepared",
                  "outcome": "prepared: private review-ready draft"}],

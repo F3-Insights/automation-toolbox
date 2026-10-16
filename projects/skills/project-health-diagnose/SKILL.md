@@ -50,7 +50,7 @@ All in the `task-stack-workstream` change-set shape, each with `reason` (one lin
 
 A nudge is for a `WAITING_ON_PERSON` or `BLOCKED_EXTERNAL` project where a named person owes something and can be asked. The confidence gate: a check-in or status note from the owner in the last 7 days means no nudge; evidence (the mail or task change that shows the ask is open) less than 14 days old means a nudge; older evidence means a question ("Is <name> still the one to chase on <project>? The last word was on <date>") instead.
 
-Each nudge goes in `extra.nudges`, one object per nudge, with exactly the keys of the nudge block `waiting-on-tracker` and the comms skills share, so the same code gates and drafts either:
+Each nudge goes in `extra.nudges`, one object per nudge, with exactly the keys of the nudge block `waiting-on-tracker-method` and the comms skills share, so the same code gates and drafts either:
 
 <!-- NUDGES_JSON_START -->
 [{"recipient_email": "...", "recipient_name": "...", "contact_id": "... or null", "thread_ref": "portal://email/... or null", "task_ref": "portal://task/... or null", "project": "...", "ask": "one or two sentences: what to ask for", "why_now": "one sentence", "evidence_date": "YYYY-MM-DD"}]

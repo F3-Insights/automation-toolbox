@@ -8,7 +8,7 @@ Building and delivering teaching: business-led AI seminars, workshop and lab dec
 |---|---|---|
 | `learning-seminar-orchestrator` | Builds or revises one seminar, workshop or lab deck in passes: outline and questions, then build, verify and red-team | setting `training_dir`; agent `executive-red-team` |
 | `seminar-builder` | Runs one pass of the seminar method (outline, build or revise) and verifies the deck in a browser | Playwright MCP server; setting `training_dir` |
-| `learning-community-orchestrator` | Prepares a community session (agenda, invitation draft) and recaps it from the recording, fact-checked | Insights Portal; agents `email-drafter`, `meeting-analyst`, `fact-check` |
+| `learning-community-orchestrator` | Prepares a community session (agenda, invitation draft) and recaps it from the recording, fact-checked | Insights Portal; agents `productivity-worker` (`email-drafter-method`, `meeting-analyst-method`), `fact-check` |
 | `community-writer` | Writes one session's agenda, invitation, recap, record and topic proposals | setting `voice_guide` |
 
 ## Skills

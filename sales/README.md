@@ -20,7 +20,7 @@ Keeps a consultant's or small firm's pipeline moving and answers new leads fast.
 | `bd-workstream` | The BD method: system of record, pursuit row, stuck rule, lead brief and fit score, DONE checklists | `BD-RULES.md` |
 | `bd-proposal-workstream` | The proposal and contract-audit method: newest copy first, house precedent, short drafts, audit rows, DONE checklist | `BD-RULES.md` |
 
-Both skills build on `orchestration-workstream` (software). The agents also use, by name: `person-researcher`, `email-researcher`, `domain-researcher`, `email-drafter`, `comms-draft-checker`, `comms-confirm`, `task-stack-workstream` (productivity); `fact-check`, `executive-red-team` (reporting); `unslop-proposal` (marketing).
+Both skills build on `orchestration-workstream` (software). The agents also use, by name: `productivity-worker` and `productivity-reviewer` (on `portal-research`, `email-drafter-method`, `comms-draft-check`), `comms-confirm`, `task-stack-workstream` (productivity); `fact-check`, `executive-red-team` (reporting); `unslop-proposal` (marketing).
 
 ## Scripts
 

@@ -1,6 +1,6 @@
 ---
 name: nightly-sweep-workstream
-description: "The nightly sweep's method and mechanics, loaded by nightly-sweep-orchestrator and its five phase workers. For each day not yet swept it files the day's email as tasks and notes (the executive assistant's lists item by item), completes tasks the sent mail finished, picks five relationships to tend, preps the external meetings of the day just starting, and writes that day's Daily Note; workers propose, the finish step writes, each write found by its marker first. Holds the commands, the rules file, the worker briefs, the folders, ledger and markers. Use when you set up or debug the sweep, or to sweep one named date by hand. Not for the daily plan (daily-plan-method) or a task-stack truth pass (task-reconcile-orchestrator)."
+description: "The nightly sweep's method and mechanics, loaded by nightly-sweep-orchestrator and its five phase workers. For each day not yet swept it files the day's email as tasks and notes (the executive assistant's lists item by item), completes tasks the sent mail finished, picks five relationships to tend, preps the external meetings of the day just starting, and writes that day's Daily Note; workers propose, the finish step writes, each write found by its marker first. Holds the commands, the rules file, the worker briefs, the folders, ledger and markers. Use when you set up or debug the sweep, or to sweep one named date by hand. Not for the daily plan (daily-plan-method) or a task-stack truth pass (task-steward, mode reconcile)."
 ---
 
 # The nightly sweep
@@ -152,10 +152,10 @@ No worker writes to the Portal. Every phase is judgment (classifying, routing, m
 
 The sweep is the one nightly pass over a single day; some of its phases do, for that day, what a productivity orchestrator does on its own schedule. They are not called from here (an orchestrator cannot dispatch another), and nothing here changes them.
 
-- **Phase 2 and `task-reconcile-orchestrator`.** Both complete tasks on evidence. The reconcile pass works the whole stack (done, duplicate, overtaken, stale) through `task-stack-apply`; phase 2 looks only at the day's sent mail and meeting recaps and proposes DONE only, through `sweep-apply`, whose evidence and handle checks are stricter. Stale tasks phase 2 finds are reported, never cancelled; cancelling is the reconcile pass's job.
-- **Phase 1 and `task-capture-orchestrator`.** Capture reads the sources the sweep does not (said-but-not-seen lists, a quick-capture inbox); the sweep is the capture pass for email. Both find an existing task before creating one.
-- **Phase 3 and `crm-relationship-tending-orchestrator`.** Both pick cooling relationships. The weekly tending pass drafts outreach; phase 3 only names five contacts and one small step each in the Daily Note.
-- **Phase 4 and `meeting-prep-orchestrator`.** The same ranking and five-meeting cap, and the same note title, so whichever runs second finds the other's note and writes nothing. Phase 4 writes the plain prep note; the meeting-prep pass adds what the owner owes the attendees and an independent check.
+- **Phase 2 and `task-steward` (mode reconcile).** Both complete tasks on evidence. The reconcile pass works the whole stack (done, duplicate, overtaken, stale) through `task-stack-apply`; phase 2 looks only at the day's sent mail and meeting recaps and proposes DONE only, through `sweep-apply`, whose evidence and handle checks are stricter. Stale tasks phase 2 finds are reported, never cancelled; cancelling is the reconcile pass's job.
+- **Phase 1 and `task-steward` (mode capture).** Capture reads the sources the sweep does not (said-but-not-seen lists, a quick-capture inbox); the sweep is the capture pass for email. Both find an existing task before creating one.
+- **Phase 3 and `comms-steward` (mode relationships).** Both pick cooling relationships. The weekly tending pass drafts outreach; phase 3 only names five contacts and one small step each in the Daily Note.
+- **Phase 4 and `meeting-steward` (mode prep).** The same ranking and five-meeting cap, and the same note title, so whichever runs second finds the other's note and writes nothing. Phase 4 writes the plain prep note; the meeting-prep pass adds what the owner owes the attendees and an independent check.
 - **The Daily Note and the daily plan.** The Daily Note is the night's record of what the mail did; the daily plan (`daily-plan-method`) is the morning's plan and the evening's close. They overlap only in what they read; neither writes the other's note.
 
 ## DONE checklist (per date)

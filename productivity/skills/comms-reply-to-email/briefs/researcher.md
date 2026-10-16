@@ -12,7 +12,7 @@ What does this email ask, and what does the reply need to know to answer it? You
 
 ## What to do
 
-1. Run `python3 ~/.claude/skills/comms-reply-to-email/scripts/email_context_pack.py EMAIL_REF --contact CONTACT_ID --out RUN/pack.json`, then read `RUN/pack.json`. It holds the thread with full bodies, the contact card, open tasks and their projects, the owner's recent sent mail to this person, and free calendar slots when the email seems to ask to meet. `unknown` lists what it could not get and why.
+1. Run `productivity-email-context-pack EMAIL_REF --contact CONTACT_ID --out RUN/pack.json`, then read `RUN/pack.json`. It holds the thread with full bodies, the contact card, open tasks and their projects, the owner's recent sent mail to this person, and free calendar slots when the email seems to ask to meet. `unknown` lists what it could not get and why.
 2. If the email asks to meet and `calendar` is null, run it again with `--slots yes`.
 3. Spend Portal reads only on what the pack cannot settle: a note or task the email refers to, an earlier thread it quotes, a company fact it depends on. Use `get`, `dereference`, `search` and `email_bodies`. Do not page listings.
 4. For each `RUN/stale-draft-*.json`, list under Superseded draft what it proposed (a date, an offer, a question), each line marked with what in the thread since has overtaken it, or "still open" when nothing has. It was never sent, so nothing in it is Already decided.

@@ -1,11 +1,23 @@
 ---
 name: meeting-prep-workstream
-description: Reference loaded by meeting-prep-orchestrator and meeting-prep-checker, not for a user request; what the daily meeting-prep pass adds to orchestration-workstream and meeting-prep. Covers MEETING-PREP-RULES.md first, which meetings get a pack (external, ranked, capped), what a pack holds (attendees, last touch, open items, what the owner owes them, the goal of the meeting), the already-prepped check, the note title and associations, the findability check that defines done, the DONE checklist and the shapes.
+description: The daily meeting-prep pass, loaded by meeting-steward in prep mode and by the productivity-reviewer it dispatches, not for a user request; adds to orchestration-workstream and meeting-prep. Covers MEETING-PREP-RULES.md first, the Steps, which meetings get a pack (external, ranked, capped), what a pack holds (attendees, last touch, open items, what the owner owes them, the goal of the meeting), the already-prepped check, the note title and associations, the findability check that defines done, the DONE checklist, the section Check a pack and the shapes.
 ---
 
 # Preparing meetings
 
 This skill extends `orchestration-workstream`. The single-meeting method is `meeting-prep` (the `meeting_prep` call and the note). This skill adds which meetings get a pack, what a pack must hold and when it is done.
+
+## Steps
+
+1. [judgment] `whoami`; read `MEETING-PREP-RULES.md` (input `prep_rules`) and `meeting-prep`. Work out `day` (default: tomorrow on an evening Run, today on a morning Run) and its local window.
+2. [judgment] Pick: list the day's events, classify, rank and cap them, and skip those already prepped (Which meetings). For each kept event call `meeting_prep` and draft its pack from `references/pack-template.md`. Save the picks to `RUN/preparer.json`.
+   → no external meeting to prep: step 6
+3. [hand-off: productivity-worker] Complete each pack, in parallel: `waiting-on-tracker-method` scoped to the meeting's attendees with lens D and `since` 60 days ago (model sonnet); `portal-research`, section Research a person, for an attendee `meeting_prep` left thin (model haiku). Add "What the owner owes them" and "The goal of this meeting", every line with its ref.
+4. [hand-off: productivity-reviewer] Check the packs (section Check a pack), with the packs and the rules path only.
+   → FAIL: step 3 (max 1)
+5. [judgment] Write: unless dry run, search the exact title once more, then `create_note` per passed pack; `get` each note back and `search` its exact title, recording both. Dry run: write the packs to `RUN/notes/`. A pack that failed twice is reported, not written.
+6. [judgment] Write `RUN/prep.json` and `RUN/done.json` (the DONE checklist, cited) and report: per meeting its time, title, note id and whether search found it; the meetings the cap dropped, with rank and role; packs that failed the check; any note search could not find, as a defect.
+   → reported: done
 
 ## The rules file first
 
@@ -56,7 +68,11 @@ Every attendee line, every open item and every owed item carries a ref. Nothing 
  "questions": [], "notes": []}
 ```
 
-The checker returns the `orchestration-workstream` block, one `items` row per pack: `test` `prep`, `item` the event ref, `state` PASS or FAIL, `note` the claim it could not find.
+## Check a pack
+
+For `productivity-reviewer`, given the packs and the rules file's path only, never the preparer's reasoning. Read the rules first. For each pack, open the event and every ref it cites. PASS only when each attendee is on the event, each fact and open item is in its ref, each owed item is an open promise or task of the owner's toward these people, the goal line is in the record or reads "Not stated", and nothing in it belongs to another client or to the owner's private files.
+
+Return the `orchestration-workstream` block, `workstream: "meeting-prep-check"`, one `items` row per pack: `test` `prep`, `item` the event ref, `state` PASS or FAIL, `evidence` the ref read, `note` the claim to fix.
 
 ## Later tools
 

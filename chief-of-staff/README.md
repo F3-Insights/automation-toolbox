@@ -9,7 +9,7 @@ An AI chief of staff for one owner: an interactive front door that routes any re
 | `chief-of-staff` | Main-session front door: routes a request to the skill or agent that serves it, checks the result, reports | the agents and skills it routes to; skill `orchestrator-fleet` |
 | `chief-of-staff-cycle-orchestrator` | Runs one unattended cycle by the chief-of-staff-cycle skill: decide, launch, dispatch, improve, receipt | Insights Portal; the chief-of-staff-cycle scripts; settings `state_dir`, `[chief-of-staff-cycle]` |
 | `chief-of-staff-decider` | Reads the owner's documents and the Portal and returns the cycle's one decision object | Insights Portal; settings `charter`, `owner_profile`, `goals_doc`, `principles`, `doer_roster`, `event_ledger` |
-| `chief-of-staff-producer` | Writes one private, review-ready draft from a source packet | skill `task-stack-produce` (productivity) |
+| `chief-of-staff-producer` | Writes one private, review-ready draft from a source packet | skill `task-stack-produce` |
 | `chief-of-staff-readonly-doer` | Runs one read-only skill headless and reports | Insights Portal |
 | `chief-of-staff-meeting-prep-doer` | Runs meeting-prep headless and writes its one prep note | Insights Portal; skill `meeting-prep` |
 | `chief-of-staff-improver` | Turns the cycle's one improvement into an exact edit for the script to commit on a branch | setting `improve_repo` (to commit) |
@@ -20,6 +20,7 @@ An AI chief of staff for one owner: an interactive front door that routes any re
 | Skill | What it does | Needs |
 |---|---|---|
 | `chief-of-staff-cycle` | The unattended cycle: decide, launch, dispatch, one improvement, one verified receipt | Insights Portal; skills `orchestrator-fleet`, `task-stack-workstream`, `task-stack-produce`, `comms-reply-to-email` (notify_owner.py); settings below |
+| `task-stack-produce` | Produces one review-ready deliverable for a selected task from a source packet; returns prepared or blocked JSON | none |
 | `orchestrator-fleet` | The owner's orchestrator registry: list, validate, status, launch through the owner's runner | settings `[orchestrator-fleet]`; `pyyaml` |
 | `start-session` | Starts the day from today's daily plan note, or plans the morning by hand | Insights Portal; skill `daily-plan-method` |
 | `quick-capture` | Universal capture: classify, link, file; tasks through task-stack-apply | Insights Portal; skills `task-stack-workstream`, `task-stack-capture`, `portal-write-safety`; setting `state_dir` |
@@ -58,8 +59,8 @@ Scripts from other departments these call: `task_stack_check.py` and `task_stack
 
 ## Agent grants
 
-`chief-of-staff-cycle-orchestrator` may dispatch only the agents its `Agent(...)` grant names: its six workers and `person-researcher` and `domain-researcher`, the `agent`-route doers of the example registry. A doer the owner adds with route `agent`, or a new `worker`, needs its agent's name added to that grant. Its `Write` grant is not limited to a folder because the state folder is a setting; the skill confines its writes to the cycle folder. `chief-of-staff` is the interactive front door and keeps every tool.
+`chief-of-staff-cycle-orchestrator` may dispatch only the agents its `Agent(...)` grant names: its six workers and `productivity-worker`, the worker of the example registry's two brief doers (`portal-research`). A doer the owner adds with route `agent`, or a new `worker`, needs its agent's name added to that grant. Its `Write` grant is not limited to a folder because the state folder is a setting; the skill confines its writes to the cycle folder. `chief-of-staff` is the interactive front door and keeps every tool.
 
 ## Left out
 
-- The registrar and red-team doers of the source repository. Each ran a skill about one owner's own Portal and private records (the red team also wrote into their private principles and searched the web from that context). The registrar's job is the `crm-data-hygiene-orchestrator`, which the cycle launches through the fleet; the red team has no general equivalent here.
+- The registrar and red-team doers of the source repository. Each ran a skill about one owner's own Portal and private records (the red team also wrote into their private principles and searched the web from that context). The registrar's job is `crm-hygiene`, which the cycle launches through the fleet; the red team has no general equivalent here.

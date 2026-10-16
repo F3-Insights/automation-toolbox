@@ -5,7 +5,7 @@
 Where things live:
 
 - **The tool** is a separate time-study program, standard-library Python run as `python -m timestudy`. It writes runtime state (every window, table and dashboard) into its own home folder, so it does not belong in this repository. It builds, validates and draws; it holds no model calls.
-- **The procedure** is this skill, with its orchestrator agent `time-study-orchestrator`. It runs unattended under a scheduler or in a plain session.
+- **The procedure** is this skill, with its main agent `time-study`. It runs unattended under a scheduler or in a plain session.
 - **The owner's specifics** (domains, topics, the mapping from people, repositories, folders, email domains, Teams tenants, websites and recurring meetings to domains, and the owner's standing rules) live in the tool's private home folder, `private/` by default: `mapping.md` and the `*.csv` config. Never here.
 
 ## The question it answers
@@ -78,7 +78,7 @@ The portable unit is this skill with its commands and worker briefs, runnable in
 
 | Piece | Kind | Job |
 |---|---|---|
-| `time-study-orchestrator` | Agent, main session (`claude --agent time-study-orchestrator`, or a scheduled Automation) | Follows this skill for a period, window by window, dispatches workers, checks what comes back against its source, batches the owner's questions into the report, applies answers when they come, writes the report and the said-but-not-seen file. Reads nothing in bulk. |
+| `time-study` | Agent, main session (`claude --agent time-study`, or a scheduled Automation) | Follows this skill for a period, window by window, dispatches workers, checks what comes back against its source, batches the owner's questions into the report, applies answers when they come, writes the report and the said-but-not-seen file. Reads nothing in bulk. |
 | `report-time-study` | Skill | The procedure as numbered `## Steps`; unattended, so questions are listed, never asked live, and the owner's answers are never guessed. |
 | `time-study-check` | Command | The six tests of done for a period or a window, from the home's files; `--precheck` for a scheduler. |
 | `time-study-collect` | Command | Plans the Run's windows and runs the tool's `collect` for each one not yet collected; a scheduler's prepare step. |
@@ -93,7 +93,7 @@ The portable unit is this skill with its commands and worker briefs, runnable in
 | topic classifier | Brief, `briefs/topic-classifier.md`, Sonnet, one per day | A topic from the owner's topic list for every slot and domain share. |
 | checker | Brief, `briefs/checker.md`, Sonnet, independent | Re-derives a sample of slots from the raw evidence without seeing the assembler's reasoning, and flags every attribution whose evidence does not support its tier or domain. |
 
-The workers' instructions are briefs inside the skill, each run by a registered agent that pins its model and tools. A worker is a registered agent when it meets any of four tests: bulk reading, fan-out, independence from the author's reasoning, or a tool boundary the harness enforces. `meeting-analyst` and `transcript-reader` already read transcripts, but for other contracts (proposed Portal notes, a claim inventory); the segmenter's contract is the meeting file `timestudy build` parses.
+The workers' instructions are briefs inside the skill, each run by the department's worker (or, for the checker, its reviewer) with the model the dispatch names. A slice goes to a worker when it meets any of four tests: bulk reading, fan-out, independence from the author's reasoning, or a tool boundary the harness enforces. `meeting-analyst` and `transcript-reader` already read transcripts, but for other contracts (proposed Portal notes, a claim inventory); the segmenter's contract is the meeting file `timestudy build` parses.
 
 Each worker gets its own input file path, and each writes its scratch files under its own name. Workers fanned out over a shared scratch folder can read one another's transcripts and overwrite one another's files. The segmenter checks that the recording id and start time it fetched match its input before reading, and stops if they differ. The orchestrator checks every segment file against its recording before assembling.
 
@@ -122,7 +122,7 @@ A signal the map cannot place goes to the assembler as "unmapped", not given a d
 
 ## Running it on a schedule
 
-- A scheduled Automation launches `time-study-orchestrator` with the home as an input. Its form takes a period, one window, the owner's answers and instructions; a monthly schedule (early in the month, for the month before) is gated by `python3 ~/.claude/skills/report-time-study/scripts/time_study_check.py --precheck`.
+- A scheduled Automation launches `time-study` with the home as an input. Its form takes a period, one window, the owner's answers and instructions; a monthly schedule (early in the month, for the month before) is gated by `productivity-time-study-check --precheck`.
 - Its prepare step runs `time-study-collect` (a dry run only plans); its finish step runs `time-study-check`.
 - One Run per home at a time. Fan-out, days per window and days per Run are limits the skill states, so a plain session keeps them without the runner.
 - The questions step does not wait: the list goes in the report and the Run's report, and the owner's answers come back through the next launch or a file in the window.

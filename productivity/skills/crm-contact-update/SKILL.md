@@ -1,6 +1,6 @@
 ---
 name: crm-contact-update
-description: "Updates one Insights Portal contact from a one-line instruction (priority, title, relationship type, phone, or free-text context), shows the change before writing it, and always logs an activity so the change is traceable. Use for \"update Dana: promoted to VP Sales\" or \"make Sam a VIP\". Not for logging a call (comms-log-call) or a meeting (meeting-log), or for a CRM-wide cleanup (crm-data-hygiene-orchestrator)."
+description: "Updates one Insights Portal contact from a one-line instruction (priority, title, relationship type, phone, or free-text context), shows the change before writing it, and always logs an activity so the change is traceable. Use for \"update Dana: promoted to VP Sales\" or \"make Sam a VIP\". Not for logging a call (comms-log-call) or a meeting (meeting-log), or for a CRM-wide cleanup (crm-hygiene)."
 argument-hint: '[name] - [what changed]'
 allowed-tools: mcp__insights-portal__search, mcp__insights-portal__get, mcp__insights-portal__update_contact, mcp__insights-portal__add_contact_fact, mcp__insights-portal__create_activity, mcp__insights-portal__create_note, mcp__insights-portal__sync_health, Read
 ---

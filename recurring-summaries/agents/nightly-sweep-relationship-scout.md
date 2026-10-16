@@ -1,6 +1,6 @@
 ---
 name: nightly-sweep-relationship-scout
-description: Phase 3 of the nightly sweep. Finds stale relationships from priority_review and the contact listing, picks two VIP or High contacts and three forgotten ones at random, gives each one specific low-effort recommendation, and flags unanswered outreach, as one JSON block. It reports only and writes nothing. Dispatched by nightly-sweep-orchestrator with its brief, briefs/relationship-health.md. Not for drafting outreach (crm-relationship-tending-orchestrator).
+description: Phase 3 of the nightly sweep. Finds stale relationships from priority_review and the contact listing, picks two VIP or High contacts and three forgotten ones at random, gives each one specific low-effort recommendation, and flags unanswered outreach, as one JSON block. It reports only and writes nothing. Dispatched by nightly-sweep-orchestrator with its brief, briefs/relationship-health.md. Not for drafting outreach (comms-steward, mode relationships).
 model: opus
 color: cyan
 maxTurns: 35

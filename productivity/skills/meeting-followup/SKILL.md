@@ -1,6 +1,6 @@
 ---
 name: meeting-followup
-description: "Turns one meeting's notes or transcript, in any format (bullets, prose, a voice memo, pasted chat, a raw transcript), into everything that should follow it in the Insights Portal: an activity, a structured meeting note, matched or new contacts and companies, tasks for the owner's action items, approved contact updates and an optional follow-up draft in the owner's voice, behind one preview and one confirmation. Use after a meeting with substantive notes, for \"file my notes from the call with X and draft the follow-up\", and for messy notes from a meeting that is not on the calendar or has people not yet in the Portal. Not for a quick record (meeting-log) or a polished shareable summary (meeting-summary)."
+description: "Turns one meeting's notes or transcript, in any format (bullets, prose, a voice memo, pasted chat, a raw transcript), into everything that should follow it in the Insights Portal: an activity, a structured meeting note, matched or new contacts and companies, tasks for the owner's action items, approved contact updates and an optional follow-up draft in the owner's voice, behind one preview and one confirmation. Use after a meeting with substantive notes, for \"file my notes from the call with X and draft the follow-up\", including a meeting not on the calendar. Not for a quick record (meeting-log) or a polished shareable summary (meeting-summary)."
 argument-hint: '[meeting topic or attendee name, or paste notes/transcript, or describe the meeting]'
 allowed-tools: mcp__insights-portal__*, AskUserQuestion, Task, Read, Bash
 model: opus
@@ -8,7 +8,7 @@ model: opus
 
 # Meeting Follow-up
 
-Richer post-meeting capture than `/meeting-log`. Takes notes or a transcript in whatever shape the owner has them and produces the full downstream fan-out: activity record, structured meeting note, contacts and companies matched or created, tasks for action items, contact updates when warranted, and an optional voice-matched follow-up draft via the `email-drafter` subagent. It works with or without a calendar event: a meeting that is not on the calendar, or that brought in people and companies not yet in the Portal, takes the off-calendar path in Step 1 and the matching in Step 3.
+Richer post-meeting capture than `/meeting-log`. Takes notes or a transcript in whatever shape the owner has them and produces the full downstream fan-out: activity record, structured meeting note, contacts and companies matched or created, tasks for action items, contact updates when warranted, and an optional voice-matched follow-up draft by `productivity-worker` on `email-drafter-method`. It works with or without a calendar event: a meeting that is not on the calendar, or that brought in people and companies not yet in the Portal, takes the off-calendar path in Step 1 and the matching in Step 3.
 
 **Relationship to `/meeting-log`:** use `/meeting-log` when you just need to log that a meeting happened. Use `/meeting-followup` when you have substantive notes and follow-ups to issue in one pass.
 
@@ -151,13 +151,14 @@ On confirmation, execute in this order:
    ```
 3. **Tasks**: one `create_task` per action item where `owner=me`. Link `project_id` if a project is associated. Set `priority` and `due_date` from parse results.
 4. **Contact updates**: if user approved, `update_contact` for each; always pair with a `create_note(note_type="episodic")` explaining why.
-5. **Follow-up draft**: if user approved, spawn `email-drafter`:
+5. **Follow-up draft**: if user approved, dispatch `productivity-worker` with `model: opus` on `email-drafter-method`:
    ```
    Task(
-       subagent_type="email-drafter",
+       subagent_type="productivity-worker",
+       model="opus",
        description="Meeting follow-up draft",
        prompt="""
-   Draft a follow-up email in the owner's voice for the meeting below.
+   Load `email-drafter-method` and follow it: draft a follow-up email in the owner's voice for the meeting below.
 
    Recipient: <primary external attendee, name + email>
    Intent: Thank them for the meeting; recap the key decisions; confirm commitments the owner made; propose/confirm next step.
@@ -165,7 +166,7 @@ On confirmation, execute in this order:
    Source material (pasted for reference, do not quote verbatim):
    <meeting summary + the owner's action items>
 
-   Follow your standard process: read the owner's voice guide (setting `voice_guide`), sample recent sent
+   Follow the method: read the owner's voice guide (setting `voice_guide`), sample recent sent
    emails to this recipient, draft, voice-check, create via draft_create (pass
    related_email_id if this follows up a specific email), return summary.
    """
@@ -192,7 +193,7 @@ End with a single summary:
 - **One confirmation, not many**: never ask for per-item confirmation. Show the whole plan, get one "yes", execute.
 - **Deterministic parsing first**: when an action-item parser is installed, run it for action items and date normalization before layering model judgment.
 - **No silent contact writes**: contact changes always appear in the preview and require explicit approval.
-- **Delegate voice work**: the `email-drafter` subagent handles the draft; this skill never writes email body content inline.
+- **Delegate voice work**: `productivity-worker` on `email-drafter-method` handles the draft; this skill never writes email body content inline.
 - **Format is never the owner's problem**: bullets, prose, voice memos, chat logs and transcripts are all accepted as they come.
 - **No silent creates**: new contacts and companies appear in the preview like contact updates.
 - **No duplicate notes**: an existing note for the same meeting is offered for appending before a new one is made.
@@ -204,14 +205,14 @@ End with a single summary:
 - `meeting_prep`: meeting resolution and attendee context in a single call
 - `search` and `get`: attendee and company matching when there is no event or a name is new
 - An action-item parser and date normalizer, when installed: deterministic extraction
-- The `email-drafter` agent: voice-matched draft generation
+- `email-drafter-method`, run by `productivity-worker`: voice-matched draft generation
 - The Portal's note structure conventions
 
 ## Key Rules
 
 - **Never impersonate**: drafts only, reviewed in the Portal.
 - **One pass, one preview, one confirmation**: this is a fan-out skill, not a conversation.
-- **Honor the voice guide** via the `email-drafter` agent; do not inline draft any email body in this skill.
+- **Honor the voice guide** via `email-drafter-method`; do not inline draft any email body in this skill.
 - **Portal write safety**: before any create/update/draft call in Step 8, load the portal-write-safety skill and follow it (propose by default, resolve entities by UUID never by name, `CANCELLED` with evidence never `DONE`, `sync_health` first).
 
 ## Relationship to quick capture

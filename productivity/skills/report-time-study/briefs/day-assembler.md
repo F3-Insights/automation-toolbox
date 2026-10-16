@@ -79,7 +79,7 @@ If a tool call is blocked by a hook or a permission rule, stop and return `STATU
 slot_start,slot_end,primary_activity,primary_domain,tier,concurrent,evidence,allocation,tags
 ```
 
-Times `HH:MM`, the last slot ending `24:00`. `allocation` is empty or `Domain A:0.8;Domain B:0.2` with weights summing to 1. `evidence` names the file and the row or time it rests on. Before you return, run `python3 ~/.claude/skills/report-time-study/scripts/time_study_day_lint.py <window>/days/<date> --domains <domains.csv>`. It checks that there are 144 contiguous rows, every tier is one of the five, every domain is in `domains.csv`, every allocation sums to 1 and the primary domain is the largest share, and it prints the day's hours by domain. Fix what it names and run it again; its first line, `OK` or `FAIL`, is your `self_check`.
+Times `HH:MM`, the last slot ending `24:00`. `allocation` is empty or `Domain A:0.8;Domain B:0.2` with weights summing to 1. `evidence` names the file and the row or time it rests on. Before you return, run `productivity-time-study-day-lint <window>/days/<date> --domains <domains.csv>`. It checks that there are 144 contiguous rows, every tier is one of the five, every domain is in `domains.csv`, every allocation sums to 1 and the primary domain is the largest share, and it prints the day's hours by domain. Fix what it names and run it again; its first line, `OK` or `FAIL`, is your `self_check`.
 
 `<window>/days/<date>/day.md`, with these sections in this order, each present even when empty:
 

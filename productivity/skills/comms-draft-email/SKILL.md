@@ -2,13 +2,13 @@
 name: comms-draft-email
 description: "Draft a new email in the owner's voice, one that answers no email received: an introduction, a first outreach, a note after a call. Pulls prior sent emails, applies the voice guide, creates the draft and delivers it to Outlook Drafts; never sends. Use for \"write an email to X about Y\". Not for replying to someone's email (comms-reply-to-email), a batch of inbox replies (comms-inbox-replies) or nudging people who owe the owner something (comms-follow-ups)."
 argument-hint: '[recipient name] -- [what you want to say]'
-allowed-tools: Task, Bash, mcp__insights-portal__search, mcp__insights-portal__whoami,
+allowed-tools: Agent, Bash(productivity-outbound-check:*), mcp__insights-portal__search, mcp__insights-portal__whoami,
   mcp__insights-portal__draft_push, mcp__insights-portal__draft_compose_url, Read
 ---
 
 # Draft Email
 
-Produce an email draft that actually sounds like the owner by delegating to the `email-drafter` subagent. The subagent reads the voice guide, samples prior sent emails to the recipient, drafts, self-checks against the voice rules, and creates the draft in the Portal. This skill then delivers it into the owner's real Outlook Drafts folder (`draft_push`), where they review it and send it themselves. Nothing here can send.
+Produce an email draft that actually sounds like the owner by delegating to one `productivity-worker` on `email-drafter-method`. The worker reads the voice guide, samples prior sent emails to the recipient, drafts, self-checks against the voice rules, and creates the draft in the Portal. This skill then delivers it into the owner's real Outlook Drafts folder (`draft_push`), where they review it and send it themselves. Nothing here can send.
 
 **Replying to an email someone sent?** Follow `comms-reply-to-email` instead. It supersedes this skill for replies: it pins the contact and the exact email in code, has the context researched into a sourced brief, asks only the decisions that are the owner's, has the draft checked against the brief, and delivers only a draft that passed. This skill stays for a new message that answers no email: an introduction, a first outreach, a note after a call.
 
@@ -36,14 +36,14 @@ Only ask questions if a critical detail is missing:
 - No intent at all → ask
 - Intent is "reply to <some email>" → stop here and follow `comms-reply-to-email` with the recipient and the intent
 
-Do NOT ask the user about tone, register, opening, or closing; those are the subagent's job to derive from the voice guide + prior emails.
+Do NOT ask the user about tone, register, opening, or closing; those are the worker's job to derive from the voice guide + prior emails.
 
 ### Step 3: Check before drafting
 
 Run the gate before you dispatch anything:
 
 ```bash
-python3 ~/.claude/skills/comms-draft-check/scripts/outbound_check.py --to <recipient email> --thread <source email _ref, if this is a reply> --json
+productivity-outbound-check --to <recipient email> --thread <source email _ref, if this is a reply> --json
 ```
 
 Without a thread, pass `--subject` instead so the check has something to match on.
@@ -58,32 +58,31 @@ A `RECENT_CONTACT` hold may be overridden; they asked for this message, and the 
 
 In a run with no one present, a HOLD means skip and list it with the rule and the reason. Never override on your own authority.
 
-### Step 4: Delegate to email-drafter
+### Step 4: Delegate to the drafter
 
-Spawn the `email-drafter` subagent with a self-contained prompt:
+Dispatch one `productivity-worker` (model opus) with a self-contained prompt:
 
 ```
-Task(
-    subagent_type="email-drafter",
+Agent(
+    subagent_type="productivity-worker",
+    model="opus",
     description="Draft voice-matched email",
     prompt="""
-Draft an email in the owner's voice.
+Follow the skill email-drafter-method: draft an email in the owner's voice.
 
 Recipient: <parsed recipient>
 Intent: <parsed intent>
 
 <Include any extra context the user provided: source email to reply to, subject hint, deadline, related meeting, etc.>
 
-Follow your standard process: read the owner's voice guide (setting voice_guide), sample recent sent emails
-to this recipient and generally, draft, run the voice-check pass, create the draft
-via draft_create (pass related_email_id if this is a reply), and return the terse summary.
+Work through its Procedure (pass related_email_id if this is a reply) and return its terse summary.
 """
 )
 ```
 
-### Step 5: Relay the Subagent's Summary
+### Step 5: Relay the Worker's Summary
 
-The subagent returns a ≤500 char summary with draft_id, recipient, subject, whether it's a reply, and voice notes. Relay it verbatim to the user.
+The worker returns a ≤500 char summary with draft_id, recipient, subject, whether it's a reply, and voice notes. Relay it verbatim to the user.
 
 Do NOT paste the draft body into the conversation. It lives in the Portal.
 
@@ -133,7 +132,7 @@ Gmail: <url>
 - **Never send**: `draft_create` stages, `draft_push` delivers to the Drafts folder; the Portal never holds a send scope, and the owner always sends from Outlook themselves.
 - **Delivery follows the request**. Asking for this email is asking for it to be where they write email. With no one present, nothing is delivered.
 - **Every path that ends in a draft goes through `outbound-check` first**. Step 3 is not optional and there is no thread obvious enough to skip it for. A non-zero exit means no draft.
-- **Trust the subagent's voice check**: don't re-judge the output in this skill.
+- **Trust the worker's voice check**: don't re-judge the output in this skill.
 - **Portal write safety**: before any create/update/draft call, load the portal-write-safety skill and follow it (propose by default, resolve entities by UUID never by name, `CANCELLED` with evidence never `DONE`, `sync_health` first).
 
 ## Example
@@ -142,8 +141,8 @@ Gmail: <url>
 
 **You:**
 1. Parse: recipient="Sarah Chen", intent="follow up on today's call, confirm Q3 rollout, propose next Wednesday 10am for check-in"
-2. Run `python3 ~/.claude/skills/comms-draft-check/scripts/outbound_check.py --to sarah@example.com --subject "follow up: today's call" --json`; it exits 0 ALLOW.
-3. Spawn `email-drafter` with that prompt.
+2. Run `productivity-outbound-check --to sarah@example.com --subject "follow up: today's call" --json`; it exits 0 ALLOW.
+3. Dispatch `productivity-worker` with that prompt.
 4. Relay:
    ```
    Draft created: d_456 (reply to Sarah's Tue email)

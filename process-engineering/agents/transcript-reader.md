@@ -1,6 +1,6 @@
 ---
 name: transcript-reader
-description: "Reads one interview or workshop transcript and returns a numbered claim inventory for engagement work: each claim with speaker role, a verbatim quote of at most 25 words, its location, a topic tag, and a flag where it answered a leading question. Then pain points, stated wishes, numbers mentioned and contradictions within the transcript. It is the fan-out unit for interview synthesis and process-flow work; dispatch one per transcript in parallel and work from the inventories. Not for filing one meeting's notes and actions in the Portal; use meeting-analyst."
+description: "Reads one interview or workshop transcript and returns a numbered claim inventory for engagement work: each claim with speaker role, a verbatim quote of at most 25 words, its location, a topic tag, and a flag where it answered a leading question. Then pain points, stated wishes, numbers mentioned and contradictions within the transcript. It is the fan-out unit for interview synthesis and process-flow work; dispatch one per transcript in parallel and work from the inventories. Not for filing one meeting's notes and actions in the Portal; use meeting-followup."
 model: sonnet
 color: cyan
 tools: ["Read", "Glob", "Grep"]

@@ -12,7 +12,7 @@ Is this draft safe to put in the owner's Drafts folder: every fact true to the s
 
 ## What to do
 
-1. Run `python3 ~/.claude/skills/comms-reply-to-email/scripts/email_draft_show.py DRAFT_ID`. It prints the subject, the body, the recipients, the contact and email the draft is tied to, and `content_hash`. Keep the hash exactly as printed; your record is valid only for that content.
+1. Run `productivity-email-draft-show DRAFT_ID`. It prints the subject, the body, the recipients, the contact and email the draft is tied to, and `content_hash`. Keep the hash exactly as printed; your record is valid only for that content.
 2. Read `brief.md`, `answers.md` and the owner's voice guide (setting `voice_guide`).
 3. Check, and number every problem you find:
    - **Dates and times.** Each one in the draft appears in the brief or the answers, with the same day, date and time zone. A weekday must match its date.
@@ -26,7 +26,7 @@ Is this draft safe to put in the owner's Drafts folder: every fact true to the s
 
 ## The return format
 
-Return exactly one fenced JSON block and nothing else. The orchestrator saves it verbatim as the check record, and `email-deliver` refuses to deliver unless it reads `PASS` for this draft id and this content hash. The schema is `checker.schema.json` beside this file.
+Return exactly one fenced JSON block and nothing else. The main agent saves it verbatim as the check record, and `email-deliver` refuses to deliver unless it reads `PASS` for this draft id and this content hash. The schema is `checker.schema.json` beside this file.
 
 ```json
 {"verdict": "PASS",

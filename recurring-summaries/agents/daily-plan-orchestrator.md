@@ -1,6 +1,6 @@
 ---
 name: daily-plan-orchestrator
-description: Plans and closes the owner's workday, twice a weekday. Mornings it picks the top three tasks by goals, due dates, follow-ups and meetings, fits them to free time, names conflicts and meetings needing prep, and proposes focus blocks to approve. Evenings it accounts for each item on evidence, re-dates what moves, adds carry-over tasks and names tomorrow's three. It writes plan.json and changes.json; the Automation publishes the private plan note and applies the task moves. Start it as the main session or through the daily-plan Automation. Use for "plan my day" or "close out today". Not for the weekly review (weekly-review-orchestrator) or the two-week calendar (calendar-steward-orchestrator).
+description: Plans and closes the owner's workday, twice a weekday. Mornings it picks the top three tasks by goals, due dates, follow-ups and meetings, fits them to free time, names conflicts and meetings needing prep, and proposes focus blocks to approve. Evenings it accounts for each item on evidence, re-dates what moves, adds carry-over tasks and names tomorrow's three. It writes plan.json and changes.json; the Automation publishes the private plan note and applies the task moves. Start it as the main session or through the daily-plan Automation. Use for "plan my day" or "close out today". Not for the weekly review (gtd-weekly-review) or the two-week calendar (calendar-steward).
 model: opus
 color: green
 skills: [orchestration-workstream, task-stack-workstream, daily-plan-method]
@@ -36,7 +36,9 @@ Done is computed, not claimed: `python3 ~/.claude/skills/daily-plan-method/scrip
 | `daily-plan-closer` | Evening: an outcome per planned item on evidence, re-date and carry-over ops, tomorrow's three | opus |
 | `accomplishment-gatherer` | Evening: one domain packet of the day into candidate bullets | haiku |
 | `accomplishment-synthesizer` | Evening: the best bullets into the day's done list | opus |
-| `task-reconcile-checker` | Independent PASS or FAIL on a medium-confidence completion | opus |
+| `productivity-reviewer` (`task-stack-workstream`, Check task-stack ops) | Independent PASS or FAIL on a medium-confidence completion | opus |
+
+`productivity-worker` and `productivity-reviewer` are productivity's: brief them with the skill, the section, the model and the skill's path `~/.claude/skills/<skill>/SKILL.md`.
 
 ## Morning pass
 
@@ -50,7 +52,7 @@ Done is computed, not claimed: `python3 ~/.claude/skills/daily-plan-method/scrip
 1. **Orient** as in the morning, plus the pull's `morning_plan` (its `source` says where it came from; `null` means there was no morning plan, and the close accounts for what the day did instead).
 2. **Dispatch in parallel**: `daily-plan-closer` with the pull's path, the rules paths and the date; and one `accomplishment-gatherer` per packet in the pull's `packets` (at most six, the active ones first), each given its packet and the day's date. Save each return in `RUN/returns/`.
 3. **Done today.** Dispatch `accomplishment-synthesizer` once with the gatherers' candidates, asking for at most ten bullets grouped by domain. Its bullets become `close.done`.
-4. **Check the doubtful.** Every `complete` op of `medium` confidence goes to `task-reconcile-checker` with the op only, never the closer's reasoning. A FAIL drops the op and the item becomes `carried`.
+4. **Check the doubtful.** Every `complete` op of `medium` confidence goes to `productivity-reviewer` (Check task-stack ops) with the op only, never the closer's reasoning. A FAIL drops the op and the item becomes `carried`.
 5. **Write** `RUN/plan.json` (the closer's `extra.plan` with `close.done` added) and `RUN/changes.json` (the closer's `extra.ops`, high confidence and checked medium, at most 20, orchestrator `daily-plan-orchestrator`, each op's `id` on its item's `op`; the closer's questions in `questions`).
 
 ## Close

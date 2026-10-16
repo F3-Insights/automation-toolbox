@@ -36,7 +36,7 @@ Runs client engagements and the owner's project portfolio from start to finish. 
 | `project-landscape` | Interactive weekly portfolio review against goals, email and engagements; holds the project playbook template | Insights Portal, commands `project-scoreboard`, `calendar-time`, `goal-alignment-check` |
 | `tech-portfolio-workstream` | The portfolio method: register, status row, slip detection, steering pack, DONE checklist | `PORTFOLIO-RULES.md` |
 
-The workstream skills build on `orchestration-workstream` (software). The agents and skills also use, by name: `task-stack-workstream`, `comms-confirm`, `portal-write-safety`, `goal-auditor`, `goal-alignment-orchestrator`, `task-clarify-worker`, `task-reconcile-checker`, `waiting-on-tracker`, `comms-follow-ups`, `comms-draft-email` (productivity); `fact-check`, `executive-red-team`, `numbers-reviewer`, `client-update-workstream`, `comms-client-status-update` (reporting); `interview-synthesis` (process-engineering); `unslop-email`, `unslop-editorial`, `unslop-deliverable`, `unslop-proposal`, `marketing-case-study-orchestrator` (marketing); `writing-seminar-builder` (learning). The baseline and runbook also suggest `software-grill-with-docs` (software) for grilling a plan.
+The workstream skills build on `orchestration-workstream` (software). The agents and skills also use, by name: `task-stack-workstream`, `comms-confirm`, `portal-write-safety`, `goal-auditor`, `goal-alignment-orchestrator`, `task-stack-clarify`, `waiting-on-tracker-method`, the agents `productivity-worker` and `productivity-reviewer`, `comms-follow-ups`, `comms-draft-email` (productivity); `fact-check`, `executive-red-team`, `numbers-reviewer`, `client-update-workstream`, `comms-client-status-update` (reporting); `interview-synthesis` (process-engineering); `unslop-email`, `unslop-editorial`, `unslop-deliverable`, `unslop-proposal`, `marketing-case-study-orchestrator` (marketing); `writing-seminar-builder` (learning). The baseline and runbook also suggest `software-grill-with-docs` (software) for grilling a plan.
 
 ## Scripts
 
@@ -60,7 +60,7 @@ Each script runs by path, `python3 ~/.claude/skills/<skill>/scripts/<script>.py`
 **`review-register`**
 - `register.py`: reads and keeps a review register (`summary`, `list`, `render`, `add`, `close`).
 
-The other commands named above live in productivity (`task-stack-check`, `task-stack-apply`, `task-stack-report` in `task-stack-workstream`; `calendar-time` in `calendar-steward-method`; `goal-alignment-check` in `goal-alignment-workstream`; `outbound-check` in `comms-draft-check`) and process-engineering (`srt-transcript-collapse`, `transcript-hygiene` in `transcript-tools`).
+The other commands named above live in productivity (`task-stack-check`, `task-stack-apply`, `task-stack-report` in `task-stack-workstream`; `calendar-time` in `calendar-time`; `goal-alignment-check` in `goal-alignment-workstream`; `outbound-check` in `comms-draft-check`) and process-engineering (`srt-transcript-collapse`, `transcript-hygiene` in `transcript-tools`).
 
 Planned and not yet built: `engagement-pack`, `sow-extract`, `closeout-invoice-tie`, `harvest-name-check`, `engagement-publish`, `portfolio-pack`, `portfolio-check`.
 

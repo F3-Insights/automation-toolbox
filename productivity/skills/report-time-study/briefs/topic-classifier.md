@@ -42,7 +42,7 @@ If a tool call is blocked by a hook or a permission rule, stop and return `STATU
 slot_start,domain,topic,confidence,basis
 ```
 
-Before you return, run `python3 ~/.claude/skills/report-time-study/scripts/time_study_day_lint.py <window>/days/<date> --domains <domains.csv> --topics <topics.csv>`. It checks that every slot-domain row of `slots.csv` appears exactly once, no row names a slot or domain the day lacks, and every topic id is in `topics.csv`, and it prints the hours per domain per topic (a row is its share divided by 6 hours), which you copy into your return, never computed by eye. The orchestrator gives you the `domains.csv` path with the others. Fix what it names and run it again; its first line, `OK` or `FAIL`, is your `self_check`.
+Before you return, run `productivity-time-study-day-lint <window>/days/<date> --domains <domains.csv> --topics <topics.csv>`. It checks that every slot-domain row of `slots.csv` appears exactly once, no row names a slot or domain the day lacks, and every topic id is in `topics.csv`, and it prints the hours per domain per topic (a row is its share divided by 6 hours), which you copy into your return, never computed by eye. The orchestrator gives you the `domains.csv` path with the others. Fix what it names and run it again; its first line, `OK` or `FAIL`, is your `self_check`.
 
 ## The return format
 
