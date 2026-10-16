@@ -491,6 +491,27 @@ def test_a_delegated_create_is_made_waiting_on_the_delegate(tmp_path):
     assert dry["outcome"] == "would_apply" and dry["change"]["status"] == "WAITING"
 
 
+class ClearsWaitOnCreate(FakePortal):
+    """A Portal that drops the waiting fields of a task created outside WAITING."""
+
+    def call(self, tool, args=None):
+        out = super().call(tool, args)
+        if tool == "create_task":
+            self.tasks[out["id"]].update(waiting_on_contact_id=None, waiting_reason=None)
+        return out
+
+
+def test_a_delegated_create_sets_who_it_waits_on_with_the_status(tmp_path):
+    portal = ClearsWaitOnCreate([])
+    op = {"id": "n1", "op": "create", "title": "Collect the lease schedule from Sam", "domain": D_SALES,
+          "owner": OTHER, "waiting_on": OTHER, "waiting_reason": "the lease schedule", "due_date": "2030-03-07",
+          "source": "asks:email:abc", "reason": "Asked Sam on 3/4"}
+    r = by_id(run(portal, changes(op), tmp_path))["n1"]
+    made = portal.tasks[r["task"].rsplit("/", 1)[1]]
+    assert (r["outcome"], made["status"], made["waiting_on_contact_id"], made["waiting_reason"]) == (
+        "applied", "WAITING", OTHER, "the lease schedule")
+
+
 def test_a_delivered_ask_is_created_and_completed_together(tmp_path):
     portal = FakePortal([])
     new = {"id": "n1", "op": "create", "title": "Send Sam the rate card", "domain": D_SALES,

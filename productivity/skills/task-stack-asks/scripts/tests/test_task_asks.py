@@ -111,3 +111,13 @@ def test_the_domain_file_needs_its_yaml_block(tmp_path):
     bad.write_text("# no block\n")
     with pytest.raises(c.Bad):
         c.load_scope(bad)
+
+
+def test_received_scope_reads_cc_and_ignore_is_case_insensitive(domain_file):
+    scope, owner = c.load_scope(domain_file), uid(900)
+    row = {"id": uid(50), "received_at": NOW.isoformat(), "from_address": "Kim@Fabrikam.test",
+           "to_addresses": ["pat@fabrikam.test"], "cc_addresses": ["Dana@Northwind.test"]}
+    item, _ = q.email_item(row, "received", owner, ["dana@northwind.test"], scope, {}, {})
+    assert item and item["counterparties"]["addresses"] == ["kim@fabrikam.test", "pat@fabrikam.test"]
+    loud = dict(row, from_address="ALERTS@NOTIFY.Northwind.test")
+    assert q.email_item(loud, "received", owner, ["dana@northwind.test"], scope, {}, {}) == (None, "ignored")

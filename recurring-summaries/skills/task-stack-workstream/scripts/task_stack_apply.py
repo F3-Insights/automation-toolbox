@@ -932,7 +932,9 @@ class Applier:
         if marker not in str(task.get("description") or ""):
             raise RuntimeError("the new task read back without its marker")
         if waiting_on and norm("status", task.get("status")) != "WAITING":
-            task = self.write_back("task", task, {}, "WAITING")  # create_task takes no status
+            # create_task takes no status; set WAITING with who and why, so the read-back checks both
+            wait = {f: args[f] for f in ("waiting_on_contact_id", "waiting_reason") if args.get(f)}
+            task = self.write_back("task", task, wait, "WAITING")
         self.logged(op, by, "create", {"status": None}, task, marker, {"status": task.get("status")})
         return {"outcome": "applied", "task": tref(str(new_id).lower())}
 
