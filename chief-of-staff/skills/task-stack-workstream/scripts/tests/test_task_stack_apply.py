@@ -474,3 +474,35 @@ def test_markers_are_pinned_so_earlier_writes_are_found_again():
 
 
 PINNED_COMPLETE = "tsk1ccc57820952"   # computed by the earlier writer on the same op
+
+
+def test_a_delegated_create_is_made_waiting_on_the_delegate(tmp_path):
+    portal = FakePortal([])
+    op = {"id": "n1", "op": "create", "title": "Collect the lease schedule from Sam", "domain": D_SALES,
+          "owner": OTHER, "waiting_on": OTHER, "waiting_reason": "the lease schedule", "due_date": "2030-03-07",
+          "evidence": f"portal://email/{EMAIL}", "source": "asks:email:abc", "reason": "Asked Sam on 3/4"}
+    r = by_id(run(portal, changes(op), tmp_path))["n1"]
+    assert r["outcome"] == "applied"
+    made = portal.tasks[r["task"].rsplit("/", 1)[1]]
+    assert (made["status"], made["owner_contact_id"], made["waiting_on_contact_id"]) == ("WAITING", OTHER, OTHER)
+    assert by_id(run(portal, changes(op), tmp_path))["n1"]["outcome"] == "unchanged"
+    assert ap.shape_problems(dict(op, due_date=None)) == ["a create with waiting_on needs due_date, its follow-up date"]
+    dry = by_id(run(FakePortal([]), changes(op), tmp_path / "dry", dry_run=True))["n1"]
+    assert dry["outcome"] == "would_apply" and dry["change"]["status"] == "WAITING"
+
+
+def test_a_delivered_ask_is_created_and_completed_together(tmp_path):
+    portal = FakePortal([])
+    new = {"id": "n1", "op": "create", "title": "Send Sam the rate card", "domain": D_SALES,
+           "source": "asks:email:def", "reason": "Sam asked on 3/1"}
+    done = {"id": "c1", "op": "complete", "task": "op:n1", "evidence": f"portal://email/{EMAIL}",
+            "reason": "Sent it on 3/2"}
+    result = by_id(run(portal, changes(new, done), tmp_path))
+    assert result["c1"]["outcome"] == "applied" and result["c1"]["task"] == result["n1"]["task"]
+    assert portal.tasks[result["n1"]["task"].rsplit("/", 1)[1]]["status"] == "DONE"
+    again = by_id(run(portal, changes(new, done), tmp_path))
+    assert again["n1"]["outcome"] == "unchanged" and again["c1"]["outcome"] == "unchanged"
+    dry = by_id(run(FakePortal([]), changes(new, done), tmp_path / "dry", dry_run=True))
+    assert dry["c1"]["outcome"] == "would_apply"
+    orphan = by_id(run(portal, changes(dict(done, task="op:n9")), tmp_path))["c1"]
+    assert (orphan["outcome"], orphan["code"]) == ("refused", "NO_TASK")

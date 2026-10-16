@@ -142,7 +142,9 @@ class FakePortal:
             new = uid(20000 + len(self.tasks))
             row = task(0, args["title"], project_id=args.get("project_id"), domain_id=args.get("domain_id_or_name"),
                        id=new, description=args.get("description", ""), source_reference=args.get("source_reference"),
-                       owner_contact_id=args.get("owner_contact_id"), due_date=args.get("due_date"))
+                       owner_contact_id=args.get("owner_contact_id"), due_date=args.get("due_date"),
+                       waiting_on_contact_id=args.get("waiting_on_contact_id"),
+                       waiting_reason=args.get("waiting_reason"))
             row["created_at"] = row["updated_at"] = self.stamp()
             self.tasks[new], self.comments[new] = row, []
             return {"id": new}

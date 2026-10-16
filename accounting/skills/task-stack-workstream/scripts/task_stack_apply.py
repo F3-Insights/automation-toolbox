@@ -22,6 +22,10 @@ THE CHANGE SET
     {"id": "x1", "op": "cancel", "task": "<uuid>", "reason": "Stale since June, no goal"},
     {"id": "n1", "op": "create", "title": "Send the board pack", "project": "<uuid>", "due_date": "...",
      "reason": "...", "source": "<source>:<item id>"},
+    {"id": "n2", "op": "create", "title": "Collect the lease schedule from Kim", "domain": "<uuid>",
+     "owner": "<Kim's contact uuid>", "waiting_on": "<Kim's contact uuid>", "due_date": "...",
+     "evidence": "portal://email/<uuid>", "reason": "Asked Kim for it on 3/2"},
+    {"id": "c2", "op": "complete", "task": "op:n1", "evidence": "portal://email/<uuid>", "reason": "..."},
     {"id": "k1", "op": "comment", "task": "<uuid>", "body": "...", "reason": "..."},
     {"id": "p1", "op": "project_edit", "project": "portal://project/<uuid>", "set": {"goal_id": "<uuid>"}},
     {"id": "p2", "op": "project_close", "project": "<uuid>", "status": "CANCELLED", "reason": "..."},
@@ -50,7 +54,11 @@ THE RULES (an op that fails one is refused whole, with a code; the other ops go 
   or is refused UNCHECKED.
 - create: a verb-first title, an owner (the op's, else the token's own contact), a project
   or a domain whose catch-all project takes it, and no open task in that project already is
-  it. A create with `source` is marked by that key alone, so the item gets one task.
+  it. A create with `source` is marked by that key alone, so the item gets one task. A create
+  with `waiting_on` (a contact uuid, with `waiting_reason` optional) is made WAITING on that
+  person and needs a due date, its follow-up date.
+- complete (or any task op) may name `task` as `op:<id>`, the task an earlier create in the
+  same set made or found: a commitment already delivered is created and completed together.
 - project_edit / project_close: only PROJECT_EDITABLE fields and open statuses; a close to
   CANCELLED or COMPLETED (COMPLETED needs evidence) once no open task is left. Without
   evidence, CANCELLED only with no goal and no activity for --stale-close-days (90). A
@@ -133,7 +141,7 @@ RENAMED_AGENTS = {
 # Whose cancels need the checker's PASS whatever their confidence: the reconciler by its old
 # names, and every mode of task-steward (remove the old names a month after productivity converts).
 CHECKED_CANCELS = ("task-reconcile-orchestrator", "productivity-task-reconciler", "task-steward",
-                   "task-steward-capture", "task-steward-clarify", "task-steward-reconcile")
+                   "task-steward-capture", "task-steward-clarify", "task-steward-reconcile", "task-steward-asks")
 PROJECT_OPS = ("project_edit", "project_close")
 GOAL_OPS = ("goal_edit", "goal_close")
 OPS = ("complete", "edit", "merge", "cancel", "create", "comment") + PROJECT_OPS + GOAL_OPS
@@ -171,6 +179,7 @@ LINK_REF = re.compile(r"^https://\S+$")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 OP_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$")
 AGENT = re.compile(r"^[a-z0-9][a-z0-9-]{1,80}$")
+OP_TASK = re.compile(r"^op:([A-Za-z0-9][A-Za-z0-9_.:-]{0,63})$")
 SOURCE_KEY = re.compile(r"^[a-z][a-z0-9-]{0,40}:[A-Za-z0-9][A-Za-z0-9_.:-]{0,80}$")
 PRIORITY = re.compile(r"^[Pp]?([1-4])$")
 
@@ -455,11 +464,13 @@ def shape_problems(op):
             out.append(f"create needs a title of 1 to {TITLE_MAX} characters")
         if not (UUID.match(str(op.get("project") or "")) or UUID.match(str(op.get("domain") or ""))):
             out.append("create needs a project, or a domain whose catch-all project takes it (uuids)")
-        for f in ("owner", "task_contact"):
+        for f in ("owner", "task_contact", "waiting_on"):
             if op.get(f) not in (None, "") and not UUID.match(str(op[f])):
                 out.append(f"{f} is a uuid")
         if op.get("due_date") not in (None, "") and not DATE.match(str(op["due_date"])):
             out.append("due_date is YYYY-MM-DD")
+        if op.get("waiting_on") and not op.get("due_date"):
+            out.append("a create with waiting_on needs due_date, its follow-up date")
         if op.get("source") not in (None, "") and not SOURCE_KEY.match(str(op["source"])):
             out.append("source is a capture source key, <source>:<item id> (letters, digits, _ . : -)")
     elif op.get("source") not in (None, ""):
@@ -898,12 +909,16 @@ class Applier:
             f"Evidence: {op['evidence']}" if op.get("evidence") else "",
             f"Captured from: {op['source']}" if op.get("source") else "",
             f"{by} via task-stack-apply, op {op['id']}. Marker: {marker}") if x)
+        waiting_on = str(op.get("waiting_on") or "").lower() or None
         args = {"title": title, "project_id": project, "domain_id_or_name": domain, "owner_contact_id": owner,
                 "description": description, "source_reference": marker, "due_date": op.get("due_date"),
-                "priority": norm("priority", op.get("priority")), "task_contact_id": op.get("task_contact")}
+                "priority": norm("priority", op.get("priority")), "task_contact_id": op.get("task_contact"),
+                "waiting_on_contact_id": waiting_on,
+                "waiting_reason": str(op.get("waiting_reason") or "").strip()[:200] if waiting_on else None}
         args = {k: v for k, v in args.items() if v not in (None, "")}
         if self.dry_run:
-            return {"outcome": "would_apply", "change": {k: v for k, v in args.items() if k != "description"}}
+            change = {k: v for k, v in args.items() if k != "description"}
+            return {"outcome": "would_apply", "change": dict(change, status="WAITING") if waiting_on else change}
         out = self.client.call("create_task", args)
         new_id = out.get("id") if isinstance(out, dict) else None
         if not new_id and isinstance(out, dict) and isinstance(out.get("task"), dict):
@@ -916,6 +931,8 @@ class Applier:
         task = self.read_task(str(new_id).lower())
         if marker not in str(task.get("description") or ""):
             raise RuntimeError("the new task read back without its marker")
+        if waiting_on and norm("status", task.get("status")) != "WAITING":
+            task = self.write_back("task", task, {}, "WAITING")  # create_task takes no status
         self.logged(op, by, "create", {"status": None}, task, marker, {"status": task.get("status")})
         return {"outcome": "applied", "task": tref(str(new_id).lower())}
 
@@ -1106,12 +1123,31 @@ class Applier:
 
     # ---------------------------------------------------------------- one op
 
+    def made_by(self, op_id):
+        """The task an earlier create in this set made or found, "would_apply" for one a dry
+        run would make, else None."""
+        for op, result in self.done:
+            if op.get("id") == op_id and op.get("op") == "create":
+                if result.get("task"):
+                    return result["task"]
+                if result.get("outcome") == "would_apply":
+                    return "would_apply"
+        return None
+
     def one(self, op):
         is_dict = isinstance(op, dict)
         base = {"id": op.get("id") if is_dict else None, "op": op.get("op") if is_dict else None,
                 "task": op.get("task") if is_dict else None}
         if is_dict and op.get("op") in PROJECT_OPS and op.get("project"):
             base["project"] = op["project"]
+        if is_dict and OP_TASK.match(str(op.get("task") or "")):
+            made = self.made_by(OP_TASK.match(op["task"]).group(1))
+            if made is None:
+                return dict(base, outcome="refused", code="NO_TASK",
+                            reason=f"{op['task']} names no earlier create in this set that made or found a task")
+            if made == "would_apply":
+                return dict(base, outcome="would_apply", change={"after": op["task"]})
+            op, base["task"] = dict(op, task=made), made
         problems = shape_problems(op)
         if problems:
             return dict(base, outcome="refused", code="INVALID_OP", reason="; ".join(problems))
