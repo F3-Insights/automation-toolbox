@@ -144,7 +144,7 @@ class FakePortal:
                        id=new, description=args.get("description", ""), source_reference=args.get("source_reference"),
                        owner_contact_id=args.get("owner_contact_id"), due_date=args.get("due_date"),
                        waiting_on_contact_id=args.get("waiting_on_contact_id"),
-                       waiting_reason=args.get("waiting_reason"))
+                       waiting_reason=args.get("waiting_reason"), email_id=args.get("source_email_id"))
             row["created_at"] = row["updated_at"] = self.stamp()
             self.tasks[new], self.comments[new] = row, []
             return {"id": new}

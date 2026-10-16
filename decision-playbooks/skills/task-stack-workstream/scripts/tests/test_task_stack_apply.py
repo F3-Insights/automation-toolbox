@@ -491,6 +491,17 @@ def test_a_delegated_create_is_made_waiting_on_the_delegate(tmp_path):
     assert dry["outcome"] == "would_apply" and dry["change"]["status"] == "WAITING"
 
 
+def test_a_create_from_mail_links_the_task_to_its_email(tmp_path):
+    portal = FakePortal([])
+    op = {"id": "n1", "op": "create", "title": "Send Sam the rate card", "domain": D_SALES,
+          "source": f"asks:email:{EMAIL}", "source_email": f"portal://email/{EMAIL}", "reason": "Sam asked"}
+    r = by_id(run(portal, changes(op), tmp_path))["n1"]
+    assert portal.tasks[r["task"].rsplit("/", 1)[1]]["email_id"] == EMAIL
+    assert ap.shape_problems(dict(op, source_email="portal://note/x")) == [
+        "source_email is portal://email/<uuid> or the uuid"]
+    assert ap.shape_problems(dict(complete(1), source_email=EMAIL)) == ["source_email belongs only on a create"]
+
+
 class ClearsWaitOnCreate(FakePortal):
     """A Portal that drops the waiting fields of a task created outside WAITING."""
 

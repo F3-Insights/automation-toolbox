@@ -7,7 +7,7 @@ import pytest
 import _common as c
 import task_asks_queue as q
 import task_asks_record as r
-from conftest import BOARD, CEO, NOW, STAFF, FakePortal, uid
+from conftest import BOARD, CEO, NOW, STAFF, FakePortal, ago, email, uid
 
 AS_OF = NOW.isoformat()
 
@@ -101,9 +101,35 @@ def test_cursor_reaches_until_when_everything_is_decided(tmp_path, domain_file):
     write_changes(out.parent, [{"source": i["key"], "decision": "skip"} for i in data["items"]])
     r.main(["--run", str(out.parent)])
     cursor = c.read_cursor(c.cursor_path("Northwind"))
-    assert cursor["since"] == data["window"]["until"] and cursor["decided"] == {}
+    assert cursor["since"] == data["window"]["until"]
+    assert set(cursor["decided"]) == {i["key"] for i in data["items"]}  # all inside the overlap, so kept
     _, again = queue(tmp_path, domain_file)
-    assert again["items"] == [] and again["window"]["since"] == data["window"]["until"]
+    assert again["items"] == [] and again["window"]["since"] == c.iso(c.parse_time(cursor["since"]) - c.OVERLAP)
+
+
+def test_mail_synced_late_is_read_inside_the_overlap_and_old_keys_are_pruned(tmp_path, domain_file):
+    out, data = queue(tmp_path, domain_file)
+    write_changes(out.parent, [{"source": i["key"], "decision": "skip"} for i in data["items"]])
+    path = c.cursor_path("Northwind")
+    r.main(["--run", str(out.parent)])
+    stale = dict(c.read_cursor(path), decided={**c.read_cursor(path)["decided"], "asks:email:old": ago(24 * 5)})
+    c.write_cursor(path, stale)
+    portal = FakePortal()
+    portal.emails.append(email(8, "received", 30, "kim@northwind.test", ["dana@northwind.test"], STAFF, [], "Late"))
+    out2, again = queue(tmp_path, domain_file, portal)
+    assert [i["key"] for i in again["items"]] == [f"asks:email:{uid(8)}"]  # dated before the cursor, synced after
+    write_changes(out2.parent, [{"source": again["items"][0]["key"], "decision": "skip"}])
+    r.main(["--run", str(out2.parent)])
+    assert "asks:email:old" not in c.read_cursor(path)["decided"]
+
+
+def test_a_meeting_names_its_attendees_contacts_and_the_delegated_follow_up(tmp_path, domain_file):
+    _, data = queue(tmp_path, domain_file)
+    meeting = next(i for i in data["items"] if i["direction"] == "meeting")
+    people = {p["address"]: p["contact_id"] for p in meeting["counterparties"]["people"]}
+    assert people == {"board@northwind.test": BOARD, "kim@northwind.test": STAFF, "guest@northwind.test": None}
+    assert meeting["counterparties"]["contact_ids"] == [BOARD, STAFF] and meeting["owner_attended"]
+    assert (meeting["default_due"], meeting["delegated_due"]) == ("2030-03-06", "2030-03-07")  # VIP: 2 and 3 days
 
 
 def test_the_domain_file_needs_its_yaml_block(tmp_path):

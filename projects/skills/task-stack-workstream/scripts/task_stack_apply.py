@@ -24,7 +24,8 @@ THE CHANGE SET
      "reason": "...", "source": "<source>:<item id>"},
     {"id": "n2", "op": "create", "title": "Collect the lease schedule from Kim", "domain": "<uuid>",
      "owner": "<Kim's contact uuid>", "waiting_on": "<Kim's contact uuid>", "due_date": "...",
-     "evidence": "portal://email/<uuid>", "reason": "Asked Kim for it on 3/2"},
+     "evidence": "portal://email/<uuid>", "source_email": "portal://email/<uuid>",
+     "reason": "Asked Kim for it on 3/2"},
     {"id": "c2", "op": "complete", "task": "op:n1", "evidence": "portal://email/<uuid>", "reason": "..."},
     {"id": "k1", "op": "comment", "task": "<uuid>", "body": "...", "reason": "..."},
     {"id": "p1", "op": "project_edit", "project": "portal://project/<uuid>", "set": {"goal_id": "<uuid>"}},
@@ -56,7 +57,8 @@ THE RULES (an op that fails one is refused whole, with a code; the other ops go 
   or a domain whose catch-all project takes it, and no open task in that project already is
   it. A create with `source` is marked by that key alone, so the item gets one task. A create
   with `waiting_on` (a contact uuid, with `waiting_reason` optional) is made WAITING on that
-  person and needs a due date, its follow-up date.
+  person and needs a due date, its follow-up date. A create with `source_email` (portal://email/
+  <uuid> or the uuid) links the new task to the email it came from.
 - complete (or any task op) may name `task` as `op:<id>`, the task an earlier create in the
   same set made or found: a commitment already delivered is created and completed together.
 - project_edit / project_close: only PROJECT_EDITABLE fields and open statuses; a close to
@@ -174,6 +176,7 @@ UUID = re.compile(rf"^{HEX_ID}$")
 TASK_REF = re.compile(rf"^(?:portal://task/)?({HEX_ID})$")
 PROJECT_REF = re.compile(rf"^(?:portal://project/)?({HEX_ID})$")
 GOAL_REF = re.compile(rf"^(?:portal://goal/)?({HEX_ID})$")
+EMAIL_REF = re.compile(rf"^(?:portal://email/)?({HEX_ID})$")
 PORTAL_REF = re.compile(rf"^portal://(email|note|calendar_event|task|project|goal|document)/({HEX_ID})$")
 LINK_REF = re.compile(r"^https://\S+$")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -209,6 +212,10 @@ def project_id(ref):
 
 def goal_id(ref):
     return _id(GOAL_REF, ref)
+
+
+def email_id(ref):
+    return _id(EMAIL_REF, ref)
 
 
 def tref(tid):
@@ -473,8 +480,10 @@ def shape_problems(op):
             out.append("a create with waiting_on needs due_date, its follow-up date")
         if op.get("source") not in (None, "") and not SOURCE_KEY.match(str(op["source"])):
             out.append("source is a capture source key, <source>:<item id> (letters, digits, _ . : -)")
-    elif op.get("source") not in (None, ""):
-        out.append("source belongs only on a create")
+        if op.get("source_email") not in (None, "") and not email_id(op["source_email"]):
+            out.append("source_email is portal://email/<uuid> or the uuid")
+    else:
+        out += [f"{f} belongs only on a create" for f in ("source", "source_email") if op.get(f) not in (None, "")]
     if kind == "comment":
         body = str(op.get("body") or "").strip()
         if not body or len(body) > COMMENT_MAX - 200:
@@ -913,7 +922,7 @@ class Applier:
         args = {"title": title, "project_id": project, "domain_id_or_name": domain, "owner_contact_id": owner,
                 "description": description, "source_reference": marker, "due_date": op.get("due_date"),
                 "priority": norm("priority", op.get("priority")), "task_contact_id": op.get("task_contact"),
-                "waiting_on_contact_id": waiting_on,
+                "waiting_on_contact_id": waiting_on, "source_email_id": email_id(op.get("source_email")),
                 "waiting_reason": str(op.get("waiting_reason") or "").strip()[:200] if waiting_on else None}
         args = {k: v for k, v in args.items() if v not in (None, "")}
         if self.dry_run:

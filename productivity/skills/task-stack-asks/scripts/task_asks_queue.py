@@ -3,22 +3,26 @@
 # ///
 """The mail and meetings one task-asks Run decides, gathered in code before the session.
 
-Reads from the Insights Portal (read only), since the domain's cursor (first run: 30 days back;
---since overrides): the owner's sent and received mail and their Fellow meetings, keeps what is
-in the domain's scope, and marks who is a VIP there. The scope is the first ```yaml block of
---domain-file (see _common.py): `mail.inboxes` (mail in these inboxes), `mail.correspondent_domains`
-(mail or meetings with people at these domains, from any inbox), `ignore.senders` (glob patterns
-on a received message's sender) and `vip` (roles and titles at companies; the VIPs are resolved
-from each company's relationships in the CRM, never named in a file).
+Reads from the Insights Portal (read only), since the domain's cursor less a two-day overlap for
+mail that syncs late (first run: 30 days back; --since overrides): the owner's sent and received
+mail and their Fellow meetings, keeps what is in the domain's scope, and marks who is a VIP there.
+The scope is the first ```yaml block of --domain-file (see _common.py): `mail.inboxes` (mail in
+these inboxes), `mail.correspondent_domains` (mail or meetings with people at these domains, from
+any inbox), `ignore.senders` (glob patterns on a received message's sender) and `vip` (roles and
+titles at companies; the VIPs are resolved from each company's relationships in the CRM, never
+named in a file).
 
 Each item: `key` (asks:email:<id> or asks:meeting:<id>, the source a create carries), `ref`,
 `date` (UTC) and `local_date`, `direction` (sent, received or meeting), `subject`, `snippet`,
-`counterparties` (addresses and contact ids, the owner left out), `vip` and `vips` (the VIPs on
-it), `default_due` (the follow-up when the ask names no date: 3 business days for a VIP and 5
-for others on sent mail, 2 for a VIP otherwise, else null) and `already` (tasks already
-carrying the key). Items an earlier Run decided are left out. VIP items come first, then the
-newest; at most --max (40), cut into batches of --batch-size (10); the rest are deferred and
-come back next Run, since the cursor only moves past what was decided (task_asks_record.py).
+`counterparties` (addresses and contact ids, the owner left out; a meeting's also `people`, each
+attendee's address with the contact it resolves to), `vip` and `vips` (the VIPs on it),
+`default_due` (the follow-up when the ask names no date: 3 business days for a VIP and 5 for
+others on sent mail, 2 for a VIP otherwise, else null) and `already` (tasks already carrying the
+key). A meeting item adds `owner_attended` and `delegated_due`, the follow-up of an action on
+someone else (3 business days for a VIP, else 5). Items an earlier Run decided are left out. VIP
+items come first, then the newest; at most --max (40), cut into batches of --batch-size (10); the
+rest are deferred and come back next Run, since the cursor only moves past what was decided
+(task_asks_record.py).
 
 First line: `QUEUE: 12 item(s) queued (3 VIP; 6 sent, 5 received, 1 meeting); 2 deferred; ...`
 or `NOTHING: ...`. --out writes a new file and never overwrites one. Exit 0 when it ran, 2 for
@@ -48,6 +52,14 @@ def add_business_days(day, n):
         if day.weekday() < 5:
             n -= 1
     return day
+
+
+def due_after(local_date, days):
+    """The date `days` business days after an item's local date, or None."""
+    try:
+        return add_business_days(date.fromisoformat(local_date), days).isoformat() if days else None
+    except ValueError:
+        return None
 
 
 def domain_of(address):
@@ -153,7 +165,29 @@ def email_item(row, direction, owner, owner_addrs, scope, vips, vip_addrs):
             "counterparties": {"addresses": others, "contact_ids": ids}, "vips": on}, None
 
 
-def meeting_item(row, event, owner_addrs, scope, vip_addrs):
+def contact_lookup(client):
+    """address -> {contact_id, name}: the contact holding that address as its natural key and
+    among its own addresses, else nulls. Each address is read once."""
+    cache = {}
+
+    def find(address):
+        if address not in cache:
+            try:
+                got = client.call("get", {"entity_type": "contact", "id_or_query": address, "detail": "summary"})
+            except c.PortalError:  # one failed lookup leaves that attendee unresolved
+                got = {}
+            got = got if isinstance(got, dict) else {}
+            rec = got.get("contact") if isinstance(got.get("contact"), dict) else {}
+            mails = {str(e.get("address") or "").lower() for e in got.get("emails") or [] if isinstance(e, dict)}
+            mails.add(str(rec.get("primary_email") or "").lower())
+            hit = rec.get("id") and address in mails
+            cache[address] = {"contact_id": str(rec["id"]).lower() if hit else None,
+                              "name": rec.get("full_name") if hit else None}
+        return cache[address]
+    return find
+
+
+def meeting_item(row, event, owner_addrs, scope, vip_addrs, contact_for):
     ev = event.get("event") if isinstance(event.get("event"), dict) else event
     organizer = str(ev.get("organizer_email") or "").lower()
     emails = [str(a).lower() for a in event.get("attendee_emails") or
@@ -163,6 +197,7 @@ def meeting_item(row, event, owner_addrs, scope, vip_addrs):
     if not (any(a in scope["inboxes"] for a in everyone)
             or any(domain_of(a) in scope["correspondent_domains"] for a in others)):
         return None, "out_of_scope"
+    people = [{"address": a, **contact_for(a)} for a in others]
     rid = str(row["id"]).lower()
     note = f"portal://note/{str(row['note_id']).lower()}" if row.get("note_id") else None
     return {"key": f"asks:meeting:{rid}", "ref": note or f"portal://calendar_event/{row['calendar_event_id']}",
@@ -170,7 +205,9 @@ def meeting_item(row, event, owner_addrs, scope, vip_addrs):
             "date": row.get("started_at"),
             "local_date": str(ev.get("start_local") or row.get("started_at") or "")[:10],
             "direction": "meeting", "subject": ev.get("title"), "from": organizer or None, "snippet": None,
-            "counterparties": {"addresses": others, "contact_ids": []},
+            "counterparties": {"addresses": others, "people": people,
+                               "contact_ids": [p["contact_id"] for p in people if p["contact_id"]]},
+            "owner_attended": any(a in owner_addrs for a in everyone),
             "vips": [v for v, a in vip_addrs.items() if set(a) & set(others)]}, None
 
 
@@ -196,6 +233,7 @@ def gather(client, domain, scope, since, cursor, now, max_items=MAX_DEFAULT, bat
     vips, warnings = resolve_vips(client, scope["vip"], owner)
     vip_addrs = {cid: v["addresses"] for cid, v in vips.items()}
     decided = set(cursor["decided"])
+    contact_for = contact_lookup(client)
     since_iso = c.iso(since)
     counts = {"emails_read": 0, "meetings_read": 0, "out_of_scope": 0, "ignored": 0, "decided_before": 0,
               "unmatched_meetings": 0}
@@ -229,16 +267,15 @@ def gather(client, domain, scope, since, cursor, now, max_items=MAX_DEFAULT, bat
             continue
         event = client.call("get", {"entity_type": "calendar_event", "id_or_query": row["calendar_event_id"],
                                     "detail": "summary"})
-        keep(*meeting_item(row, event if isinstance(event, dict) else {}, owner_addrs, scope, vip_addrs))
+        keep(*meeting_item(row, event if isinstance(event, dict) else {}, owner_addrs, scope, vip_addrs,
+                           contact_for))
 
     for it in items:
         it["vip"] = bool(it["vips"])
         it["vips"] = [{"contact_id": v, "name": vips[v]["name"], "why": vips[v]["why"]} for v in it["vips"]]
-        days = DUE_DAYS.get((it["direction"], it["vip"]))
-        try:
-            it["default_due"] = add_business_days(date.fromisoformat(it["local_date"]), days).isoformat() if days else None
-        except ValueError:
-            it["default_due"] = None
+        it["default_due"] = due_after(it["local_date"], DUE_DAYS.get((it["direction"], it["vip"])))
+        if it["direction"] == "meeting":  # an action the meeting put on someone else is followed up as sent mail is
+            it["delegated_due"] = due_after(it["local_date"], DUE_DAYS[("sent", it["vip"])])
     items.sort(key=lambda i: (i["vip"], str(i["date"] or ""), i["key"]), reverse=True)
     queued, deferred = items[:max_items], items[max_items:]
     for n, it in enumerate(queued):
@@ -306,8 +343,9 @@ def main(argv=None, client=None):
         scope = c.load_scope(a.domain_file)
         path = c.cursor_path(a.domain, a.state)
         cursor = c.read_cursor(path)
+        last = c.parse_time(cursor["since"])
         since = c.parse_time(a.since) if a.since.strip() else (
-            c.parse_time(cursor["since"]) or now - timedelta(days=FIRST_RUN_DAYS))
+            last - c.OVERLAP if last else now - timedelta(days=FIRST_RUN_DAYS))
         if since is None:
             raise c.Bad(f"--since wants an ISO date or instant, got {a.since!r}")
         client = client or c.Portal(a.config or None, a.server or None)

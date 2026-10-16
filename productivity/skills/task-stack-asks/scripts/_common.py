@@ -20,8 +20,9 @@ or a title holding any of `titles` (case-insensitive). Every key is optional.
 THE CURSOR
 ----------
 `<state_dir>/task-asks/<domain-slug>.json`: `since` (the newest instant every item up to which
-is decided) and `decided` (the keys dated at or after `since` already decided, with their dates). Written only by
-task_asks_record.py.
+is decided) and `decided` (the keys dated at or after `since` - OVERLAP already decided, with
+their dates). The queue reads from `since` - OVERLAP, so mail stamped earlier but synced later
+is still read, and drops what `decided` holds. Written only by task_asks_record.py.
 """
 
 import fnmatch
@@ -32,12 +33,13 @@ import sys
 import tomllib
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 YAML_BLOCK = re.compile(r"^```ya?ml[ \t]*\n(.*?)^```", re.M | re.S)
+OVERLAP = timedelta(days=2)  # how far before the cursor each Run reads again, for late-synced mail
 
 
 class Bad(Exception):

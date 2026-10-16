@@ -71,11 +71,14 @@ class FakePortal(c.Portal):
         ]
         self.events = {
             uid(500): {"event": {"id": uid(500), "title": "Board prep", "organizer_email": "dana@northwind.test",
-                                 "start_local": ago(8)}, "attendee_emails": ["board@northwind.test"]},
+                                 "start_local": ago(8)},
+                       "attendee_emails": ["board@northwind.test", "Kim@northwind.test", "guest@northwind.test"]},
             uid(502): {"event": {"id": uid(502), "title": "Family dinner", "organizer_email": "dana@personal.test",
                                  "start_local": ago(9)}, "attendee_emails": ["sam@home.test"]},
         }
         self.tasks = tasks or []
+        self.contacts = {CEO: ("VIP", "ceo@northwind.test"), BOARD: ("VIP", "board@northwind.test"),
+                         STAFF: ("Kim Lee", "kim@northwind.test")}
         self.calls = []
 
     def call(self, tool, args=None):
@@ -93,10 +96,13 @@ class FakePortal(c.Portal):
                 {"contact_id": uid(905), "relationship_type": "board_member", "is_current": False},
                 {"contact_id": OWNER, "relationship_type": "founder", "is_current": True}]}
         if tool == "get":
-            if args["entity_type"] == "contact":
-                addr = {CEO: "ceo@northwind.test", BOARD: "board@northwind.test"}[args["id_or_query"]]
-                return {"contact": {"id": args["id_or_query"], "full_name": "VIP", "primary_email": addr},
-                        "emails": [{"address": addr}]}
+            if args["entity_type"] == "contact":  # by id, or by address as the contact's natural key
+                key = args["id_or_query"]
+                cid = key if key in self.contacts else next((i for i, (_, a) in self.contacts.items() if a == key), None)
+                if cid is None:
+                    raise c.PortalError("portal get: not found")
+                name, addr = self.contacts[cid]
+                return {"contact": {"id": cid, "full_name": name, "primary_email": addr}, "emails": [{"address": addr}]}
             return self.events[args["id_or_query"]]
         if tool == "list_fellow_meetings":
             return {"meetings": self.meetings, "next_offset": None}

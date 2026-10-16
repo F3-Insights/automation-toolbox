@@ -13,7 +13,8 @@ applied, would apply, found unchanged by its marker or refused as a DUPLICATE. A
 (no decision, a create refused, deferred or failed, an item deferred past the cap) is left for
 the next Run. The cursor's `since` moves to the newest instant up to which every item is
 decided (the queue's `until` when all are), and `decided` keeps the decided keys dated at or
-after it, so a later Run neither skips an undecided item nor decides one twice. It never moves back.
+after it less the queue's overlap (_common.OVERLAP), so a later Run neither skips an undecided
+item nor decides one twice, even re-reading the overlap. It never moves back.
 
 A dry Run (--dry-run, or --dry-run-if true) writes RUN/asks-record-dry-run.json and leaves the
 cursor alone; a live one writes RUN/asks-record.json and the cursor.
@@ -71,7 +72,7 @@ def decided_keys(queue, changes, results):
 
 
 def advance(queue, decided, old):
-    """The new cursor: since, and the decided keys at or after it with their dates."""
+    """The new cursor: since, and the decided keys dated inside the overlap before it or later."""
     items = {i["key"]: i.get("date") for i in (queue.get("items") or []) + (queue.get("deferred") or [])}
     open_dates = [c.parse_time(d) for k, d in items.items() if k not in decided and c.parse_time(d)]
     since = (min(open_dates) - timedelta(seconds=1)) if open_dates else c.parse_time(queue["window"]["until"])
@@ -79,7 +80,7 @@ def advance(queue, decided, old):
     if before is not None and since < before:
         since = before
     merged = dict(old.get("decided") or {}, **{k: items[k] for k in decided})
-    keep = {k: d for k, d in merged.items() if (c.parse_time(d) or since) >= since}
+    keep = {k: d for k, d in merged.items() if (c.parse_time(d) or since) >= since - c.OVERLAP}
     return {"since": c.iso(since), "decided": dict(sorted(keep.items()))}
 
 
