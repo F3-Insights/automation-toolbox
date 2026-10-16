@@ -5,3 +5,6 @@ __pycache__/
 *.env
 .DS_Store
 .pytest_cache/
+
+# Third-party transcripts kept beside idea notes for reference only
+docs/ideas/*-transcript.md
