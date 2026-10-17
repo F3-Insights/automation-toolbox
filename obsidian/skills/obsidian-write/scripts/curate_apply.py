@@ -20,7 +20,8 @@ THE CHANGE SET (RUN/proposals.json)
      "to": "Inbox/merged", ...}]}
 
   splice       adds `text` at the end of the section under `heading` (an exact heading line that
-               occurs once), or at the end of the note when `heading` is absent. Adds only.
+               occurs once; a heading the note lacks becomes a new section at its end), or at the
+               end of the note when `heading` is absent. Adds only.
   replace      `old` occurs exactly once and becomes `new`. `kind` says what may change:
                link         only wikilinks differ between old and new;
                frontmatter  old lies inside the frontmatter block, or, in a note with
@@ -28,7 +29,8 @@ THE CHANGE SET (RUN/proposals.json)
                fact         new keeps the old text struck through (~~old~~).
   move         the note moves into folder `to`; an existing note there is never replaced.
   mark_merged  an inbox note gets `merged-into: "[[into]]"` in its frontmatter and moves to
-               `to` (default <vault_inbox>/merged). Nothing is ever deleted.
+               `to` (default <vault_inbox>/merged). Nothing is ever deleted. Refused when a splice
+               whose `source` is that note was not applied in the same Run.
 
 THE RULES (a change that breaks one is refused; the others go on)
 - Only changes with "check": "PASS" are made; any other is skipped as unchecked.
@@ -135,7 +137,11 @@ def do_splice(text, ch):
     lines = text.split("\n")
     end = section_end(lines, ch["heading"])
     if end is None:
-        return None, "heading not found exactly once"
+        hits = [line for line in lines if line.strip() == ch["heading"].strip()]
+        if hits or not HEADING_RE.match(ch["heading"].strip()):
+            return None, "heading not found exactly once"
+        # A heading the note does not have yet: the text goes in as a new section at the end.
+        return text.rstrip("\n") + "\n\n" + ch["heading"].strip() + "\n\n" + add + "\n", None
     rest = lines[end:]
     while rest and not rest[0].strip():
         rest = rest[1:]
@@ -369,7 +375,17 @@ def main(argv=None):
         fail("Every change needs a unique id; nothing was changed.", 2)
     dry = args.dry_run or bool(data.get("dry_run"))
     applier = Applier(vault, scope, run.name, state, dry, cap)
-    results = [applier.apply(ch) for ch in changes]
+    results, spliced = [], {}
+    for ch in changes:
+        src = norm(ch["source"]) if ch.get("op") == "splice" and ch.get("source") else ""
+        if ch.get("op") == "mark_merged" and spliced.get(norm(ch.get("target") or ""), [True]).count(False):
+            res = {"id": ch.get("id"), "op": "mark_merged", "target": ch.get("target"), "status": "refused",
+                   "reason": "a splice of this note was not applied, so it is not merged"}
+        else:
+            res = applier.apply(ch)
+        if src:
+            spliced.setdefault(src, []).append(res["status"] == "applied")
+        results.append(res)
     log = None if dry else append_log(vault, scope.inbox, log_lines(run.name, data.get("mode", "curate"), results))
     counts = {}
     for r in results:
