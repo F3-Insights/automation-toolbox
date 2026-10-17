@@ -31,7 +31,12 @@ THE CHANGE SET
     {"id": "p1", "op": "project_edit", "project": "portal://project/<uuid>", "set": {"goal_id": "<uuid>"}},
     {"id": "p2", "op": "project_close", "project": "<uuid>", "status": "CANCELLED", "reason": "..."},
     {"id": "g1", "op": "goal_edit", "goal": "portal://goal/<uuid>", "set": {"priority": "P2"}, "reason": "..."},
-    {"id": "g2", "op": "goal_close", "goal": "<uuid>", "status": "CANCELLED", "reason": "..."}],
+    {"id": "g2", "op": "goal_close", "goal": "<uuid>", "status": "CANCELLED", "reason": "..."},
+    {"id": "np1", "op": "create_project", "name": "Launch the storefront", "domain_id": "<uuid>",
+     "goal_id": "<uuid>", "description": "Done when: ...", "priority": 2, "proposal": "project:storefront",
+     "approval": "portal://task/<the task the proposal was asked on>", "reason": "..."},
+    {"id": "e2", "op": "edit", "task": "<uuid>", "set": {"project_id": "op:np1", "domain_id": "<uuid>"},
+     "reason": "..."}],
    "questions": [{"ask": "...", "task": "portal://task/<uuid>", "why": "..."}], "notes": []}
 
 Every op has a unique `id`, its `op`, a `reason`, and `by` (the producing agent; the set's
@@ -40,7 +45,8 @@ goal|document>/<uuid> (read before it is relied on: it must exist, and an event 
 started) or an https:// link to a commit or pull request.
 
 THE RULES (an op that fails one is refused whole, with a code; the other ops go on)
-- Nothing is ever deleted. Undoing a create cancels the task.
+- Nothing is ever deleted. Undoing a create cancels the task; undoing a create_project
+  cancels the project once no open task is left in it.
 - complete: the task is open; evidence is required and goes into the completion comment.
 - edit: only EDITABLE fields; status only TODO, IN_PROGRESS or WAITING. A task left WAITING has
   a due date (its follow-up date) and a task moved to WAITING names who it waits on. A new
@@ -72,6 +78,17 @@ THE RULES (an op that fails one is refused whole, with a code; the other ops go 
   delegated tasks (held by someone else but created by the owner). Work is assigned to the
   owner, a contact in the setting [task-stack-workstream] assignable_contacts, or anyone the
   op's evidence or captured source shows the owner asked.
+- create_project: a name, a domain_id and the owner's approval. A project proposal is asked on
+  one member task: a `comment` op of an earlier set posts it there, its text holding
+  `(<proposal key>)` and the proposed name. `approval` names that task and `proposal` the key.
+  The answer is the owner's newest comment after the proposal (theirs: by one of their
+  addresses with no agent line, or starting with the setting [task-stack-workstream]
+  relayed_answer_head, the line a runner puts on an answer it relays). It approves when its
+  first word is ok, yes or approve and the proposal holds the op's name, or when it holds the
+  op's name itself (a rename); no, decline or skip refuses the op DECLINED; no answer,
+  UNAPPROVED. goal_id, when set, is an active goal of the same domain. An open project of that
+  name in the domain, or one carrying the op's marker, is found instead of made. An `edit` may
+  set project_id to `op:<create_project id>`, the project that earlier op made or found.
 - --domain limits every op to one domain; --max-changes caps the writes, the rest deferred.
 
 HAND EDITS: a field changed by anyone else in the last --hand-edit-days (7) is never
@@ -146,7 +163,8 @@ CHECKED_CANCELS = ("task-reconcile-orchestrator", "productivity-task-reconciler"
                    "task-steward-capture", "task-steward-clarify", "task-steward-reconcile", "task-steward-asks")
 PROJECT_OPS = ("project_edit", "project_close")
 GOAL_OPS = ("goal_edit", "goal_close")
-OPS = ("complete", "edit", "merge", "cancel", "create", "comment") + PROJECT_OPS + GOAL_OPS
+NEW_PROJECT = "create_project"
+OPS = ("complete", "edit", "merge", "cancel", "create", "comment", NEW_PROJECT) + PROJECT_OPS + GOAL_OPS
 OPEN = ("TODO", "IN_PROGRESS", "WAITING")
 ALL_STATUSES = ["TODO", "IN_PROGRESS", "WAITING", "DONE", "CANCELLED"]
 EDIT_STATUSES = ("TODO", "IN_PROGRESS", "WAITING")
@@ -170,6 +188,12 @@ HORIZONS = ("VISION", "ANNUAL", "QUARTERLY", "MONTHLY")
 HAND_EDIT_DAYS, STALE_CLOSE_DAYS, STALE_CANCEL_DAYS, MAX_CHANGES = 7, 90, 60, 50
 COMMENT_MAX, TITLE_MAX = 4000, 200
 DUP_THRESHOLD = 0.85
+# The owner's answer to a project proposal, read by its first word.
+APPROVE_WORDS = frozenset({"ok", "okay", "yes", "y", "approve", "approved", "go"})
+DECLINE_WORDS = frozenset({"no", "n", "decline", "declined", "skip", "reject", "rejected"})
+AGENT_LINE = re.compile(r"\(posted by .+?, an agent\)\s*\Z", re.S)
+RELAYED_QUESTION = re.compile(r"^\d{1,2}\.\s.*\n(?=Answer:)", re.M)  # a runner's echo of the question
+PROPOSAL_KEY = re.compile(r"^project:[a-z0-9][a-z0-9-]{0,80}$")
 
 HEX_ID = r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"
 UUID = re.compile(rf"^{HEX_ID}$")
@@ -259,6 +283,9 @@ def marker_for(by, op):
         return source_marker(str(op["source"]))
     if kind in GOAL_OPS:
         content = {"op": kind, "goal": goal_id(op.get("goal")), "set": op.get("set"), "status": op.get("status")}
+    elif kind == NEW_PROJECT:
+        content = {"op": kind, "name": c.normalise_title(str(op.get("name") or "")),
+                   "domain": str(op.get("domain_id") or "").lower()}
     else:
         keys = ("op", "project", "set", "status") if kind in PROJECT_OPS else (
             "op", "task", "into", "set", "title", "project", "domain", "body")
@@ -442,6 +469,19 @@ def shape_problems(op):
                 out.append(f"goal_close status is one of {', '.join(GOAL_CLOSE_STATUSES)}")
             if status == "ACHIEVED" and not op.get("evidence"):
                 out.append("goal_close to ACHIEVED needs evidence that the goal was met")
+        return out
+    if kind == NEW_PROJECT:
+        if not 0 < len(str(op.get("name") or "").strip()) <= TITLE_MAX:
+            out.append(f"create_project needs a name of 1 to {TITLE_MAX} characters")
+        check_fields(op, ("due_date",), ("domain_id", "goal_id"), out)
+        if not op.get("domain_id"):
+            out.append("create_project needs domain_id")
+        if op.get("priority") not in (None, "") and not PRIORITY.match(str(op["priority"])):
+            out.append("priority is 1 to 4")
+        if not task_id(op.get("approval")):
+            out.append("create_project needs approval, the portal://task/<uuid> its proposal was asked on")
+        if not PROPOSAL_KEY.match(str(op.get("proposal") or "")):
+            out.append("create_project needs proposal, the key the proposal was asked under (project:<slug>)")
         return out
     if kind != "create" and not task_id(op.get("task")):
         out.append("task is portal://task/<uuid> or the uuid")
@@ -1049,6 +1089,82 @@ class Applier:
         row = self.logged(op, by, "project_update", project, after, marker, {"status": target}, entity="project")
         return {"outcome": "applied", "change": {"status": [status, target]}, "undo": row["before"]}
 
+    def owners_answer(self, op):
+        """The owner's newest answer to the proposal asked on the op's approval task: its words,
+        after the proposal comment, as (proposal text, answer text), or (proposal, None)."""
+        tid, key = task_id(op["approval"]), str(op["proposal"])
+        comments = self.read_task(tid).get("_comments") or []
+        asked = [i for i, x in enumerate(comments) if f"({key})" in str(x.get("body") or "")]
+        if not asked:
+            raise Refused("UNAPPROVED", f"no proposal ({key}) was asked on {tref(tid)}; post it first, as a "
+                                        "comment op, and wait for the owner's answer")
+        proposal = str(comments[asked[-1]].get("body") or "")
+        emails = set(self.identity()["emails"])
+        head = str(c.settings(c.SKILL).get("relayed_answer_head")
+                   or c.settings("meeting-scheduled-worker").get("relayed_answer_head") or "").strip()
+        answer = None
+        for x in comments[asked[-1] + 1:]:
+            body = str(x.get("body") or "").strip()
+            if str(x.get("author_email") or "").strip().lower() not in emails or "Marker: tsk" in body:
+                continue
+            if head and body.startswith(head):
+                answer = RELAYED_QUESTION.sub("", AGENT_LINE.sub("", body[len(head):])).replace("Answer:", " ")
+            elif body and not AGENT_LINE.search(body):
+                answer = body
+        return proposal, answer
+
+    def op_create_project(self, op, by, marker):
+        name, domain = " ".join(str(op["name"]).split()), str(op["domain_id"]).lower()
+        mine = c.normalise_title(name)
+        for p in self.listing("project"):
+            same = (str(p.get("domain_id") or "").lower() == domain and live_project(p) and not p.get("is_general")
+                    and c.normalise_title(str(p.get("name") or "")) == mine)
+            if marker in str(p.get("description") or "") or same:
+                return {"outcome": "unchanged", "reason": f"already open as {p.get('name')!r}",
+                        "project": f"portal://project/{str(p.get('id')).lower()}"}
+        self.in_scope(domain, "the new project's domain")
+        proposal, answer = self.owners_answer(op)
+        words = re.findall(r"[a-z0-9']+", (answer or "").lower())
+        if answer is None:
+            raise Refused("UNAPPROVED", f"the owner has not answered the proposal on {tref(task_id(op['approval']))}")
+        if words and words[0] in DECLINE_WORDS:
+            raise Refused("DECLINED", "the owner declined this project; do not propose it again")
+        renamed = mine and mine in c.normalise_title(answer)
+        if not renamed and not (words and words[0] in APPROVE_WORDS and mine in c.normalise_title(proposal)):
+            raise Refused("UNAPPROVED", "the owner's answer neither approves the proposed name nor gives this one")
+        goal = str(op.get("goal_id") or "").lower() or None
+        if goal:
+            g = {str(x.get("id")).lower(): x for x in self.listing("goal")}.get(goal)
+            if g is None or g.get("is_archived") or norm("status", g.get("status")) in CLOSED_GOAL:
+                raise Refused("NO_GOAL", f"goal {goal} is not an active goal")
+            if str(g.get("domain_id") or "").lower() not in ("", domain):
+                raise Refused("DOMAIN_MISMATCH", f"goal {goal} is in domain {g.get('domain_id')}, not {domain}")
+        self.evidence_holds(op)
+        self.take_slot()
+        description = "\n".join(x for x in (
+            str(op.get("description") or "").rstrip(), f"Why: {op['reason']}",
+            f"Approved by the owner on {tref(task_id(op['approval']))} ({op['proposal']}).",
+            f"{by} via task-stack-apply, op {op['id']}. Marker: {marker}") if x)
+        args = {"name": name, "domain_id_or_name": domain, "goal_id": goal, "description": description,
+                "priority": portal_priority(op.get("priority")) if op.get("priority") not in (None, "") else None,
+                "due_date": op.get("due_date")}
+        args = {k: v for k, v in args.items() if v not in (None, "")}
+        if self.dry_run:
+            return {"outcome": "would_apply", "change": {k: v for k, v in args.items() if k != "description"}}
+        out = self.client.call("create_project", args)
+        new_id = out.get("id") if isinstance(out, dict) else None
+        if not new_id and isinstance(out, dict) and isinstance(out.get("project"), dict):
+            new_id = out["project"].get("id")
+        if not new_id:
+            raise RuntimeError(f"create_project answered without an id: {str(out)[:200]}")
+        project = self.read("project", str(new_id).lower(), "summary")
+        if marker not in str(project.get("description") or ""):
+            raise RuntimeError("the new project read back without its marker")
+        self.listing("project").append(project)
+        self.logged(op, by, "create", {"status": None}, project, marker, {"status": project.get("status")},
+                    entity="project")
+        return {"outcome": "applied", "project": f"portal://project/{str(new_id).lower()}"}
+
     # ---------------------------------------------------------------- goal ops
 
     def open_goal(self, gid):
@@ -1145,6 +1261,17 @@ class Applier:
                     return "would_apply"
         return None
 
+    def project_made_by(self, op_id):
+        """The project uuid an earlier create_project in this set made or found, "would_apply"
+        for one a dry run would make, else None."""
+        for op, result in self.done:
+            if op.get("id") == op_id and op.get("op") == NEW_PROJECT:
+                if result.get("project"):
+                    return project_id(result["project"])
+                if result.get("outcome") == "would_apply":
+                    return "would_apply"
+        return None
+
     def one(self, op):
         is_dict = isinstance(op, dict)
         base = {"id": op.get("id") if is_dict else None, "op": op.get("op") if is_dict else None,
@@ -1159,6 +1286,18 @@ class Applier:
             if made == "would_apply":
                 return dict(base, outcome="would_apply", change={"after": op["task"]})
             op, base["task"] = dict(op, task=made), made
+        fields = op.get("set") if is_dict and op.get("op") == "edit" else None
+        if isinstance(fields, dict) and OP_TASK.match(str(fields.get("project_id") or "")):
+            made = self.project_made_by(OP_TASK.match(fields["project_id"]).group(1))
+            if made is None:
+                return dict(base, outcome="refused", code="NO_PROJECT",
+                            reason=f"{fields['project_id']} names no earlier create_project in this set that made "
+                                   "or found a project")
+            if made == "would_apply":
+                return dict(base, outcome="would_apply", change={"project_id": [None, fields["project_id"]]})
+            op = dict(op, set=dict(fields, project_id=made))
+        if is_dict and op.get("op") == NEW_PROJECT:
+            base["name"] = op.get("name")
         problems = shape_problems(op)
         if problems:
             return dict(base, outcome="refused", code="INVALID_OP", reason="; ".join(problems))
@@ -1251,6 +1390,19 @@ def undo_one(applier, row, entity, rid, dry_run):
         applier.comment(rid, "Cancelled: this task was created in error and its creation was undone.",
                         marker, "task-stack-undo", op["id"])
         applier.remember("task_id", applier.write_back("task", record, {}, "CANCELLED"), op, "task-stack-undo")
+        return {"outcome": "undone", "change": {"status": [status, "CANCELLED"]}}
+    if entity == "project" and row.get("write") == "create":
+        status = norm("status", record.get("status"))
+        if status == "CANCELLED":
+            return {"outcome": "unchanged", "reason": "already cancelled"}
+        still = applier.read("project", rid, "full")["_open"]
+        if still:
+            return {"outcome": "refused", "code": "OPEN_TASKS",
+                    "reason": f"{len(still)} open task(s) are in it; undo the moves into it first"}
+        if dry_run:
+            return {"outcome": "would_undo", "change": {"status": [status, "CANCELLED"]}}
+        applier.remember("project_id", applier.write_back("project", record, {"status": "CANCELLED"}), op,
+                         "task-stack-undo")
         return {"outcome": "undone", "change": {"status": [status, "CANCELLED"]}}
     after_vals, before_vals = row.get("after") or {}, row.get("before") or {}
     if all(norm(f, record.get(f)) == norm(f, v) for f, v in before_vals.items()):

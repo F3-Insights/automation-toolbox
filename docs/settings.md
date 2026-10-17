@@ -279,6 +279,7 @@ Every key here except `state` is read from this table first and from the top lev
 |---|---|---|---|
 | `assignable_contacts` | No | none (only the owner) | Portal contact ids, besides the owner, to whom task-stack-apply may assign work. |
 | `lead_words` | No | none | Extra words that may come before a task's verb, such as the owner's first name, added to the built-in list. |
+| `relayed_answer_head` | No | `[meeting-scheduled-worker] relayed_answer_head`, else none | The first line a runner puts on an answer it posts for the owner, so task-stack-apply reads that comment as the owner's answer to a project proposal. |
 
 ### [toolbox-audit-workstream]
 

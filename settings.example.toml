@@ -295,6 +295,9 @@
 # assignable_contacts = ["00000000-0000-0000-0000-000000000000"]
 # Extra words that may come before a task's verb, such as the owner's first name, added to the built-in list (optional).
 # lead_words = ["dana"]
+# The first line a runner puts on an answer it relays for the owner, so task-stack-apply reads that
+# comment as the owner's answer to a project proposal (optional; else [meeting-scheduled-worker]'s).
+# relayed_answer_head = ""
 
 [toolbox-audit-workstream]
 # The toolbox checkout the audit scans and cuts its fix branch from; the Run folder must sit outside it (required, unless --repo is given).

@@ -538,3 +538,118 @@ def test_a_delivered_ask_is_created_and_completed_together(tmp_path):
     assert dry["c1"]["outcome"] == "would_apply"
     orphan = by_id(run(portal, changes(dict(done, task="op:n9")), tmp_path))["c1"]
     assert (orphan["outcome"], orphan["code"]) == ("refused", "NO_TASK")
+
+
+# --------------------------------------------------------------------------- a new project, on approval
+
+KEY = "project:storefront"
+PROPOSAL = (f"Project proposal ({KEY}): open \"Launch the storefront\" in Northwind Sales for these 3 tasks. "
+            "Answer approve, a new name, or no.")
+
+
+def new_project(name="Launch the storefront", op_id="np1", **kw):
+    op = {"id": op_id, "op": "create_project", "name": name, "domain_id": D_SALES, "proposal": KEY,
+          "approval": f"portal://task/{uid(1)}", "description": "Done when: the storefront takes orders",
+          "priority": 2, "reason": "Three tasks share the storefront launch"}
+    op.update(kw)
+    return op
+
+
+def move(n, op_id):
+    return {"id": op_id, "op": "edit", "task": f"portal://task/{uid(n)}",
+            "set": {"project_id": "op:np1", "domain_id": D_SALES}, "reason": "Filed under the new project"}
+
+
+def proposed(answer=None, author="dana@northwind.test"):
+    """Three tasks in the catch-all; the proposal asked on the first, and the owner's answer."""
+    portal = FakePortal([task(n, f"Send the storefront item {n}", project_id=P_BUCKET) for n in (1, 2, 3)])
+    portal.comments[uid(1)].append({"id": uid(4001), "author_email": "dana@northwind.test",
+                                    "body": PROPOSAL + "\n\ntask-steward-clarify via task-stack-apply, op q1. "
+                                                       "Marker: tsk000000000001"})
+    if answer is not None:
+        portal.comments[uid(1)].append({"id": uid(4002), "author_email": author, "body": answer})
+    return portal
+
+
+def test_an_approved_project_is_created_and_its_tasks_moved_into_it(tmp_path):
+    portal = proposed("approve")
+    result = by_id(run(portal, changes(new_project(), move(1, "e1"), move(2, "e2"), move(3, "e3"),
+                                       orchestrator="task-steward-clarify"), tmp_path))
+    assert result["np1"]["outcome"] == "applied"
+    pid = result["np1"]["project"].rsplit("/", 1)[1]
+    made = portal.projects[pid]
+    assert (made["name"], made["domain_id"], made["priority"]) == ("Launch the storefront", D_SALES, "P2")
+    assert result["np1"]["marker"] in made["description"] and "Done when" in made["description"]
+    assert {portal.tasks[uid(n)]["project_id"] for n in (1, 2, 3)} == {pid}
+    again = by_id(run(portal, changes(new_project(), move(1, "e1"), orchestrator="task-steward-clarify"), tmp_path))
+    assert again["np1"]["outcome"] == "unchanged" and again["e1"]["outcome"] == "unchanged"
+    assert sum(1 for x in portal.calls if x[0] == "create_project") == 1
+
+
+@pytest.mark.parametrize("answer,code", [
+    (None, "UNAPPROVED"),
+    ("no, these belong under Delivery routes", "DECLINED"),
+    ("maybe later", "UNAPPROVED"),
+    ("approve\n(posted by task-steward, an agent)", "UNAPPROVED"),   # an agent's words, not the owner's
+])
+def test_no_project_without_the_owners_yes(tmp_path, answer, code):
+    portal = proposed(answer)
+    result = by_id(run(portal, changes(new_project(), move(1, "e1")), tmp_path))
+    assert (result["np1"]["outcome"], result["np1"]["code"]) == ("refused", code)
+    assert (result["e1"]["outcome"], result["e1"]["code"]) == ("refused", "NO_PROJECT")
+    assert portal.writes() == []
+
+
+def test_an_answer_by_someone_else_or_with_no_proposal_asked_is_no_approval(tmp_path):
+    portal = proposed("approve", author="sam@elsewhere.test")
+    assert by_id(run(portal, changes(new_project()), tmp_path))["np1"]["code"] == "UNAPPROVED"
+    bare = FakePortal([task(1, "Send the storefront item 1", project_id=P_BUCKET)])
+    bare.comments[uid(1)].append({"id": uid(4002), "author_email": "dana@northwind.test", "body": "approve"})
+    assert by_id(run(bare, changes(new_project()), tmp_path))["np1"]["code"] == "UNAPPROVED"
+
+
+def test_a_rename_approves_the_name_the_owner_gave(tmp_path):
+    portal = proposed("rename: Storefront go-live")
+    assert by_id(run(portal, changes(new_project()), tmp_path))["np1"]["code"] == "UNAPPROVED"
+    r = by_id(run(portal, changes(new_project("Storefront go-live")), tmp_path))["np1"]
+    assert r["outcome"] == "applied"
+
+
+def test_an_answer_relayed_by_a_runner_counts_as_the_owners(tmp_path, no_owner_settings):
+    no_owner_settings.write_text('[task-stack-workstream]\nrelayed_answer_head = "Relayed for the owner:"\n')
+    relayed = ("Relayed for the owner:\n\n1. Open project \"Launch the storefront\"?\nAnswer: rename\n\n"
+               "Storefront go-live\n(posted by runner, an agent)")
+    portal = proposed(relayed)
+    # The echoed question names the proposed name; only the pick and the typed words count.
+    assert by_id(run(portal, changes(new_project()), tmp_path))["np1"]["code"] == "UNAPPROVED"
+    assert by_id(run(portal, changes(new_project("Storefront go-live")), tmp_path))["np1"]["outcome"] == "applied"
+    no = proposed("Relayed for the owner:\n\n1. Open project?\nAnswer: no\n(posted by runner, an agent)")
+    assert by_id(run(no, changes(new_project()), tmp_path))["np1"]["code"] == "DECLINED"
+
+
+def test_a_project_already_open_by_that_name_is_found_not_made(tmp_path):
+    portal = proposed()   # not even answered: the owner opened it by hand
+    portal.projects[uid(703)] = {"id": uid(703), "name": "Launch the Storefront", "domain_id": D_SALES,
+                                 "status": "IN_PROGRESS", "created_at": ago(1), "updated_at": ago(1)}
+    result = by_id(run(portal, changes(new_project(), move(1, "e1")), tmp_path))
+    assert result["np1"]["outcome"] == "unchanged" and result["np1"]["project"].endswith(uid(703))
+    assert portal.tasks[uid(1)]["project_id"] == uid(703)
+    assert not any(x[0] == "create_project" for x in portal.calls)
+
+
+def test_create_project_shape_goal_dry_run_and_undo(tmp_path):
+    problems = ap.shape_problems({"id": "x", "op": "create_project", "reason": "r", "name": ""})
+    assert any("name" in p for p in problems) and any("approval" in p for p in problems)
+    assert any("proposal" in p for p in problems) and any("domain_id" in p for p in problems)
+    portal = proposed("ok")
+    wrong_goal = by_id(run(portal, changes(new_project(goal_id=G_GROW)), tmp_path))["np1"]
+    assert wrong_goal["code"] == "DOMAIN_MISMATCH" and portal.writes() == []
+    dry = by_id(run(portal, changes(new_project(), move(1, "e1")), tmp_path, dry_run=True))
+    assert dry["np1"]["outcome"] == "would_apply" and dry["e1"]["outcome"] == "would_apply"
+    assert portal.writes() == []
+    result = by_id(run(portal, changes(new_project(), move(1, "e1")), tmp_path))
+    pid = result["np1"]["project"].rsplit("/", 1)[1]
+    undone = ap.undo(portal, ap.read_jsonl(tmp_path / "undo.jsonl"), False, tmp_path / "state",
+                     now=NOW + timedelta(minutes=5))
+    assert undone["status"] == "undone"
+    assert portal.tasks[uid(1)]["project_id"] == P_BUCKET and portal.projects[pid]["status"] == "CANCELLED"

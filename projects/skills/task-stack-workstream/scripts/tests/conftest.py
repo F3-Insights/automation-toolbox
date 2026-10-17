@@ -135,9 +135,16 @@ class FakePortal:
             return {"id": rec["id"]}
         if tool == "create_task_comment":
             cid = uid(10000 + len(self.calls))
-            self.comments[args["task_id"]].append({"id": cid, "body": args["body"]})
+            self.comments[args["task_id"]].append({"id": cid, "body": args["body"], "author_email": "dana@northwind.test"})
             self.tasks[args["task_id"]]["updated_at"] = self.stamp()
             return {"id": cid}
+        if tool == "create_project":
+            new = uid(30000 + len(self.projects))
+            self.projects[new] = {"id": new, "name": args["name"], "domain_id": args["domain_id_or_name"],
+                                  "goal_id": args.get("goal_id"), "status": "NOT_STARTED",
+                                  "description": args.get("description", ""), "priority": args.get("priority", "P3"),
+                                  "due_date": args.get("due_date"), "created_at": self.stamp(), "updated_at": self.stamp()}
+            return {"id": new}
         if tool == "create_task":
             new = uid(20000 + len(self.tasks))
             row = task(0, args["title"], project_id=args.get("project_id"), domain_id=args.get("domain_id_or_name"),
