@@ -2211,7 +2211,7 @@ Job-specific changes:
 
 ### obsidian
 
-**Today:** 1 agent (0 main), 4 skills, 10 scripts (8 plus 2 `_common.py`). Obsidian works with the owner's Obsidian vault, run by the owner by hand. It turns a YouTube video into an inbox note shaped by the owner's takeaway (`obsidian-video-note`) and proposes vault tidying without changing anything (`obsidian-vault-garden`). Both follow the vault's privacy and write rules (`obsidian-workstream`: private folders never read, new notes only in the inbox). It also holds `content-scout`, which indexes and distils outside creators into a research folder that must be **outside** the vault. It needs no Insights Portal and has no Automation.
+**Today:** 1 agent (0 main), 4 skills, 10 scripts (8 plus 2 `_common.py`). Obsidian works with the owner's Obsidian vault, run by the owner by hand. It turns a YouTube video into an inbox note shaped by the owner's takeaway (`obsidian-video-note`) and proposes vault tidying without changing anything (`obsidian-vault-garden`). Both follow the vault's privacy and write rules (then `obsidian-workstream`, since split into `obsidian-search` and `obsidian-write`: private folders never read, new notes only in the inbox). It also holds `content-scout`, which indexes and distils outside creators into a research folder that must be **outside** the vault. It needs no Insights Portal and has no Automation.
 
 **Plugin:** `obsidian`, **a plugin of skills only**: no main agent, no reviewer, no worker. The three vault skills are interactive, share one reference skill and one settings block (`vault_dir`, `vault_inbox`, `vault_private_dirs`, `vault_rules`), and are what the owner wants switched on in a vault session and nowhere else. That matches decision 1's "switched on as one unit". Folding it into personal or learning would turn the vault tools on wherever that department is on, for no gain.
 
@@ -2231,7 +2231,7 @@ Job-specific changes:
 
 | skill | decision | add `## Steps`? | scripts → commands |
 |---|---|---|---|
-| `obsidian-workstream` | keep (reference) | no | `obsidian-vault-config`, `obsidian-vault-find`, `obsidian-vault-read`, `obsidian-vault-links`, `obsidian-vault-inbox-write` |
+| `obsidian-workstream` (split into `obsidian-search` and `obsidian-write`) | keep (reference) | no | `obsidian-vault-config`, `obsidian-vault-find`, `obsidian-vault-read`, `obsidian-vault-links`, `obsidian-vault-inbox-write` |
 | `obsidian-video-note` | keep | has Steps | `obsidian-youtube-transcript` |
 | `obsidian-vault-garden` | keep | has Steps | `obsidian-vault-garden` (the wrapper keeps the prefix once) |
 | `content-scout-workstream` | **move to marketing** (with a copy of `youtube_transcript.py`, which it calls from `obsidian-video-note`) | no | in marketing: `marketing-youtube-channel-list`, `marketing-youtube-transcript` |

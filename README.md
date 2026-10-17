@@ -227,7 +227,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Recurring Summaries](recurring-summaries/) | The nightly sweep and the daily plan: the night's Daily Note, the morning's three, the evening close | 11 / 4 |
 | [Chief of Staff](chief-of-staff/) | Routes requests to the right piece and runs an unattended daily cycle over the owner's agents, with start-of-day, quick capture, status and work-survey tools | 8 / 6 |
 | [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 5 |
-| [Obsidian](obsidian/) | Video notes into the vault inbox, a vault gardener that only proposes, and an outside-creator scout | 1 / 4 |
+| [Obsidian](obsidian/) | Video notes into the vault inbox, a vault gardener that only proposes, a curator that keeps one scope of the vault tidy and files the inbox into it (backed up, undoable), and an outside-creator scout; a Claude Code plugin | 2 / 7 |
 | [Toolbox Maintenance](toolbox-maintenance/) | A weekly audit of this toolbox with lint fixes on a review branch, an automation activity audit, and a monthly skill harvest from past sessions | 8 / 3 |
 | [Personal](personal/) | Household, health check-ins, home infrastructure, personal finance review, tax season | 11 / 6 |
 

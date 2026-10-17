@@ -1,6 +1,6 @@
 ---
 name: content-scout-workstream
-description: "Reference loaded by the content-scout agent, not for a user request. Holds the method for tracking outside creators from the owner's watchlist: creators and their channels as folders in the research folder, a cheap index pass first, then a transcript and distillation only for the items picked, the index and distillation formats, and the attribution rules. Also owns youtube_channel_list.py. To index or distill, dispatch content-scout; to put one video in the vault, use obsidian-video-note."
+description: "Reference loaded by the content-scout agent, not for a user request. Holds the method for tracking outside creators from the owner's watchlist: creators and their channels as folders in the research folder, a cheap index pass first, then a transcript and distillation only for the items picked, the index and distillation formats, and the attribution rules. Also owns obsidian-youtube-channel-list. To index or distill, dispatch content-scout; to put one video in the vault, use obsidian-video-note."
 user-invocable: false
 ---
 
@@ -10,7 +10,7 @@ The content scout fetches, indexes and distills what outside creators publish, s
 
 ## Inputs
 
-- **The research folder**: the setting `research_dir` in the `[content-scout-workstream]` table of the owner's settings file, or the folder the caller names. It is a working folder, not the vault: if it sits inside the setting `vault_dir`, stop and say so, because the vault takes only new inbox notes (see `obsidian-workstream`). To keep one distilled video in the vault, the owner runs `obsidian-video-note` on it.
+- **The research folder**: the setting `research_dir` in the `[content-scout-workstream]` table of the owner's settings file, or the folder the caller names. It is a working folder, not the vault: if it sits inside the setting `vault_dir`, stop and say so, because the vault takes only new inbox notes (see `obsidian-write`). To keep one distilled video in the vault, the owner runs `obsidian-video-note` on it.
 - **The watchlist**: the owner's own file, at the setting `watchlist` in the same table, else `<research_dir>/_watchlist.md`. It names each creator, a folder slug, and each channel with its link. `references/watchlist.example.md` shows the shape with invented creators. The watchlist and the folders it creates stay out of this repository.
 
 If neither the setting nor the caller gives a research folder, stop and say which setting is needed.
@@ -28,7 +28,7 @@ If neither the setting nor the caller gives a research folder, stop and say whic
 For each creator and channel asked for:
 
 1. List every item with its title, link or id, publish date and, where available, views and duration.
-   - YouTube: `python3 ~/.claude/skills/content-scout-workstream/scripts/youtube_channel_list.py <@handle or URL> [--max N] --out <channel folder>/_raw.json`. Its fast mode leaves dates and views empty; add `--with-stats` for a short list (`--max 25` or so), since it makes one request per video.
+   - YouTube: `obsidian-youtube-channel-list <@handle or URL> [--max N] --out <channel folder>/_raw.json`. Its fast mode leaves dates and views empty; add `--with-stats` for a short list (`--max 25` or so), since it makes one request per video.
    - Newsletter or blog: fetch the archive or news page and read the post list from it.
 2. Write `_index.md` as a table, newest first. Keep the status of items already in the index; add new items as `Pending`.
 3. Fetch no transcripts in this pass.
@@ -38,7 +38,7 @@ For each creator and channel asked for:
 For each item the owner or the caller picks:
 
 1. Create `<YYYY-MM-DD>-<item-slug>/`.
-2. Save the text: for a video, `python3 ~/.claude/skills/obsidian-video-note/scripts/youtube_transcript.py <url> --out <folder>/transcript.txt`; for a post, the fetched text as `source.md`. When a video has no captions (exit 1), mark it `Skipped` with the reason.
+2. Save the text: for a video, `obsidian-youtube-transcript <url> --out <folder>/transcript.txt`; for a post, the fetched text as `source.md`. When a video has no captions (exit 1), mark it `Skipped` with the reason.
 3. Write `README.md` in the format below.
 4. Mark the item `Distilled` in `_index.md`, with the folder name.
 
@@ -107,4 +107,4 @@ Report what was indexed and distilled, and every problem: a video with no captio
 
 ## Scripts
 
-- `scripts/youtube_channel_list.py CHANNEL [--max N] [--with-stats] [--out FILE]`: a channel's videos as JSON through yt-dlp, which the owner installs; the environment variable `YT_DLP` names another command to run it. It refuses an `--out` inside the setting `vault_dir`. Standard library only.
+- `obsidian-youtube-channel-list CHANNEL [--max N] [--with-stats] [--out FILE]`: a channel's videos as JSON through yt-dlp, which the owner installs; the environment variable `YT_DLP` names another command to run it. It refuses an `--out` inside the setting `vault_dir`. Standard library only.

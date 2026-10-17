@@ -1,6 +1,6 @@
 """What vault_garden.py needs: the owner's settings, the vault index, frontmatter and links.
 
-A short copy of obsidian-workstream's _common.py (without title search); a fix to one is a
+A short copy of obsidian-search's _common.py (without title search); a fix to one is a
 deliberate edit to the other.
 
 Settings (top level of the owner's settings file, all shared by the obsidian skills):
