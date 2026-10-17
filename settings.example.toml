@@ -39,10 +39,6 @@
 # vault_private_dirs = ["Private"]
 # Path to the owner's VAULT-RULES.md: note kinds, frontmatter keys, title prefixes and tags (optional).
 # vault_rules = "~/path/to/vault/VAULT-RULES.md"
-# A list of folders inside the vault, relative to vault_dir, that the vault curator keeps tidy; nothing outside them and the inbox is changed (required, for the curator).
-# vault_curate_dirs = ["Work"]
-# The most changes obsidian-curate-apply makes in one Run (optional; default 25).
-# vault_curate_max_changes = 25
 
 [board-package-workstream]
 # The folder of Context files for this skill, read before the top-level key (optional; default the top-level contexts_dir).

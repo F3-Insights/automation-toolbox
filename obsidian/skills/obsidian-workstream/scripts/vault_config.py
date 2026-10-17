@@ -3,10 +3,9 @@
 Skills run this first so they know where the vault, the inbox and the owner's vault rules
 are, and stop with a plain message when one is missing, instead of guessing a path.
 
-Input: nothing (reads vault_dir, vault_inbox, vault_private_dirs, vault_rules and
-vault_curate_dirs from the owner's settings). Prints JSON with each value, its resolved path
-and a list of problems. Exit 0 when the vault and inbox are usable (a bad vault_rules or curate
-folder is listed but does not block); exit 2 otherwise.
+Input: nothing (reads vault_dir, vault_inbox, vault_private_dirs and vault_rules from the
+owner's settings). Prints JSON with each value, its resolved path and a list of problems.
+Exit 0 when the vault and inbox are usable; exit 2 otherwise.
 
     python3 vault_config.py
 """
@@ -22,7 +21,7 @@ def check():
     conf = settings()
     out = {"vault_dir": conf.get("vault_dir"), "vault_inbox": conf.get("vault_inbox"),
            "vault_private_dirs": conf.get("vault_private_dirs", []), "vault_rules": conf.get("vault_rules"),
-           "vault_curate_dirs": conf.get("vault_curate_dirs", []), "inbox_path": None, "problems": []}
+           "inbox_path": None, "problems": []}
     if not out["vault_dir"]:
         out["problems"].append("vault_dir is not set")
     else:
@@ -36,9 +35,6 @@ def check():
             out["inbox_path"] = str(inbox)
             if not inbox.is_dir():
                 out["problems"].append(f"the inbox folder {inbox} does not exist")
-        for folder in out["vault_curate_dirs"]:
-            if not (root / folder).is_dir():
-                out["problems"].append(f"vault_curate_dirs: {root / folder} is not a folder")
     if out["vault_rules"] and not Path(out["vault_rules"]).expanduser().is_file():
         out["problems"].append(f"vault_rules {out['vault_rules']} is not a file")
     return out
@@ -48,7 +44,7 @@ def main(argv=None):
     argparse.ArgumentParser(description="Show the owner's vault settings and their problems.").parse_args(argv)
     out = check()
     print(json.dumps(out, indent=1))
-    blocking = [p for p in out["problems"] if not p.startswith(("vault_rules", "vault_curate_dirs"))]
+    blocking = [p for p in out["problems"] if not p.startswith("vault_rules")]
     return 2 if blocking else 0
 
 
