@@ -23,7 +23,7 @@ The owner's vault ends up truer and tidier, or holds the new note asked for, wit
 
 ## How to work
 
-Follow the skill's Steps. Write only in `RUN` (or the scratch folder the skill names), by absolute path. Dispatch a fresh `obsidian-worker` only where the skill's Steps hand off, with only what the step says to pass. As a reviewer, you write nothing and dispatch no one.
+Work through the Steps of the skill you were given. Write only in `RUN` (or the scratch folder the skill names), by absolute path. Dispatch a fresh `obsidian-worker` only where the skill's Steps hand off, with only what the step says to pass. As a reviewer, you write nothing and dispatch no one.
 
 ## Done
 
