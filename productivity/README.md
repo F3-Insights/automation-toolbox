@@ -17,7 +17,6 @@ From Sentinel, an Automation launches a main agent by name and its brief names t
 | Agent | Mode | Automation | What it does |
 |---|---|---|---|
 | `task-steward` | `capture` | task-capture | Turns said-but-not-seen commitments and quick-capture lines into tasks, never twice |
-| | `asks` | task-asks | One domain's mail and meetings: the owner's asks of others as delegated WAITING tasks, asks of the owner (VIPs first) as theirs, never twice |
 | | `clarify` | task-clarify | Daily GTD clarify: files, retitles, dates and sets WAITING on open tasks |
 | | `reconcile` | task-reconcile | Nightly: closes done, duplicate and dead tasks on evidence; every cancel reviewer-passed |
 | `comms-steward` | `follow-up` | follow-up | Chases what the owner is owed and closes what they promised: checked nudges, promise tasks |
@@ -42,7 +41,7 @@ Departments not yet converted (sales, reporting, learning, projects, recurring-s
 | Skill | Run by | What it holds |
 |---|---|---|
 | `task-stack-workstream` | task-steward, gtd-weekly-review, comms-steward (shared copy) | Task-stack conduct, the change-set contract, checklist Check task-stack ops |
-| `task-stack-capture`, `task-stack-asks`, `task-stack-clarify`, `task-stack-reconcile` | task-steward | Each mode's Steps; sections Decide a batch, Decide asks in a batch, Clarify a batch, Prove a batch |
+| `task-stack-capture`, `task-stack-clarify`, `task-stack-reconcile` | task-steward | Each mode's Steps; sections Decide a batch, Clarify a batch, Prove a batch |
 | `comms-follow-up-workstream`, `comms-clerical-routing-workstream`, `crm-relationship-workstream` | comms-steward | Each mode's rules, Steps and shapes; checklist Check routed threads |
 | `comms-draft-check` | reviewer | Checklist The tests, in order, and the outbound gate `productivity-outbound-check` |
 | `email-drafter-method`, `email-triager-method`, `waiting-on-tracker-method` | worker | Drafting one email, triaging inbound mail, finding what the owner waits on |
@@ -64,7 +63,7 @@ Departments not yet converted (sales, reporting, learning, projects, recurring-s
 
 ## Commands
 
-In `bin/`, one per script: `productivity-find-contact`, `-find-email`, `-email-context-pack`, `-email-draft-show`, `-email-deliver`, `-outbound-check`, `-notify-owner`; `-meeting-pending`, `-existing`, `-fetch`, `-validate`, `-publish`, `-acknowledge`, `-skip`; `-prepare-transcript`, `-portal-read`, `-check-evidence` (meeting-portal-notes); `-task-capture-queue`, `-record`, `-check`; `-task-asks-queue`, `-record`; `-weekly-review-gather`, `-pack`, `-check`, `-changes`, `-publish`; `-calendar-steward-scan`, `-calendar-apply`, `-calendar-steward-check`, `-calendar-time`; `-portal-issue-file`; `-time-study-collect`, `-tool`, `-day-lint`, `-said-not-seen`, `-check`. The shared copy's commands keep one unprefixed name: `task-stack-apply`, `task-stack-check`, `task-stack-queue`, `task-stack-report`. Each prints `--help`.
+In `bin/`, one per script: `productivity-find-contact`, `-find-email`, `-email-context-pack`, `-email-draft-show`, `-email-deliver`, `-outbound-check`, `-notify-owner`; `-meeting-pending`, `-existing`, `-fetch`, `-validate`, `-publish`, `-acknowledge`, `-skip`; `-prepare-transcript`, `-portal-read`, `-check-evidence` (meeting-portal-notes); `-task-capture-queue`, `-record`, `-check`; `-weekly-review-gather`, `-pack`, `-check`, `-changes`, `-publish`; `-calendar-steward-scan`, `-calendar-apply`, `-calendar-steward-check`, `-calendar-time`; `-portal-issue-file`; `-time-study-collect`, `-tool`, `-day-lint`, `-said-not-seen`, `-check`. The shared copy's commands keep one unprefixed name: `task-stack-apply`, `task-stack-check`, `task-stack-queue`, `task-stack-report`. Each prints `--help`.
 
 Not in this repository: `meeting-summary-to-pdf` (`meeting-summary`) and the `timestudy` program, a separate checkout `productivity-time-study-tool` runs.
 
@@ -73,7 +72,7 @@ Not in this repository: `meeting-summary-to-pdf` (`meeting-summary`) and the `ti
 The keys are described in [docs/settings.md](../docs/settings.md).
 
 - **Portal**: `portal_mcp_config` (and `portal_server`) for every script that reads or writes the Portal, with the bearer in `INSIGHTS_PORTAL_ASSISTANT_TOKEN` or a `${VAR}` in the MCP config.
-- **State**: `state_dir` for the task stack, capture, the asks cursor (`task-asks/<domain>.json`), calendar steward and weekly review. The meeting worker's state is `--state`, else `MEETING_PROCESSING_STATE`, else `state_dir` under `[meeting-scheduled-worker]`, else `<state_dir>/meeting-processing`.
+- **State**: `state_dir` for the task stack, capture, calendar steward and weekly review. The meeting worker's state is `--state`, else `MEETING_PROCESSING_STATE`, else `state_dir` under `[meeting-scheduled-worker]`, else `<state_dir>/meeting-processing`.
 - **Per skill**: `[calendar-steward-method] home`, `daily_plan_state`, `timezone` (also read by `calendar-time`); `[task-stack-workstream] assignable_contacts`, `lead_words`; `[task-stack-capture] sources` or `sources_file`; `[meeting-scheduled-worker] since`, `enrichment_agent`, `relayed_answer_head`; `[crm-hygiene-workstream] portal_issue_repo`, `private_terms`; `[report-time-study] home`, `repo`, `domains_csv`.
 - **Runner switches**: `F3I_TOOLBOX_DRY_RUN=1` makes the meeting worker's writes refuse a call without `--dry-run`; `NOTIFY_OWNER_MODE` (`off`, `dry-run`) quiets `productivity-notify-owner`; `GH` names another `gh` for `productivity-portal-issue-file`.
 - `voice_guide` is read by the agents, not by a script.
