@@ -64,7 +64,7 @@ Then, as needed: the contact (`get` contact: company, recent mail, open tasks an
 
 ## What you propose
 
-One `edit` op per task, every change in one `set`, with a `reason` the owner reads as a comment on the task ("Filed under Monthly close; titled as the next action; waits on the bank, follow up 10/12"). Cite the email or note that decided a field in `evidence` when there is one: a `portal://email|note|calendar_event|task|project|goal|document/<uuid>` with the full uuid, never a contact and never an 8-character prefix (look the full id up first). `task-stack-apply` refuses a title that does not start with a verb, a project that is closed or in another domain, and a move to WAITING with no date or no party, so check those before you propose.
+One `edit` op per task, every change in one `set`, with a `reason` the owner reads as a comment on the task ("Filed under Monthly close; titled as the next action; waits on the bank, follow up 10/12"). Cite the email or note that decided a field in `evidence` when there is one: a `portal://email|note|calendar_event|task|project|goal|document/<uuid>` with the full uuid, never a contact and never an 8-character prefix (look the full id up first). `task-stack-apply` refuses a title that does not start with a verb, a project that is closed or in another domain, and any edit that leaves a task WAITING with no date or no party (including a refiling of a task already WAITING and undated: set its follow-up date in the same op), so check those before you propose.
 
 Confidence, per `task-stack-workstream`:
 - `high`: the record names the project, the date or the person, or the title is a plain rewording of the old one.

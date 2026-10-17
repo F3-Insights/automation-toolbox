@@ -44,7 +44,7 @@ And for each task:
 - **Overtaken.** Evidence the task no longer applies (the meeting was cancelled, the client chose another route, someone else did it): a cancel with that evidence.
 - **Stale.** No update in 60 days and no goal (its own or its project's): a cancel without evidence is allowed. Anything linked to a goal goes to `questions`.
 - **WAITING resolved.** Since the task last moved, an inbound email from the person it waits on, a meeting with them, or a note recording their answer plainly resolves the wait: an edit moving it to TODO (or IN_PROGRESS when work has started), citing that evidence. A reply that only acknowledges does not.
-- **WAITING undated.** When the record shows when to follow up (a promised date, a stated cadence), an edit setting `due_date`; otherwise leave it for the clarify mode and say so in `notes`.
+- **WAITING undated.** When the record shows when to follow up (a promised date, a stated cadence), an edit setting `due_date` to it; otherwise to one week from today. Any other edit of an undated WAITING task (a party, a reason) sets `due_date` the same way in the same op, or `task-stack-apply` refuses it.
 
 A task with no evidence either way stays open (`still-open`). Never complete on a hunch.
 
