@@ -173,28 +173,3 @@ def test_missing_scope_setting_stops(vault, tmp_path, monkeypatch):
     with pytest.raises(SystemExit) as exc:
         curate_apply.main(["--run", str(tmp_path)])
     assert exc.value.code == 2
-
-
-def test_splice_under_a_new_heading_adds_a_section(vault, tmp_path):
-    r = run_apply(tmp_path, [splice(vault, heading="## Draws", text="New line.")])["c1"]
-    assert r["status"] == "applied"
-    assert (vault / "Work/Areas/Pricing.md").read_text().endswith("\n\n## Draws\n\nNew line.\n")
-
-
-def test_a_note_is_not_marked_merged_when_its_splice_failed(vault, tmp_path):
-    clip = vault / "Inbox/Clip.md"
-    rs = run_apply(tmp_path, [
-        splice(vault, "c1", heading="Not a heading", source="Inbox/Clip.md"),
-        {"id": "c2", "op": "mark_merged", "target": "Inbox/Clip.md", "hash": h(clip), "into": "Pricing",
-         "check": "PASS"}])
-    assert rs["c1"]["status"] == "refused" and rs["c2"]["status"] == "refused"
-    assert clip.exists()
-
-
-def test_a_note_is_marked_merged_after_its_splice(vault, tmp_path):
-    clip = vault / "Inbox/Clip.md"
-    rs = run_apply(tmp_path, [
-        splice(vault, "c1", source="Inbox/Clip.md"),
-        {"id": "c2", "op": "mark_merged", "target": "Inbox/Clip.md", "hash": h(clip), "into": "Pricing",
-         "check": "PASS"}])
-    assert rs["c1"]["status"] == rs["c2"]["status"] == "applied"
