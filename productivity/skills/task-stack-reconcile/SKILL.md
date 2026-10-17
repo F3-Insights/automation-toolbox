@@ -1,6 +1,6 @@
 ---
 name: task-stack-reconcile
-description: "The nightly truth pass over the owner's Insights Portal task stack, run by task-steward in mode reconcile and by the productivity-worker it dispatches, not for a user request: closes tasks the evidence shows done, merges duplicates, cancels the overtaken and the long dead, never deletes. Covers what to pick, the Run's Steps, and the section Prove a batch (what counts as evidence a task is done). Use for \"which of my tasks are already done\". Not for filing and retitling (task-stack-clarify) or the weekly review (weekly-review-workstream)."
+description: "The nightly truth pass over the owner's Insights Portal task stack, run by task-steward in mode reconcile and by the productivity-worker it dispatches, not for a user request: closes tasks the evidence shows done, merges duplicates, cancels what the evidence shows overtaken or dropped (never on age alone), never deletes. Covers what to pick, the Run's Steps, and the section Prove a batch (what counts as evidence a task is done). Use for \"which of my tasks are already done\". Not for filing and retitling (task-stack-clarify) or the weekly review (weekly-review-workstream)."
 ---
 
 # Reconciling the task stack
