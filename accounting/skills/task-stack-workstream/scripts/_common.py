@@ -147,8 +147,15 @@ class Portal:
         req.add_header("Content-Type", "application/json")
         req.add_header("Accept", "application/json, text/event-stream")
         try:
-            with _OPENER.open(req, timeout=self.timeout) as response:
-                raw = response.read().decode("utf-8", errors="replace")
+            try:
+                with _OPENER.open(req, timeout=self.timeout) as response:
+                    raw = response.read().decode("utf-8", errors="replace")
+            except (TimeoutError, urllib.error.URLError) as exc:
+                # One retry on a timeout: the Portal is sometimes slow, rarely down.
+                if not isinstance(getattr(exc, "reason", exc), TimeoutError) and not isinstance(exc, TimeoutError):
+                    raise
+                with _OPENER.open(req, timeout=self.timeout) as response:
+                    raw = response.read().decode("utf-8", errors="replace")
         except urllib.error.HTTPError as exc:
             raise PortalError(f"portal {tool}: HTTP {exc.code}") from None
         except (urllib.error.URLError, OSError) as exc:
@@ -460,8 +467,14 @@ def compare(result, before):
         then_refs = {f.get("ref") for f in prev_find.get(k) or []}
         now_refs = {f["ref"] for f in result["findings"][k]}
         b, a = old.get("clean_share"), now.get("clean_share")
-        direction = ("n/a" if b is None or a is None else "better" if a > b + 1e-9
-                     else "worse" if a < b - 1e-9 else "same")
+        # Judged on the flagged count: closing tasks shrinks the total, so a share can dip while
+        # the same items are flagged. The share decides only when a count is missing.
+        fb, fa = old.get("flagged"), now.get("flagged")
+        if isinstance(fb, int) and isinstance(fa, int):
+            direction = "better" if fa < fb else "worse" if fa > fb else "same"
+        else:
+            direction = ("n/a" if b is None or a is None else "better" if a > b + 1e-9
+                         else "worse" if a < b - 1e-9 else "same")
         out["components"][k] = {"flagged_before": old.get("flagged"), "flagged_after": now["flagged"],
                                 "clean_share_before": b, "clean_share_after": a, "direction": direction,
                                 "new_items": len(now_refs - then_refs), "resolved_items": len(then_refs - now_refs)}

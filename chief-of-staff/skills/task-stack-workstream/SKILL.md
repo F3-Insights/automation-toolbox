@@ -29,7 +29,7 @@ Every proposed op carries `confidence`:
 
 ## The return on the task stack
 
-Return the `orchestration-workstream` block. Put each proposed write in `extra.ops`, in the change-set op shape below, plus `confidence` and `title` (the task's title as the Portal holds it). Put a merge or cancel you are unsure of, and any cancel of a task linked to a goal, in `questions` (`of: owner`), never in `extra.ops`. `items` holds one row per task you judged: `test` is the lens (`evidence`, `duplicate`, `stale`, `waiting`, `overdue`), `item` the task's `portal://task/<id>`, `state` one of `done`, `duplicate`, `stale`, `still-open`, `unclear`, `evidence` the reference or empty, `note` one line.
+Return the `orchestration-workstream` block. Put each proposed write in `extra.ops`, in the change-set op shape below, plus `confidence` and `title` (the task's title as the Portal holds it). Decide; never ask the owner (2026-10-17). A merge of the same commitment and owner, and a cancel with evidence it was done, overtaken or dropped (a goal-linked task included), go in `extra.ops`. A cancel without evidence is never written: age alone is no reason. What you cannot settle on evidence stays as it is, with an `items` row `state: unclear` saying why. `questions` stays empty. `items` holds one row per task you judged: `test` is the lens (`evidence`, `duplicate`, `stale`, `waiting`, `overdue`), `item` the task's `portal://task/<id>`, `state` one of `done`, `duplicate`, `stale`, `still-open`, `unclear`, `evidence` the reference or empty, `note` one line.
 
 ## The change set (for main agents)
 

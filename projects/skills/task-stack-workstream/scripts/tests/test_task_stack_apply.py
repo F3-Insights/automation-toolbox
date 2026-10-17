@@ -141,29 +141,35 @@ def test_domain_scope(tmp_path):
 
 # --------------------------------------------------------------------------- hand edits
 
+def test_no_hand_edit_window_by_default(tmp_path):
+    """The owner removed the window (2026-10-17): a task edited yesterday is written like any other."""
+    portal = FakePortal([task(1, "Send the rate card", created=40, updated=1)])
+    assert by_id(run(portal, changes(complete(1)), tmp_path))["c1"]["outcome"] == "applied"
+
+
 def test_a_task_changed_inside_the_window_by_someone_else_is_protected(tmp_path):
     portal = FakePortal([task(1, "Send the rate card", created=40, updated=2)])
-    r = by_id(run(portal, changes(complete(1)), tmp_path))["c1"]
+    r = by_id(run(portal, changes(complete(1)), tmp_path, hand_edit_days=7))["c1"]
     assert (r["outcome"], r["code"]) == ("refused", "HAND_EDIT") and "never written" in r["reason"]
 
 
 def test_never_edited_or_outside_the_window_is_free(tmp_path):
     portal = FakePortal([task(1, "Send pack", created=2, updated=2), task(2, "Send deck", created=40, updated=8)])
-    result = run(portal, changes(complete(1, op_id="a"), complete(2, op_id="b")), tmp_path)
+    result = run(portal, changes(complete(1, op_id="a"), complete(2, op_id="b")), tmp_path, hand_edit_days=7)
     assert {r["outcome"] for r in result["results"]} == {"applied"}
 
 
 def test_the_journal_tells_its_own_writes_from_a_hand_edit(tmp_path):
     portal = FakePortal([task(1, "Send the rate card", created=40, updated=40)])
     edit = {"id": "e1", "op": "edit", "task": uid(1), "set": {"due_date": "2030-03-20"}, "reason": "promised"}
-    run(portal, changes(edit), tmp_path)
+    run(portal, changes(edit), tmp_path, hand_edit_days=7)
     second = {"id": "e2", "op": "edit", "task": uid(1), "set": {"priority": 2}, "reason": "client asked"}
-    assert by_id(run(portal, changes(second), tmp_path))["e2"]["outcome"] == "applied"
+    assert by_id(run(portal, changes(second), tmp_path, hand_edit_days=7))["e2"]["outcome"] == "applied"
     portal.tasks[uid(1)].update(due_date="2030-04-01", updated_at=iso(NOW - timedelta(hours=3)))
     result = by_id(run(portal, changes(
         {"id": "e3", "op": "edit", "task": uid(1), "set": {"due_date": "2030-03-25"}, "reason": "x"},
         {"id": "e4", "op": "edit", "task": uid(1), "set": {"title": "Send the spring rate card"}, "reason": "y"}),
-        tmp_path))
+        tmp_path, hand_edit_days=7))
     assert result["e3"]["code"] == "HAND_EDIT" and "due_date" in result["e3"]["reason"]
     assert result["e4"]["outcome"] == "applied" and portal.tasks[uid(1)]["due_date"] == "2030-04-01"
 
@@ -239,8 +245,19 @@ def test_cancel_rules(tmp_path):
         {"id": "d", "op": "cancel", "task": uid(4), "reason": "overtaken", "check": "PASS",
          "evidence": f"portal://note/{NOTE}"},
         {"id": "e", "op": "cancel", "task": uid(1), "reason": "unchecked"}), tmp_path))
-    assert result["a"]["outcome"] == "applied" and result["d"]["outcome"] == "applied"
-    assert result["b"]["code"] == "NOT_STALE" and result["c"]["code"] == "GOAL_LINKED"
+    # Age alone is no reason (the owner, 2026-10-17): only the cancel with evidence is written.
+    assert result["d"]["outcome"] == "applied"
+    assert {result[k]["code"] for k in "abc"} == {"NO_EVIDENCE"}
+
+
+def test_a_task_created_and_closed_in_one_run_is_not_written(tmp_path):
+    portal = FakePortal([task(1, "Send pack")])
+    made = {"id": "n1", "op": "create", "title": "Answer the workspace question", "domain": D_OPS, "reason": "ask"}
+    closed = {"id": "n2", "op": "complete", "task": "op:n1", "reason": "answered", "evidence": f"portal://note/{NOTE}"}
+    result = by_id(run(portal, changes(made, closed, complete(1, op_id="c")), tmp_path))
+    assert result["n1"]["outcome"] == result["n2"]["outcome"] == "skipped"
+    assert result["c"]["outcome"] == "applied"
+    assert len(portal.tasks) == 1
 
 
 def test_a_reconcile_cancel_needs_the_checkers_pass(tmp_path):
@@ -366,7 +383,8 @@ def test_project_edit_links_a_goal_and_refuses_a_bucket(tmp_path):
 def test_close_a_dead_project_after_cancelling_its_last_task_in_the_same_set(tmp_path):
     portal = FakePortal([task(1, "Plan the routes", created=200, updated=200)])
     result = by_id(run(portal, changes(
-        {"id": "x1", "op": "cancel", "task": uid(1), "reason": "dead", "check": "PASS"},
+        {"id": "x1", "op": "cancel", "task": uid(1), "reason": "dead", "check": "PASS",
+         "evidence": f"portal://note/{NOTE}"},
         {"id": "pc", "op": "project_close", "project": P_ROUTES, "reason": "nothing left"}), tmp_path))
     assert result["x1"]["outcome"] == "applied" and result["pc"]["outcome"] == "applied"
     assert portal.projects[P_ROUTES]["status"] == "CANCELLED"
@@ -523,19 +541,17 @@ def test_a_delegated_create_sets_who_it_waits_on_with_the_status(tmp_path):
         "applied", "WAITING", OTHER, "the lease schedule")
 
 
-def test_a_delivered_ask_is_created_and_completed_together(tmp_path):
+def test_a_delivered_ask_is_not_written_at_all(tmp_path):
+    """An ask already delivered is created and closed in one change set: neither is written, so the
+    owner's Portal gets no task that was done before it existed (the owner, 2026-10-17)."""
     portal = FakePortal([])
     new = {"id": "n1", "op": "create", "title": "Send Sam the rate card", "domain": D_SALES,
            "source": "asks:email:def", "reason": "Sam asked on 3/1"}
     done = {"id": "c1", "op": "complete", "task": "op:n1", "evidence": f"portal://email/{EMAIL}",
             "reason": "Sent it on 3/2"}
     result = by_id(run(portal, changes(new, done), tmp_path))
-    assert result["c1"]["outcome"] == "applied" and result["c1"]["task"] == result["n1"]["task"]
-    assert portal.tasks[result["n1"]["task"].rsplit("/", 1)[1]]["status"] == "DONE"
-    again = by_id(run(portal, changes(new, done), tmp_path))
-    assert again["n1"]["outcome"] == "unchanged" and again["c1"]["outcome"] == "unchanged"
-    dry = by_id(run(FakePortal([]), changes(new, done), tmp_path / "dry", dry_run=True))
-    assert dry["c1"]["outcome"] == "would_apply"
+    assert result["n1"]["outcome"] == result["c1"]["outcome"] == "skipped"
+    assert portal.tasks == {}
     orphan = by_id(run(portal, changes(dict(done, task="op:n9")), tmp_path))["c1"]
     assert (orphan["outcome"], orphan["code"]) == ("refused", "NO_TASK")
 
@@ -639,8 +655,12 @@ def test_a_project_already_open_by_that_name_is_found_not_made(tmp_path):
 
 def test_create_project_shape_goal_dry_run_and_undo(tmp_path):
     problems = ap.shape_problems({"id": "x", "op": "create_project", "reason": "r", "name": ""})
-    assert any("name" in p for p in problems) and any("approval" in p for p in problems)
-    assert any("proposal" in p for p in problems) and any("domain_id" in p for p in problems)
+    assert any("name" in p for p in problems) and any("domain_id" in p for p in problems)
+    # No approval is needed any more (2026-10-17); one that is given must be well formed.
+    assert not any("approval" in p for p in problems)
+    bad = ap.shape_problems({"id": "x", "op": "create_project", "reason": "r", "name": "n", "domain_id": D_SALES,
+                             "approval": "not-a-task"})
+    assert any("approval" in p for p in bad) and any("proposal" in p for p in bad)
     portal = proposed("ok")
     wrong_goal = by_id(run(portal, changes(new_project(goal_id=G_GROW)), tmp_path))["np1"]
     assert wrong_goal["code"] == "DOMAIN_MISMATCH" and portal.writes() == []
@@ -653,3 +673,12 @@ def test_create_project_shape_goal_dry_run_and_undo(tmp_path):
                      now=NOW + timedelta(minutes=5))
     assert undone["status"] == "undone"
     assert portal.tasks[uid(1)]["project_id"] == P_BUCKET and portal.projects[pid]["status"] == "CANCELLED"
+
+
+def test_a_project_is_opened_without_asking(tmp_path):
+    """The owner, 2026-10-17: no propose-and-ask; the clarify pass opens the project it groups tasks into."""
+    portal = FakePortal([task(1, "Send pack")])
+    op = {k: v for k, v in new_project().items() if k not in ("approval", "proposal")}
+    result = by_id(run(portal, changes(op), tmp_path))
+    assert result["np1"]["outcome"] == "applied"
+    assert any(x[0] == "create_project" for x in portal.calls)

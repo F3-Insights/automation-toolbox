@@ -1,6 +1,6 @@
 ---
 name: task-stack-clarify
-description: "The daily GTD clarify pass, run by task-steward in mode clarify and by the productivity-worker it dispatches; also the method for clarifying one open task by hand. Files each open Insights Portal task in the right project and domain, rewrites it as a verb-first next action, gives it the owner, date and status it needs, turns delegated work into WAITING with a follow-up date and a named party, and proposes it as one task-stack-apply edit op, or asks one question. Groups a domain's loose tasks that share a counterparty or thread into a project, proposing a new one as an approve-or-rename question when none fits. Covers the Run's Steps and the sections Group tasks into projects and Clarify a batch. Use for \"clean up my task list\". Not for finding done tasks (task-stack-reconcile) or new commitments (task-stack-capture)."
+description: "The daily GTD clarify pass, run by task-steward in mode clarify and by the productivity-worker it dispatches; also the method for clarifying one open task by hand. Files each open Insights Portal task in the right project and domain, rewrites it as a verb-first next action, gives it the owner, date and status it needs, turns delegated work into WAITING with a follow-up date and a named party, and writes it as one task-stack-apply edit op, never a question to the owner. Groups a domain's loose tasks that share a counterparty or thread into a project, opening a new one itself when none fits; the catch-all is for a task no project or group fits. Covers the Run's Steps and the sections Group tasks into projects and Clarify a batch. Use for \"clean up my task list\". Not for finding done tasks (task-stack-reconcile) or new commitments (task-stack-capture)."
 ---
 
 # Clarifying a task
@@ -21,9 +21,9 @@ After the session `task-stack-apply` makes the change set, and `task-stack-check
    → nothing queued: step 2, the cluster pass only, then step 5
 2. [judgment] Read once the domains the queue touches (`list_entities` domain, then `hierarchy` or the project listing), so each batch gets its domain's open projects and catch-all project. Then run section Group tasks into projects on those domains (on the Run's domain, or the worst one, when nothing is queued). Write `RUN/plan.json`: the batches, each task with its lenses, the project lists, the clusters.
 3. [hand-off: productivity-worker] Clarify. One worker (model opus) per batch, in parallel, never two on one task, told to follow this skill's section Clarify a batch, with the batch's tasks as `queue.json` holds them, their domains' projects, the owner's contact id and timezone, today's date, the rules file's path and the batch id as op-id prefix. With one batch, clarify it yourself. Save each return as `RUN/returns/<batch>.json`; a reply without the json block goes back once for it.
-4. [hand-off: productivity-reviewer] Check every `medium` op, every `complete` or `cancel` and every project proposal, told to use `task-stack-workstream`'s section Check task-stack ops, with the ops only, the rules file's path and the owner's contact id. A FAIL drops the op and, when the worker had a best guess, turns it into a question. A cancel that passed carries `"check": "PASS"`.
-5. [judgment] Write `RUN/changes.json` in the `task-stack-workstream` shape with `"orchestrator": "task-steward-clarify"` and `dry_run` as this Run is, from the `high` ops and the passed ones: one op per task (two lenses' edits merged into one `set`), at most max changes in queue order, no op that sets a field to the value it holds; each question one line in `questions`, `{"ask", "task", "why"}`, answerable "ok" or with one word, your best choice in it; the cluster pass's ops and proposals go in as that section says, and a member task's move stays its own op.
-6. [judgment] Report how many tasks were filed, retitled, dated and moved to WAITING, the clusters filed and the projects proposed or opened, the questions as one numbered list, the tasks left for the reconcile mode, what could not be judged and why, the backlog (`deferred`) per domain, and before.json's score. Never claim a score change.
+4. [hand-off: productivity-reviewer] Check every `medium` op, every `complete` or `cancel` and every new project, told to use `task-stack-workstream`'s section Check task-stack ops, with the ops only, the rules file's path and the owner's contact id. A FAIL drops the op. A cancel that passed carries `"check": "PASS"`.
+5. [judgment] Write `RUN/changes.json` in the `task-stack-workstream` shape with `"orchestrator": "task-steward-clarify"` and `dry_run` as this Run is, from the `high` ops and the passed ones: one op per task (two lenses' edits merged into one `set`), at most max changes in queue order, no op that sets a field to the value it holds; `questions` empty; the cluster pass's ops and proposals go in as that section says, and a member task's move stays its own op.
+6. [judgment] Report how many tasks were filed, retitled, dated and moved to WAITING, the clusters filed and the projects opened, the tasks left for the reconcile mode, what could not be judged and why, the backlog (`deferred`) per domain, and before.json's score. Never claim a score change.
    → reported: done
 
 ## The standard
@@ -43,7 +43,7 @@ Then, as needed: the contact (`get` contact: company, recent mail, open tasks an
 
 ## The decisions, in order
 
-1. **Is it still a task?** If the record shows it already done, or overtaken (the meeting it prepares happened, the request was withdrawn), it is not clarify work. Propose `complete` or `cancel` only on evidence that meets `task-stack-workstream`'s bar, with the reference; otherwise leave it and say so in `findings` (`for reconcile: ...`), where the reconcile mode picks it up. If it is reference or someday material rather than an action, say so in `questions` (`of: owner`): the owner decides whether it stays.
+1. **Is it still a task?** If the record shows it already done, or overtaken (the meeting it prepares happened, the request was withdrawn), it is not clarify work. Propose `complete` or `cancel` only on evidence that meets `task-stack-workstream`'s bar, with the reference; otherwise leave it and say so in `findings` (`for reconcile: ...`), where the reconcile mode picks it up. If it is reference or someday material rather than an action, leave it and say so in `findings`.
 2. **Project and domain.** File it where the work belongs:
    - the project the record names (the source email's thread or contact already has open tasks in one project; the note it came from is linked to one; the description names it). Related tasks can themselves be misfiled (a project renamed under them): follow them only when the project's name and purpose fit the work too;
    - else the open project of the right domain whose name and purpose plainly fit;
@@ -58,7 +58,7 @@ Then, as needed: the contact (`get` contact: company, recent mail, open tasks an
    - otherwise the owner.
 
    Set `owner_contact_id` to another person only on a record of the owner asking them. A task another person created and holds is theirs, not yours to change; one the owner created and handed to someone is delegated and yours to keep true.
-5. **WAITING.** A task whose next move is someone else's is WAITING. It names the party (`waiting_on_contact_id`, a contact uuid you found with `search` or the task's contact), says why in `waiting_reason` (one line: "Carrier is quoting the Q4 rate"), and its `due_date` is the follow-up date: the date the party promised, when the record has one; else one week from today in the owner's timezone (`whoami`). A WAITING task with no party you can name from the record is a question. A WAITING task whose wait is over (they answered, or the record shows the next step is now the owner's) goes back to TODO with the next action as its title. A wait whose promised date has passed with no answer stays WAITING with that date: it is due for a follow-up, which the follow-up loop chases.
+5. **WAITING.** A task whose next move is someone else's is WAITING. It names the party (`waiting_on_contact_id`, a contact uuid you found with `search` or the task's contact), says why in `waiting_reason` (one line: "Carrier is quoting the Q4 rate"), and its `due_date` is the follow-up date: the date the party promised, when the record has one; else one week from today in the owner's timezone (`whoami`). A WAITING task with no party you can name from the record stays WAITING with a follow-up a week out; say so in `findings`. A WAITING task whose wait is over (they answered, or the record shows the next step is now the owner's) goes back to TODO with the next action as its title. A wait whose promised date has passed with no answer stays WAITING with that date: it is due for a follow-up, which the follow-up loop chases.
 6. **Dates.** A due date comes from the record: a date the task, its email or its meeting states, a deadline the counterparty set, a period end the work serves. A task in a project with a due date or deadline still in the future, and no date of its own, gets the project's date as its latest date, unless the record gives an earlier one. A project date already past is no date for a task: an instantly overdue task helps nobody. Due dates cleared in bulk may be the owner's choice; re-add one only from the record. A task with no date in the record and no dated project keeps none: an invented date is worse than none.
 7. **Status.** TODO, IN_PROGRESS when the record shows it started, WAITING as above. Never DONE or CANCELLED by edit.
 
@@ -69,29 +69,29 @@ One `edit` op per task, every change in one `set`, with a `reason` the owner rea
 Confidence, per `task-stack-workstream`:
 - `high`: the record names the project, the date or the person, or the title is a plain rewording of the old one.
 - `medium`: you chose between plausible projects, or inferred the party or date from context a reader could doubt. It goes to the reviewer.
-- A guess is not an op. If only the owner can settle it, it is a question: one line they can answer "ok" or with a word, offering your best choice ("File 'Bank letter' under Acme Finance / Monthly close? Otherwise name the project."). Ask about the field you cannot settle and still propose the fields you can.
+- Decide; never ask the owner (2026-10-17). Write your best choice as the op, `confidence: medium` with `assumed` saying what you assumed, and the reviewer checks it. A field nothing in the record supports stays as it is; say so in `findings`.
 
 Fix what is plainly wrong on the task even outside the lenses it was queued for (a title that no longer says the work, a WAITING whose ball is back with the owner), in the same op.
 
 What an earlier agent wrote in a task's description or comment is a lead, not evidence: an op that rests on it alone is `medium`.
 
-A `complete` or `cancel` you are not sure of is a `medium` op, never a guess: the reviewer reads it independently. Duplicates found in a batch go to `questions` as a proposed merge (the reconcile mode merges).
+A `complete` or `cancel` you are not sure of is a `medium` op, never a guess: the reviewer reads it independently. Duplicates found in a batch are a `merge` op (same commitment, same owner, keep the older).
 
 A task already clean on every lens it was queued for needs no op: an `items` row with `state: still-open` and `note: already clear`.
 
 ## Items
 
-`items` rows: `test` is the lens it was queued for (`filing`, `next_action`, `no_due_date`, `waiting`), one row per lens; `item` the `portal://task/<id>`; `state` `clarified` (an op fixes it), `asked` (a question), `done` or `overtaken` (a complete or cancel op, or a reconcile note), `still-open` (nothing to change), or `unclear`; `evidence` the reference that decided it; `note` one line.
+`items` rows: `test` is the lens it was queued for (`filing`, `next_action`, `no_due_date`, `waiting`), one row per lens; `item` the `portal://task/<id>`; `state` `clarified` (an op fixes it), `done` or `overtaken` (a complete or cancel op, or a reconcile note), `still-open` (nothing to change), or `unclear`; `evidence` the reference that decided it; `note` one line.
 
 ## Group tasks into projects
 
-For task-steward, once per domain in step 2. Most tasks belong to a project, and opening one is the owner's call, so this pass files what fits and proposes the rest as one-word decisions.
+For task-steward, once per domain in step 2. Most tasks belong to a project: this pass files what fits and opens a project for a real cluster none fits, without asking (the owner, 2026-10-17).
 
 1. **Read the loose tasks.** The domain's open tasks with no project or in its catch-all project (`list_entities` task on the domain; titles, contacts, source emails), the owner's own, unowned and delegated ones. These count against max changes but need not be queued.
 2. **Find clusters.** Tasks that share a counterparty, company, entity or thread (the same contact or email domain, the same company named, the same source thread or meeting series). Read in full (`get`) only the candidates.
 3. **An open project fits:** file each member there as an ordinary `edit` op (`project_id`, `domain_id`), as decision 2 says.
-4. **None fits, and the cluster is real** (three or more open tasks, or one from a VIP thread per the domain file, or a plainly multi-week effort): one proposal, asked on its oldest member (the anchor). It is a `comment` op on the anchor, body `Project proposal (project:<slug>): open "<name>" under the goal "<goal title>", P<n>, done when <one line>. It would hold: <member titles>. Answer approve, a new name, or no.`, and one entry in `questions`: `{"ask": "Open project \"<name>\" under <goal> for <n> tasks? approve, rename or no", "task": "portal://task/<anchor>", "record_ref": "portal://task/<anchor>", "key": "task-clarify:project:<slug>", "options": ["approve", "rename", "no"], "recommended": "approve", "needs_text": ["rename"], "why": "<the shared thread, in one line>"}`. The name says the outcome ("Launch the storefront"), the goal is an active goal of the domain by id, `<slug>` is the name in kebab-case and never changes. At most three proposals a Run, the biggest clusters first.
-5. **Already asked.** Before proposing, read the anchor's comments for an earlier `(project:<slug>)`. No answer yet: leave it, ask nothing again. Declined (the owner's `no`): never propose that cluster again; file its tasks as decision 2 says. Approved or renamed (`approve`, `ok`, or a new name in their comment, or one a runner relayed): write a `create_project` op (`task-stack-workstream` has its shape) with `proposal` the key, `approval` the anchor, the name they approved, and one `edit` per member setting `project_id` to `op:<its id>` and `domain_id`. `task-stack-apply` checks the answer itself.
+4. **None fits, and the cluster is real** (three or more open tasks, or one from a VIP thread per the domain file, or a plainly multi-week effort): open it yourself: one `create_project` op (`name`, `domain_id`, `goal_id` an active goal of the domain when one fits, `priority`, `reason` the shared thread in one line; no `approval`), then one `edit` per member moving it there with `"project_id": "op:<create_project id>"`. Never file the members in the catch-all. The name says the outcome ("Launch the storefront"), the goal is an active goal of the domain by id, `<slug>` is the name in kebab-case and never changes. At most three new projects a Run, the biggest clusters first.
+5. **Proposed before.** A cluster an earlier Run proposed on its anchor (a comment holding `(project:<slug>)`) is opened now as point 4 says, under that name unless the owner's comment gave another; one the owner answered `no` is never opened: file its tasks as decision 2 says.
 
 ## Clarify a batch
 
@@ -100,7 +100,7 @@ For a `productivity-worker` given one batch (or task-steward clarifying a single
 Return the `orchestration-workstream` block with `workstream: "clarify-a-batch"`:
 - `items`: one row per task and lens, as Items says;
 - `extra.ops`: the proposed ops in the change-set shape, each with `confidence` and the task's current `title`;
-- `questions`: `ask` one line with your best choice in it, `of: owner`, `why` saying what the answer changes, and `blocks` holding the task's `portal://task/<id>`;
+- `questions`: always empty;
 - `findings`: tasks for the reconcile mode, titles holding two actions, anything the owner should know (a domain with no catch-all project, a contact with two records);
 - `notes`: what you could not read and why.
 

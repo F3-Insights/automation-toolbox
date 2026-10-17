@@ -185,7 +185,9 @@ GOAL_CLOSE_STATUSES = ("ACHIEVED", "CANCELLED", "MISSED")
 GOAL_TRACKED = GOAL_EDITABLE + ("is_archived", "assignee_contact_id")
 CLOSED_GOAL = ("ACHIEVED", "MISSED", "CANCELLED", "ARCHIVED", "COMPLETED", "DONE")
 HORIZONS = ("VISION", "ANNUAL", "QUARTERLY", "MONTHLY")
-HAND_EDIT_DAYS, STALE_CLOSE_DAYS, STALE_CANCEL_DAYS, MAX_CHANGES = 7, 90, 60, 50
+HAND_EDIT_DAYS, STALE_CLOSE_DAYS, STALE_CANCEL_DAYS, MAX_CHANGES = 0, 90, 60, 50
+"""HAND_EDIT_DAYS 0: no hand-edit window. The owner removed it on 2026-10-17 (a fresh hand edit
+is no reason to leave a task wrong); --hand-edit-days N puts one back for a Run."""
 COMMENT_MAX, TITLE_MAX = 4000, 200
 DUP_THRESHOLD = 0.85
 # The owner's answer to a project proposal, read by its first word.
@@ -478,10 +480,10 @@ def shape_problems(op):
             out.append("create_project needs domain_id")
         if op.get("priority") not in (None, "") and not PRIORITY.match(str(op["priority"])):
             out.append("priority is 1 to 4")
-        if not task_id(op.get("approval")):
-            out.append("create_project needs approval, the portal://task/<uuid> its proposal was asked on")
-        if not PROPOSAL_KEY.match(str(op.get("proposal") or "")):
-            out.append("create_project needs proposal, the key the proposal was asked under (project:<slug>)")
+        if op.get("approval") and not task_id(op.get("approval")):
+            out.append("create_project's approval, when given, is the portal://task/<uuid> its proposal was asked on")
+        if op.get("approval") and not PROPOSAL_KEY.match(str(op.get("proposal") or "")):
+            out.append("create_project with an approval needs proposal, the key it was asked under (project:<slug>)")
         return out
     if kind != "create" and not task_id(op.get("task")):
         out.append("task is portal://task/<uuid> or the uuid")
@@ -690,6 +692,8 @@ class Applier:
         never edited since creation, or last changed by this script; otherwise the fields that
         differ from the journal (or every field when the journal has no row) are protected."""
         tracked = {"task_id": TRACKED, "project_id": PROJECT_TRACKED, "goal_id": GOAL_TRACKED}[key]
+        if self.hand_edit.days <= 0:
+            return set(), ""
         updated, created = c.parse_time(record.get("updated_at")), c.parse_time(record.get("created_at"))
         if updated is None or self.now - updated > self.hand_edit:
             return set(), ""
@@ -807,15 +811,10 @@ class Applier:
         if status not in OPEN:
             raise Refused("CLOSED", f"the task is {status}, not open")
         if target == "CANCELLED" and not op.get("evidence"):
-            hier = task.get("_hierarchy") or {}
-            if task.get("goal_id") or (hier.get("goal") or {}).get("id") or (hier.get("project") or {}).get("goal_id"):
-                raise Refused("GOAL_LINKED", "the task links to a goal; cancel it only with evidence it was "
-                                             "overtaken, else ask the owner")
-            updated = c.parse_time(task.get("updated_at")) or c.parse_time(task.get("created_at"))
-            if updated is None or self.now - updated <= self.stale_cancel:
-                days = (self.now - updated).days if updated else "?"
-                raise Refused("NOT_STALE", f"last updated {days} days ago; a cancel without evidence needs "
-                                           f"{self.stale_cancel.days} days with no activity")
+            # Age alone is no reason (the owner, 2026-10-17): a cancel names the evidence that the
+            # task was done, overtaken or dropped.
+            raise Refused("NO_EVIDENCE", "a cancel needs evidence the task was done, overtaken or dropped; "
+                                         "age alone is not a reason")
         self.evidence_holds(op)
         self.guard(task, ["status"])
         self.take_slot()
@@ -1123,15 +1122,18 @@ class Applier:
                 return {"outcome": "unchanged", "reason": f"already open as {p.get('name')!r}",
                         "project": f"portal://project/{str(p.get('id')).lower()}"}
         self.in_scope(domain, "the new project's domain")
-        proposal, answer = self.owners_answer(op)
-        words = re.findall(r"[a-z0-9']+", (answer or "").lower())
-        if answer is None:
-            raise Refused("UNAPPROVED", f"the owner has not answered the proposal on {tref(task_id(op['approval']))}")
-        if words and words[0] in DECLINE_WORDS:
-            raise Refused("DECLINED", "the owner declined this project; do not propose it again")
-        renamed = mine and mine in c.normalise_title(answer)
-        if not renamed and not (words and words[0] in APPROVE_WORDS and mine in c.normalise_title(proposal)):
-            raise Refused("UNAPPROVED", "the owner's answer neither approves the proposed name nor gives this one")
+        # Opened without asking (the owner, 2026-10-17: no propose-and-ask). An op that still names
+        # an approval task is held to the owner's answer on it, as before.
+        if op.get("approval"):
+            proposal, answer = self.owners_answer(op)
+            words = re.findall(r"[a-z0-9']+", (answer or "").lower())
+            if answer is None:
+                raise Refused("UNAPPROVED", f"the owner has not answered the proposal on {tref(task_id(op['approval']))}")
+            if words and words[0] in DECLINE_WORDS:
+                raise Refused("DECLINED", "the owner declined this project; do not propose it again")
+            renamed = mine and mine in c.normalise_title(answer)
+            if not renamed and not (words and words[0] in APPROVE_WORDS and mine in c.normalise_title(proposal)):
+                raise Refused("UNAPPROVED", "the owner's answer neither approves the proposed name nor gives this one")
         goal = str(op.get("goal_id") or "").lower() or None
         if goal:
             g = {str(x.get("id")).lower(): x for x in self.listing("goal")}.get(goal)
@@ -1143,7 +1145,8 @@ class Applier:
         self.take_slot()
         description = "\n".join(x for x in (
             str(op.get("description") or "").rstrip(), f"Why: {op['reason']}",
-            f"Approved by the owner on {tref(task_id(op['approval']))} ({op['proposal']}).",
+            (f"Approved by the owner on {tref(task_id(op['approval']))} ({op['proposal']})." if op.get("approval")
+             else "Opened by the agent for the tasks it groups."),
             f"{by} via task-stack-apply, op {op['id']}. Marker: {marker}") if x)
         args = {"name": name, "domain_id_or_name": domain, "goal_id": goal, "description": description,
                 "priority": portal_priority(op.get("priority")) if op.get("priority") not in (None, "") else None,
@@ -1330,7 +1333,19 @@ def apply(client, data, dry_run, state, log, domain="", max_changes=MAX_CHANGES,
         raise Refused("DRY_RUN", "the change set was written by a dry-run session; apply it with --dry-run")
     applier = Applier(client, dry_run, state, None if dry_run else log, changes.get("orchestrator"), domain,
                       max_changes, hand_edit_days, stale_cancel_days, stale_close_days, now)
-    results = [applier.one(op) for op in ops]
+    # A task created and closed in the same change set (an ask already answered) is noise in the
+    # owner's Portal: neither is written, and the result says why (the owner, 2026-10-17).
+    created = {str(o.get("id")) for o in ops if o.get("op") == "create"}
+    born_closed = {str(o.get("task"))[3:] for o in ops
+                   if o.get("op") in ("complete", "cancel") and str(o.get("task") or "").startswith("op:")} & created
+    results = []
+    for op in ops:
+        if str(op.get("id")) in born_closed or (op.get("op") in ("complete", "cancel")
+                                                and str(op.get("task") or "")[3:] in born_closed):
+            results.append({"op": op.get("op"), "id": op.get("id"), "outcome": "skipped",
+                            "reason": "created and closed in the same Run: already handled, nothing to track"})
+            continue
+        results.append(applier.one(op))
     counts = {}
     for r in results:
         per = counts.setdefault(str(r.get("op")), {})
