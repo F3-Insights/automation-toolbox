@@ -34,6 +34,7 @@ Process engineering is forward-deployed work: working inside the client's operat
 | `workshop-design` | Assembles a workshop run of show from eight exercise cards; holds the workshop pack and session log templates | none |
 | `survey-analytics-workstream` | The data fence, season jobs, readout shape and DONE checklist for a client survey season | none |
 | `reference-process-models` | Reference models (order to cash, procure to pay, proposal to contract, record to report) for completeness audits | none |
+| `review-completeness` | Shared reviewer checklist (copy of `shared/skills/review-completeness`): coverage against a reference model and about fifteen prioritized questions | none |
 
 ## Scripts
 

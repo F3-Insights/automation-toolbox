@@ -34,6 +34,9 @@ Reports that leave the building: an executive's weekly update to the leadership 
 | `comms-client-status-update` | Writing the client status memo, weekly or full length, in a matter-of-fact voice | command `srt-transcript-collapse` for caption files |
 | `project-status-deck` | Building, reviewing and revising a client status deck as self-contained HTML | none |
 | `numbers-reviewer-method` | The numbers reviewer's seven-step method: inventory, claim ledger, re-derive, arithmetic, tie-out, prior-version diff, the report against itself | command `report-tieout` |
+| `review-facts` | Shared reviewer checklist (copy of `shared/skills/review-facts`): each claim VERIFIED, NOT IN MY SOURCES or CONTRADICTED with a quote, plus omissions | none |
+| `review-numbers` | Shared reviewer checklist (copy of `shared/skills/review-numbers`): re-derive every figure, arithmetic, cross-document tie-out, prior-version diff, findings by severity | command `report-tieout` |
+| `review-red-team` | Shared reviewer checklist (copy of `shared/skills/review-red-team`): the silent-read test and ten tests as a skeptical executive, graded, a fix per criticism | none |
 
 ## Settings and other departments
 
