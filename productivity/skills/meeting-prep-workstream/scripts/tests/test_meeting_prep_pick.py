@@ -85,8 +85,8 @@ def test_classifies_skips_and_ranks(capsys):
               organizer_email=ME, recurring_event_id=None),                                       # rank 1
         event(2, "Pricing call", "16:00", "17:00", ["lee@fabrikam.test"], recurring_event_id="s1",
               organizer_email="lee@fabrikam.test"),                                                # rank 2
-        event(3, "Coffee", "18:00", "18:30", ["sam@gmail.com"],
-              organizer_email="sam@gmail.com"),                                                    # rank 3
+        event(3, "Coffee", "18:00", "18:30"),                                                    # rank 3: one-off,
+                                                                                                   # nobody invited
         event(4, "Gym", "14:00", "15:00"),                                                         # personal
         event(5, "Team standup", "15:30", "15:45", ["ana@northwind.test"]),                       # internal recurring
         event(6, "Canceled: Vendor demo", "19:00", "20:00", ["vic@fabrikam.test"]),               # cancelled
