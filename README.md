@@ -175,7 +175,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Process Engineering](process-engineering/) | Assessments, interview synthesis, process maps, workshops, automation scoping, surveys | 8 / 11 |
 | [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 8 / 3 |
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
-| [Sales & Business Development](sales/) | Pipeline reviews, lead intake, proposals and statements of work, contract audits | 6 / 2 |
+| [Sales & Business Development](sales/) | Pipeline reviews, lead intake, proposals and statements of work, contract audits | 5 / 4 |
 | [Marketing & Writing](marketing/) | Content and case studies, brand, and the unslop editing skills | 4 / 8 |
 | [Training & Community](learning/) | Seminar and workshop decks, peer learning groups | 4 / 2 |
 
@@ -205,9 +205,9 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `software-weekly-review`: the weekly review of every repository carried
   - `software-release-prep`: prepares one repository's next release for the person who ships it
 - **Sales**
-  - `bd-lead-intake-orchestrator`: answers one inbound lead the day it arrives
-  - `bd-pipeline-orchestrator`: runs the weekly pipeline pass
-  - `bd-proposal-orchestrator`: drafts a proposal or SOW and audits its contract documents
+  - `sales-lead-intake`: answers one inbound lead the day it arrives
+  - `sales-pipeline-review`: runs the weekly pipeline pass
+  - `sales-proposal-writer`: drafts a proposal or SOW and audits its contract documents
 - **Marketing**
   - `marketing-content-orchestrator`: runs the editorial pipeline
   - `marketing-case-study-orchestrator`: finishes one case study from a closed engagement

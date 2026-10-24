@@ -1,6 +1,6 @@
 ---
 name: unslop-proposal
-description: Edit proposals, statements of work, master service agreements, contract exhibits and the cover notes that carry them, for a client executive who signs and possibly their counsel. The unslop router picks it whenever the text creates, limits or prices an obligation. Not for drafting a proposal or auditing contract conflicts; start bd-proposal-orchestrator.
+description: Edit proposals, statements of work, master service agreements, contract exhibits and the cover notes that carry them, for a client executive who signs and possibly their counsel. The unslop router picks it whenever the text creates, limits or prices an obligation. Not for drafting a proposal or auditing contract conflicts; start sales-proposal-writer.
 ---
 
 # Unslop for proposals and contracts
