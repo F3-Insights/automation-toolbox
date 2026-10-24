@@ -85,7 +85,7 @@ Each workflow also reads a **rules file** you keep beside the work, such as `MON
 Orchestrators are agents. Run one as the main session:
 
 ```bash
-claude --agent cash-forecast-orchestrator
+claude --plugin-dir automation-toolbox/finance --agent finance:finance-cash-forecast
 ```
 
 or ask for it by name in an open session. Each orchestrator works in a **Run** folder: it gathers, plans, builds, has a checker review the result against its sources, and delivers drafts plus a **change set** of proposed writes. Nothing touches a live system until you approve the change set and its finish step applies it.
@@ -96,7 +96,7 @@ To run a workflow on a schedule, wrap it in an **automation**: a prepare step th
 
 | If you are | Start with |
 |---|---|
-| A controller or fractional CFO | [accounting](../accounting/) (`month-end-orchestrator`), [finance](../finance/) (`cash-forecast-orchestrator`), [reporting](../reporting/) (`board-package-orchestrator`) |
+| A controller or fractional CFO | [accounting](../accounting/) (`month-end-orchestrator`), [finance](../finance/) (`finance-cash-forecast`), [reporting](../reporting/) (`board-package-orchestrator`) |
 | An operations or process consultant | [process-engineering](../process-engineering/) (`discovery-synthesis-orchestrator`, `process-flow-orchestrator`) and [projects](../projects/) (`client-delivery-orchestrator`) |
 | Running a small firm | [productivity](../productivity/), [recurring-summaries](../recurring-summaries/) and [chief-of-staff](../chief-of-staff/) (these expect the Insights Portal) |
 | An engineer | [software](../software/) (`software-developer`) and the `orchestrator-scaffold` skill, then [templates/](../templates/) to write your own |

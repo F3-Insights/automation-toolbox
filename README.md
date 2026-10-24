@@ -97,7 +97,7 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 |---|---|---|
 | Every night | `nightly-sweep-orchestrator` | The day's email turned into tasks and notes, and a Daily Note with what needs you |
 | Every weekday | `daily-plan-orchestrator` | The morning's three priorities and an evening close |
-| Every week | `cash-forecast-orchestrator` | The 13-week cash forecast rolled forward, with the low point called out |
+| Every week | `finance-cash-forecast` | The 13-week cash forecast rolled forward, with the low point called out |
 | Every week | `client-delivery-orchestrator` | One engagement's plan, risks and status, ready for the sponsor |
 | Every week | `weekly-report-orchestrator` | The leadership weekly, drafted from the week's record |
 | Month end | `month-end-orchestrator` | The close worked like a close team: reconciliations, accruals, flux, a review trail |
@@ -133,7 +133,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
 | [Accounting](accounting/) | Month-end close, reconciliations, journal entries, accruals, collections, intercompany, cost accounting, audit support, 1099s | 22 / 20 |
-| [Finance](finance/) | Forecasts, budgets, 13-week cash, one-off analysis, investor obligations | 13 / 5 |
+| [Finance](finance/) | Forecasts, budgets, 13-week cash, one-off analysis, investor obligations; a Claude Code plugin | 7 / 13 |
 | [Strategy](strategy/) | Goals checked against projects and where the time went, and pre-mortems on strategic plans | 5 / 4 |
 | [Executive Reporting](reporting/) | Board packages, leadership weeklies, results memos, client updates, and the reviewers every report passes | 16 / 7 |
 
@@ -151,11 +151,11 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `product-costing-orchestrator`: runs a manufacturer's monthly product-costing review
   - `vendor-1099-orchestrator`: gets vendor 1099s right before year end, not in January
 - **Finance**
-  - `forecast-orchestrator`: bridges each forecast revision to the one before and builds the rolling vintage
-  - `cash-forecast-orchestrator`: rolls the 13-week cash forecast forward each week by the direct method
-  - `budget-orchestrator`: builds the annual three-way budget (P&L, balance sheet, cash) from drivers
-  - `analysis-orchestrator`: drafts a one-off analysis, scenario model or what-if
-  - `investor-posting-orchestrator`: keeps contractual investor data-room postings on time
+  - `finance-forecast`: bridges each forecast revision to the one before and builds the rolling vintage
+  - `finance-cash-forecast`: rolls the 13-week cash forecast forward each week by the direct method
+  - `finance-budget`: builds the annual three-way budget (P&L, balance sheet, cash) from drivers
+  - `finance-analysis`: drafts a one-off analysis, scenario model or what-if
+  - `finance-investor-posting`: keeps contractual investor data-room postings on time
 - **Strategy**
   - `goal-alignment-orchestrator`: prepares the monthly check of goals against projects and time spent
 - **Reporting**
