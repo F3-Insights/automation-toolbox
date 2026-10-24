@@ -443,3 +443,18 @@ def test_month_end_check_comes_from_this_checkout():
     """The month-end-workstream check script is found through the toolbox checkout."""
     script = Path(bc.MONTH_END_CHECK)
     assert script.is_file() and SCRIPTS.parents[3] in script.parents
+
+
+def test_the_close_gate_prefers_accountings_command_on_path(tmp_path, monkeypatch):
+    """Accounting's named command, when on PATH, is the Close gate's check (the file contract)."""
+    fake = tmp_path / "accounting-month-end-check"
+    fake.write_text("#!/bin/sh\necho '{}'\n", encoding="utf-8")
+    fake.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{tmp_path}{os.pathsep}{os.environ.get('PATH', '')}")
+    assert bc.month_end_check_argv() == [str(fake)]
+
+
+def test_the_close_gate_falls_back_to_the_checkouts_script(monkeypatch):
+    monkeypatch.setenv("PATH", "")
+    argv = bc.month_end_check_argv()
+    assert argv[0] == sys.executable and argv[1] == bc.MONTH_END_CHECK

@@ -882,7 +882,7 @@ def main():
     ledger = (manual_ledger(args.from_dir, args.domain, args.since, args.until, args.outline_file)
               if args.tier == "manual" else portal_ledger(args) if args.tier == "portal" else None)
     if ledger is None:
-        raise Fail("the harvester tier is written by the report-harvester worker; check its file with --validate")
+        raise Fail("the harvester tier is written by the harvester worker (workers/harvester.md); check its file with --validate")
     for warning in ledger["provenance"]["warnings"]:
         print(safe(f"warning: {warning}"), file=sys.stderr)
     if args.out.strip():
