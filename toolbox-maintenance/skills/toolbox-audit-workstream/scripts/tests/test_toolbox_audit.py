@@ -303,7 +303,9 @@ def test_record_keeps_the_ledger_week_over_week_and_files_tasks_once(tmp_path):
         {"id": "lint:b", "rank": 2, "section": "lint", "level": "warning", "title": "B", "evidence": ["y"], "fix": "Fix B",
          "state": "proposed"}]})
     assert rec.record(run, folder, dry_run=False, task_domain="00000000-0000-0000-0000-000000000000")["recorded"]
-    ops = json.loads((run / "changes.json").read_text())["ops"]
+    changes = json.loads((run / "changes.json").read_text())
+    assert changes["orchestrator"] == "toolbox-maintenance-auditor"  # the task-stack writer maps it to the old name's markers
+    ops = changes["ops"]
     assert ops[0]["source"] == "toolbox-audit:lint:a" and ops[0]["title"] == "Fix the A lint"
     run2 = tmp_path / "r2"
     run2.mkdir()

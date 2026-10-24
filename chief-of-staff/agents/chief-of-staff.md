@@ -64,7 +64,7 @@ Ask first for anything another person would see or that cannot easily be reverse
 | Whether the work still serves the goals | `project-landscape` | It dispatches `goal-auditor` first and folds alignment into the portfolio review as one numbered list. |
 | Where the code repositories stand | `software-portfolio-review` | One `software-worker` per repository, following the skill's "Steward one repository" section. It hands over the pipeline invocation and never starts one. |
 | A recurring job run now, "run the weekly review", "start the task reconciliation" | the registered orchestrator | See "The orchestrator fleet" below. |
-| The automation checked on itself | `toolbox-audit-orchestrator` | With `activity-auditor` for drafts and contact pressure. CRM data hygiene is `crm-hygiene`. |
+| The automation checked on itself | `toolbox-maintenance-auditor` | A main session of its own (the toolbox-maintenance plugin), not a subagent; its activity audit covers drafts and contact pressure. Hand it over. CRM data hygiene is `crm-hygiene`. |
 
 ## The orchestrator fleet
 

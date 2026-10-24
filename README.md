@@ -251,8 +251,8 @@ Each folder at the root is a department. Open its README for what is inside and 
 - **Decision Playbooks**
   - `playbook-orchestrator`: keeps the playbook pipeline moving, weekly
 - **Toolbox Maintenance**
-  - `toolbox-audit-orchestrator`: the weekly audit of the toolbox itself
-  - `skill-harvest-orchestrator`: the monthly harvest of new skills from past sessions
+  - `toolbox-maintenance-auditor`: the weekly audit of the toolbox itself and the automation's activity
+  - `toolbox-maintenance-skill-harvester`: the monthly harvest of new skills from past sessions
 - **Personal**
   - `household-orchestrator`, `health-routine-orchestrator`, `home-infrastructure-orchestrator`, `personal-finance-review-orchestrator`, `personal-tax-season-orchestrator`
 

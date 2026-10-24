@@ -164,3 +164,26 @@ def test_a_private_name_in_the_run_folder_name_refuses_the_commit_message(setup,
 
 def test_the_default_name_check_is_this_checkouts():
     assert Path(shb.NAME_CHECK) == NAME_CHECK
+
+
+def test_skill_paths_finds_the_name_check_in_this_checkout_not_the_home_folder():
+    import _skill_paths
+
+    found = _skill_paths.skill_file("skills-extract", "scripts", "name_check.py")
+    assert found == NAME_CHECK and found.is_file()
+    assert shb.NAME_CHECK == str(NAME_CHECK)
+
+
+def test_packs_from_the_harvest_folder_feed_the_name_check(setup, tmp_path):
+    repo, run = setup
+    harvest = tmp_path / "harvest"
+    pack = harvest / "2026-10" / "scopes" / "lots" / "pack.json"
+    pack.parent.mkdir(parents=True)
+    pack.write_text(json.dumps({"private_terms": ["Contoso"]}))
+    assert shb.found_packs(run, folders=[harvest]) == [str(pack)]
+    (run / "drafts" / "finance" / "skills" / "finance-lot-count" / "SKILL.md").write_text(
+        "---\nname: finance-lot-count\ndescription: Count lots for Contoso.\n---\n")
+    assert shb.main(["--run", str(run), "--repo", str(repo), "--dry-run"]) == 0
+    assert json.loads((run / "branch.json").read_text())["state"] == "would-stage"
+    assert shb.main(["--run", str(run), "--repo", str(repo), "--packs-in", str(harvest), "--dry-run"]) == 0
+    assert json.loads((run / "branch.json").read_text())["state"] == "refused"

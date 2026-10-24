@@ -35,6 +35,10 @@ Convert one department per branch. If the department needs a change in the runti
    - Check the owner's own folders (rules files, logs) for agent names that the conversion will change.
 
    Check: a written list of the jobs, the specialists each uses, and the names that change.
+
+   **1b. The test set.** For each job, keep 5 to 10 past outputs the owner accepted (a report sent on, a draft kept, a change set applied) with the input each came from, in the owner's folders, never the toolbox. For a job that has never run, its first accepted live run (step 8) becomes the set. A converted job is judged against these first: a cheaper Run whose output is worse is not done.
+
+   Check: each job names its test set's folder, or says it waits for step 8.
 2. **The plugin skeleton.** Write `.claude-plugin/plugin.json`. Add the department to `shared/manifest.yaml` for the shared skills it needs, and run the copy build.
 
    Check: `python3 scripts/toolbox_check.py`.
@@ -53,11 +57,11 @@ Convert one department per branch. If the department needs a change in the runti
    - an old owner field becomes `for_owner:`.
 
    Check: `sentinel agents`, each Automation's preview shows no missing item, and How it works draws each job.
-7. **Dry run each job,** launched by the owner. Read its trace for tool calls refused or failing, whether the reviewer and worker were dispatched as the Steps say, whether the check passed, and tokens, turns and time against the baseline.
+7. **Dry run each job,** launched by the owner. Read its trace for tool calls refused or failing, whether the reviewer and worker were dispatched as the Steps say, whether the check passed, and tokens, turns and time against the baseline. Compare its output with the test set's: the same findings, figures and decisions, and nothing the owner would have rejected. Tokens, turns and time count only once the output holds.
 8. **Live run each job** once, on a real but low-stakes input. The old agents are already gone (step 5); if a live run fails, fix forward or revert the branch.
 9. **Write it down.** Update the department's README, the getting-started guide, the record of what was renamed, and Sentinel's docs if it needed an engine change. Then merge.
 
-A department is done when every job has passed a dry run and a live run and the audit reports it clean.
+A department is done when every job has passed a dry run and a live run, its output holds against its test set, and the audit reports it clean.
 
 ## The audit's view
 
