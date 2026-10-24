@@ -31,7 +31,7 @@ def test_one_batched_message_a_week(folder):
     open_vintage(folder)
     for item in ("2027-07-20", "2027-07-21"):
         assert forecast_record.main([str(folder), "--vintage", "rev5", "--test", "messages", "--item", item,
-                                     "--state", "asked", "--by", "forecast-orchestrator"]) == 0
+                                     "--state", "asked", "--by", "finance-forecast"]) == 0
     test = forecast_check.check(folder)["tests"]["messages"]
     assert not test["met"] and "more than 1" in test["gaps"][0]
 

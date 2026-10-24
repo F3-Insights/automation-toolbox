@@ -20,7 +20,7 @@ Prints "created <id>" or "updated <id>". Exit 0 on success, 2 on a refusal or ba
 
 Example:
     python3 forecast_record.py ~/Forecast --vintage rev3 --test questions --item Q-001 \\
-        --state asked --by forecast-orchestrator --note "If unanswered, assume a January start."
+        --state asked --by finance-forecast --note "If unanswered, assume a January start."
 """
 
 import argparse

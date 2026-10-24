@@ -39,7 +39,7 @@ def test_a_vintage_is_done_only_when_every_test_holds(folder):
 
     write_hypotheses(vdir)
     ok(forecast_record.main, folder, "--vintage", "rev5", "--test", "hypotheses", "--item", "set", "--state", "written",
-       "--by", "forecast-drivers-analyst")
+       "--by", "finance-worker")
     time.sleep(1.1)   # the bridge must be built after the hypotheses were recorded
     for main in (forecast_bridge.main, forecast_sense_check.main, forecast_score.main):
         ok(main, folder, "--vintage", "rev5")
@@ -55,12 +55,12 @@ def test_a_vintage_is_done_only_when_every_test_holds(folder):
          for f in flags["flags"] if f["severity"] == "material"}))
     (vdir / "summary.md").write_text(SUMMARY)
     ok(forecast_record.main, folder, "--vintage", "rev5", "--test", "questions", "--item", "Q-001", "--state", "asked",
-       "--by", "forecast-orchestrator", "--note", "If unanswered, assume the chain starts in August.")
+       "--by", "finance-forecast", "--note", "If unanswered, assume the chain starts in August.")
     assert not forecast_check.check(folder)["tests"]["questions"]["met"]
     ok(forecast_record.main, folder, "--vintage", "rev5", "--test", "questions", "--item", "Q-001", "--state", "answered",
        "--by", "Sales director", "--evidence", "reply 2027-07-20")
     ok(forecast_record.main, folder, "--vintage", "rev5", "--test", "review", "--item", "vintage", "--state", "reviewed",
-       "--review", "PASS", "--by", "forecast-reviewer", "--review-file", "reviews/review rev5.md")
+       "--review", "PASS", "--by", "finance-reviewer", "--review-file", "reviews/review rev5.md")
     done = forecast_check.check(folder)
     assert done["done"], {k: v["gaps"] for k, v in done["tests"].items() if not v["met"]}
     assert forecast_check.precheck(folder).startswith("NOTHING: vintage rev5 is done")

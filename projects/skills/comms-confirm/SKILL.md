@@ -2,7 +2,7 @@
 name: comms-confirm
 description: "Ask a person (the owner, a colleague by role, a client contact) to confirm something the work needs, record that the question is out, end the session, and let a later check notice the answer. Four uses: ask (resolves the role to a person, records the request, puts a waiting task on the owner's list, relays the question through the owner, one message per session, never contacting colleagues unless delivery is set to direct); check (a no-model precheck of the record, the Portal task and the email thread that prints NOTHING or WORK); close (marks it resolved with who answered and the evidence); remind (the morning message listing requests past due or due today). Use whenever semi-attended work (a close, forecast, report, project) must wait on an answer instead of guessing. Not for chasing work already delegated; use comms-follow-ups."
 argument-hint: "[ask | check | close | remind] [store or folder] [question, role, channels, due, fallback]"
-allowed-tools: Read, Bash(python3:*), Bash(python3 ~/.claude/skills/comms-confirm/scripts/confirm_portal.py:*), Bash(python3 ~/.claude/skills/comms-reply-to-email/scripts/find_contact.py:*), Bash(python3 ~/.claude/skills/comms-reply-to-email/scripts/notify_owner.py:*), Skill, Task
+allowed-tools: Read, Bash(confirm:*), Bash(confirm-portal:*), Skill, Task
 ---
 
 # Confirm with a person
@@ -11,18 +11,18 @@ Work that runs without its owner watching meets questions only a person can answ
 
 For now the owner is the relay: the skill never writes to a colleague. It messages the owner, asking them to put the question to the named person, and records the request as waiting on that person. Every Portal task it makes sits on the owner's own list. Nothing here sends anything to anyone but the owner.
 
-The request's fields, the store, the channels, the delivery setting, the fallbacks and how answers are matched are in `rules.md` beside this file. Read it before the first request in a session. One script keeps the store (paths relative to this skill's folder); it reaches the Portal only through `scripts/confirm_portal.py` beside it and the owner only through `python3 ~/.claude/skills/comms-reply-to-email/scripts/notify_owner.py`:
+The request's fields, the store, the channels, the delivery setting, the fallbacks and how answers are matched are in `rules.md` beside this file. Read it before the first request in a session. One command, `confirm`, keeps the store; it reaches the Portal only through `confirm_portal.py` beside it and the owner only through the comms-reply-to-email skill's `notify_owner.py`, which it finds in the same toolbox checkout:
 
 ```bash
-python3 scripts/confirm.py who FOLDER --role ROLE
-python3 scripts/confirm.py new STORE --question Q --of ROLE --channel task|owner|email [...]
-python3 scripts/confirm.py task STORE ID
-python3 scripts/confirm.py relay STORE_OR_FOLDER ... [--dry-run]
-python3 scripts/confirm.py record STORE ID --draft D --subject S
-python3 scripts/confirm.py check PATH ...
-python3 scripts/confirm.py close STORE ID --by WHO --answer A --evidence E
-python3 scripts/confirm.py reopen STORE ID --by WHO --note N
-python3 scripts/confirm.py remind STORE_OR_FOLDER ... [--dry-run]
+confirm who FOLDER --role ROLE
+confirm new STORE --question Q --of ROLE --channel task|owner|email [...]
+confirm task STORE ID
+confirm relay STORE_OR_FOLDER ... [--dry-run]
+confirm record STORE ID --draft D --subject S
+confirm check PATH ...
+confirm close STORE ID --by WHO --answer A --evidence E
+confirm reopen STORE ID --by WHO --note N
+confirm remind STORE_OR_FOLDER ... [--dry-run]
 ```
 
 ## Inputs
@@ -43,18 +43,18 @@ If a required input was not given, ask. If no one can be asked, stop and name it
 ## Steps
 
 1. [judgment] Settle the use and the inputs. For ask, write the question as one sentence the person can answer without opening anything, list the context links, and choose the channels, the due date and the fallback. Take the delivery from the setting. With no one present, the owner channel becomes a task on the owner's list. → a required input is missing and no one can be asked: stop → use is check: step 9 → use is close: step 11 → use is remind: step 12
-2. [script] Resolve the role to a person. For an engagement folder run `python3 scripts/confirm.py who FOLDER --role ROLE`; otherwise read the role from the caller's context (its BACKGROUND.md, a Context, the brief). Then pin the person's Portal contact with `python3 ~/.claude/skills/comms-reply-to-email/scripts/find_contact.py "<name or address>"`. The owner needs no lookup. → no person for the role, or several contacts, and no one can be asked: stop → several people or contacts and the owner is present: ask
-3. [script] Record the request: `python3 scripts/confirm.py new STORE --question Q --of ROLE --person "Name <address>" --contact UUID --channel CH --due D --fallback F --assume A --context LINK --engagement FOLDER --phase NAME --by WHO`. It prints the request id and the delivery. The same question to the same role in the same store returns the existing request, never a second. → `"outcome": "existing"` and its channels are already out: done
+2. [script] Resolve the role to a person. For an engagement folder run `confirm who FOLDER --role ROLE`; otherwise read the role from the caller's context (its BACKGROUND.md, a Context, the brief). Then pin the person's Portal contact with the comms-reply-to-email skill's `find_contact.py "<name or address>"` (a named command where that skill is loaded), or the Portal's contact search. The owner needs no lookup. → no person for the role, or several contacts, and no one can be asked: stop → several people or contacts and the owner is present: ask
+3. [script] Record the request: `confirm new STORE --question Q --of ROLE --person "Name <address>" --contact UUID --channel CH --due D --fallback F --assume A --context LINK --engagement FOLDER --phase NAME --by WHO`. It prints the request id and the delivery. The same question to the same role in the same store returns the existing request, never a second. → `"outcome": "existing"` and its channels are already out: done
 4. [ask] Owner channel with the owner present: put the question, with its context, as one numbered line. Skip this step for the other channels. → the owner answers: step 11
-5. [script] Task channel: `python3 scripts/confirm.py task STORE ID`. It runs `scripts/confirm_portal.py task`, which finds the request's task by its marker or creates it once, on the owner's list, WAITING on the person when they have a contact. → it fails: stop
-6. [script] Delivery relay, once the session's last question is recorded: `python3 scripts/confirm.py relay STORE_OR_FOLDER`. It sends the owner ONE message through `comms-reply-to-email/scripts/notify_owner.py` asking them to put each question not yet relayed to its person, with where the answer goes, and marks each one relayed. Then end the session; the work waits on the requests. Skip this step with delivery direct. → `NOTHING` or `SENT`: done → `NOT SENT` (notifications are off or rehearsing): done → it fails: stop
+5. [script] Task channel: `confirm task STORE ID`. It runs `confirm_portal.py task`, which finds the request's task by its marker or creates it once, on the owner's list, WAITING on the person when they have a contact. → it fails: stop
+6. [script] Delivery relay, once the session's last question is recorded: `confirm relay STORE_OR_FOLDER`. It sends the owner ONE message through the comms-reply-to-email skill's `notify_owner.py` asking them to put each question not yet relayed to its person, with where the answer goes, and marks each one relayed. Then end the session; the work waits on the requests. Skip this step with delivery direct. → `NOTHING` or `SENT`: done → `NOT SENT` (notifications are off or rehearsing): done → it fails: stop
 7. [hand-off: comms-draft-email] Email channel, delivery direct only: draft the question to the person through the drafting skill, which checks with `outbound-check`, writes in the owner's voice and never sends. With no one present the draft stays in the Portal for the owner to deliver. → no draft was made (`outbound-check` held, or the drafter stopped): done
-8. [script] Note the draft so a reply can be matched: `python3 scripts/confirm.py record STORE ID --draft DRAFT_ID --subject "SUBJECT"`. Then end the session; the work waits on the request. → recorded: done
-9. [script] Look for answers: `python3 scripts/confirm.py check STORE_OR_FOLDER`. The first line is `NOTHING` or `WORK: answered ...; past due ...`; answers found are recorded in the store and in the Waiting on row. → `NOTHING`: done
+8. [script] Note the draft so a reply can be matched: `confirm record STORE ID --draft DRAFT_ID --subject "SUBJECT"`. Then end the session; the work waits on the request. → recorded: done
+9. [script] Look for answers: `confirm check STORE_OR_FOLDER`. The first line is `NOTHING` or `WORK: answered ...; past due ...`; answers found are recorded in the store and in the Waiting on row. → `NOTHING`: done
 10. [judgment] For each answered request, read the evidence (the comment, the reply email, the typed answer). If it answers the question, the calling work uses it and closes it at step
-    11. If it does not ("let me check"), run `python3 scripts/confirm.py reopen STORE ID --by WHO --note N`. A past-due request with the proceed fallback is closed as assumed at step 11; one with escalate is already in the owner's morning reminder and needs nothing here. → something to close: step 11 → nothing to close: done
-11. [script] Close: `python3 scripts/confirm.py close STORE ID --by WHO --answer "A" --evidence REF`, or `--assumed` for a proceed fallback, or `--withdrawn`. The record is closed with it and the request's Portal task gets one comment with the answer and its evidence, then is marked done (cancelled when withdrawn). → closed: done
-12. [script] Remind: `python3 scripts/confirm.py remind STORE_OR_FOLDER ...`, with `--dry-run` to see the message without sending it. It sends the owner ONE message listing every open request past due or due today (who, the question, when it was asked, where to answer), or nothing when there are none. A request already in today's reminder is not listed again until the next day. → `NOTHING` or `SENT`: done → `NOT SENT` or `DRY RUN`: done → it fails: stop
+    11. If it does not ("let me check"), run `confirm reopen STORE ID --by WHO --note N`. A past-due request with the proceed fallback is closed as assumed at step 11; one with escalate is already in the owner's morning reminder and needs nothing here. → something to close: step 11 → nothing to close: done
+11. [script] Close: `confirm close STORE ID --by WHO --answer "A" --evidence REF`, or `--assumed` for a proceed fallback, or `--withdrawn`. The record is closed with it and the request's Portal task gets one comment with the answer and its evidence, then is marked done (cancelled when withdrawn). → closed: done
+12. [script] Remind: `confirm remind STORE_OR_FOLDER ...`, with `--dry-run` to see the message without sending it. It sends the owner ONE message listing every open request past due or due today (who, the question, when it was asked, where to answer), or nothing when there are none. A request already in today's reminder is not listed again until the next day. → `NOTHING` or `SENT`: done → `NOT SENT` or `DRY RUN`: done → it fails: stop
 
 On a stop, say why in one line and what would unblock it.
 
