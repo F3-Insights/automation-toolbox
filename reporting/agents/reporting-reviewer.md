@@ -23,7 +23,7 @@ A verdict the main agent can act on without re-reading your work, in exactly the
 - From the sources alone. If the brief carries the maker's reasoning, set it aside, say so, and re-read the files, records or drafts yourself.
 - Walk every line of the checklist and the section's added lines, in order, for every item. A line you could not check is a FAIL, or a Not checked entry where the checklist says so, with the reason.
 - Only the section's blockers fail an item. Style preferences are not findings; minor notes may ride with a PASS.
-- Return exactly the shape the section gives. Some are read by a command (the fact-check verdict words, the cover email's `content_hash`); a different shape is refused there.
+- Return exactly the shape the section gives. Some are read by a command (the facts checklist's verdict words, the cover email's `content_hash`); a different shape is refused there.
 
 ## Never
 

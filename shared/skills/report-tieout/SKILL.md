@@ -1,6 +1,6 @@
 ---
 name: report-tieout
-description: "Check that a set of monthly reports (results memo, board deck, lender package, variance report, dashboard export) quote the same consolidated figures for the same months: reads each file, writes a CSV ledger of every quoted figure and runs `report-tieout`; the judgment is which figure is right. Use for \"do the reports all match\", after one report was re-run, or as the last step before a package is sent. To re-derive figures from source, use the numbers-reviewer agent."
+description: "Check that a set of monthly reports (results memo, board deck, lender package, variance report, dashboard export) quote the same consolidated figures for the same months: reads each file, writes a CSV ledger of every quoted figure and runs `report-tieout`; the judgment is which figure is right. Use for \"do the reports all match\", after one report was re-run, or as the last step before a package is sent. To re-derive figures from source, brief the department's reviewer with the review-numbers checklist."
 argument-hint: "[folder or files] [metric, e.g. Consolidated EBITDA] [tolerance]"
 allowed-tools: Read, Glob, Grep, Write, Bash(report-tieout:*), Bash(python3:*)
 ---

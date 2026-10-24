@@ -1,6 +1,6 @@
 # Engagement decks: kickoff, build method, findings readout
 
-Three client-facing decks, one per point in an engagement. Slide-by-slide outlines only; build them as self-contained HTML with the deck kit in the `writing-seminar-builder` skill and red-team them with `executive-red-team` before anyone sees them.
+Three client-facing decks, one per point in an engagement. Slide-by-slide outlines only; build them as self-contained HTML with the deck kit in the `writing-seminar-builder` skill and red-team them with `projects-reviewer` on the `review-red-team` checklist before anyone sees them.
 
 ## Kickoff deck (one per workstream)
 

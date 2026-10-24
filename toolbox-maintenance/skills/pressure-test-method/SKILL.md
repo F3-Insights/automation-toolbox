@@ -1,6 +1,6 @@
 ---
 name: pressure-test-method
-description: Pressure-tests one of the owner's systems, workflows or automations per run, picked from a rotation ledger so each target gets its turn and one audit gets full attention. Steelmans it from its own files and data, judges it against the specific goal it serves, compares at least three external practices, and ranks every finding KEEP, IMPROVE, REPLACE (at most one) or INVESTIGATE in one audit note the owner can argue with, then records the findings in the ledger. Use for "red-team the weekly reporting workflow" or "audit the next thing on the rotation". Not for reviewing a finished deliverable as its reader (executive-red-team) or code (software-review).
+description: Pressure-tests one of the owner's systems, workflows or automations per run, picked from a rotation ledger so each target gets its turn and one audit gets full attention. Steelmans it from its own files and data, judges it against the specific goal it serves, compares at least three external practices, and ranks every finding KEEP, IMPROVE, REPLACE (at most one) or INVESTIGATE in one audit note the owner can argue with, then records the findings in the ledger. Use for "red-team the weekly reporting workflow" or "audit the next thing on the rotation". Not for reviewing a finished deliverable as its reader (a department reviewer on the review-red-team checklist) or code (software-review).
 argument-hint: '[a ledger entry, something off the ledger, or next]'
 ---
 

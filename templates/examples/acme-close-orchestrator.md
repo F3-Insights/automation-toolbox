@@ -45,7 +45,7 @@ Five stages, in order. Each ends on its exit test. The month-end skills hold the
 ### D. Test & review
 
 - **Goal.** Proof each entry and reconciliation is right.
-- **Who.** `numbers-reviewer`, given the files and their sources only.
+- **Who.** `acme-reviewer`, briefed with the review-numbers checklist and given the files and their sources only.
 - **Move on when** every item passes. A fail goes back to B with the findings, at most twice; after that it is a question for the controller.
 
 ### E. Deliver
@@ -59,7 +59,7 @@ Five stages, in order. Each ends on its exit test. The month-end skills hold the
 | Sub-agent | Given | Boundaries | Returns | When |
 |---|---|---|---|---|
 | `acme-accruals` | The period, the close folder, its checklist rows | Drafts only; never posts | Import files with backup, or a question | C |
-| `numbers-reviewer` | The drafts and their sources only | Never sees the drafter's reasoning; edits nothing | PASS or FAIL per item, with fixes | D |
+| `acme-reviewer` | The review-numbers checklist, the drafts and their sources only | Never sees the drafter's reasoning; edits nothing | PASS or FAIL per item, with fixes | D |
 
 ## Boundaries
 
