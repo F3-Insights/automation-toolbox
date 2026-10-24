@@ -10,7 +10,7 @@ pass between markers, the morning plan first and the evening close after it:
     <!-- daily-plan:evening -->  ...  <!-- /daily-plan:evening -->
     <!-- daily-plan:2030-03-04 -->
 
-THE PLAN FILE (RUN/plan.json), written by the orchestrator:
+THE PLAN FILE (RUN/plan.json), written by the main agent (daily-planner):
 
     {"tool": "daily-plan", "version": 1, "date": "2030-03-04", "pass": "morning",
      "dry_run": false, "summary": "one line on the day",
@@ -48,11 +48,9 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 SKILL = "daily-plan-method"
 SKILL_DIR = Path(__file__).resolve().parents[1]
 TOOL, VERSION = "daily-plan", 1
-# What a plan file's "tool" may say: the tool, or the name of the agent that wrote it, now
-# and after the department migration renames it (recurring-summaries-daily-planner, or
-# daily-planner if the plugin becomes daily). Remove the old agent name a month after
-# recurring-summaries converts.
-PLAN_TOOLS = (TOOL, "daily-plan-orchestrator", "recurring-summaries-daily-planner", "daily-planner")
+# What a plan file's "tool" may say: the tool, or the name of the agent that wrote it
+# (daily-planner; recurring-summaries-daily-planner is the name the migration plan proposed).
+PLAN_TOOLS = (TOOL, "recurring-summaries-daily-planner", "daily-planner")
 PASSES = ("morning", "evening")
 OUTCOMES = ("done", "moved", "carried", "dropped")
 NOON = 12

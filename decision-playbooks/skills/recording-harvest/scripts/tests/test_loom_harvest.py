@@ -133,3 +133,11 @@ def test_register_failure_keeps_going_and_exits_1(tmp_path, monkeypatch, capsys)
 def test_the_decision_store_comes_from_this_checkout():
     toolbox = Path(__file__).resolve().parents[5]
     assert lh.STORE.is_file() and toolbox in lh.STORE.parents
+
+
+def test_skill_paths_finds_a_sibling_skill_in_this_department_first():
+    import _skill_paths
+
+    found = _skill_paths.skill_file("decision-case-mining", "scripts", "decision_store.py")
+    department = Path(__file__).resolve().parents[3]
+    assert found == department / "decision-case-mining" / "scripts" / "decision_store.py"

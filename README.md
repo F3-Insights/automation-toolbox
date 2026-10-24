@@ -41,7 +41,7 @@ Most agent collections give you prompts. This one gives you **the back office as
 
 ### 67 ready workflows
 
-A month-end close, a 13-week cash forecast, a board package, a client update, a process map, an issue-to-pull-request factory, a nightly email sweep. Each one is an **orchestrator** that runs the job end to end the way a lead runs a small team.
+A month-end close, a 13-week cash forecast, a board package, a client update, a process map, an issue-to-pull-request factory, a daily plan. Each one is an **orchestrator** that runs the job end to end the way a lead runs a small team.
 
 </td>
 <td width="33%" valign="top">
@@ -95,8 +95,7 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 
 | When | Workflow | What you get back |
 |---|---|---|
-| Every night | `nightly-sweep-orchestrator` | The day's email turned into tasks and notes, and a Daily Note with what needs you |
-| Every weekday | `daily-plan-orchestrator` | The morning's three priorities and an evening close |
+| Every weekday | `daily-planner` | The morning's three priorities and an evening close |
 | Every week | `finance-cash-forecast` | The 13-week cash forecast rolled forward, with the low point called out |
 | Every week | `projects-client-delivery` | One engagement's plan, risks and status, ready for the sponsor |
 | Every week | `reporting-weekly-report` | The leadership weekly, drafted from the week's record |
@@ -176,8 +175,8 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 5 / 9 |
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
 | [Sales & Business Development](sales/) | Pipeline reviews, lead intake, proposals and statements of work, contract audits | 5 / 4 |
-| [Marketing & Writing](marketing/) | Content and case studies, brand, and the unslop editing skills | 4 / 8 |
-| [Training & Community](learning/) | Seminar and workshop decks, peer learning groups | 4 / 2 |
+| [Marketing & Writing](marketing/) | Content and case studies, brand, and the unslop editing skills | 4 / 13 |
+| [Training & Community](learning/) | Seminar and workshop decks, peer learning groups | 3 / 8 |
 
 <details>
 <summary><b>Orchestrators in delivery</b> (25)</summary>
@@ -209,11 +208,11 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `sales-pipeline-review`: runs the weekly pipeline pass
   - `sales-proposal-writer`: drafts a proposal or SOW and audits its contract documents
 - **Marketing**
-  - `marketing-content-orchestrator`: runs the editorial pipeline
-  - `marketing-case-study-orchestrator`: finishes one case study from a closed engagement
+  - `marketing-post-writer`: runs the editorial pipeline
+  - `marketing-case-study-writer`: finishes one case study from a closed engagement
 - **Training**
-  - `learning-seminar-orchestrator`: builds or revises one seminar, workshop or lab deck end to end
-  - `learning-community-orchestrator`: runs one session of a peer learning group
+  - `learning-seminar-builder`: builds or revises one seminar, workshop or lab deck end to end
+  - `learning-community-host`: runs one session of a peer learning group
 
 </details>
 
@@ -224,10 +223,10 @@ Each folder at the root is a department. Open its README for what is inside and 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
 | [Personal Productivity](productivity/) | Email, meetings, tasks, calendar, CRM upkeep, weekly planning | 10 / 39 |
-| [Recurring Summaries](recurring-summaries/) | The nightly sweep and the daily plan: the night's Daily Note, the morning's three, the evening close | 11 / 4 |
+| [Recurring Summaries](recurring-summaries/) | The daily plan: the morning's three, the evening close | 3 / 3 |
 | [Chief of Staff](chief-of-staff/) | Routes requests to the right piece and runs an unattended daily cycle over the owner's agents, with start-of-day, quick capture, status and work-survey tools | 8 / 6 |
-| [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 5 |
-| [Obsidian](obsidian/) | Video notes into the vault inbox, a vault gardener that only proposes, and an outside-creator scout | 1 / 4 |
+| [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 8 |
+| [Obsidian](obsidian/) | Video notes into the vault inbox and a vault gardener that only proposes (skills only) | 0 / 4 |
 | [Toolbox Maintenance](toolbox-maintenance/) | A weekly audit of this toolbox with lint fixes on a review branch, an automation activity audit, and a monthly skill harvest from past sessions | 8 / 3 |
 | [Personal](personal/) | Household, health check-ins, home infrastructure, personal finance review, tax season | 6 / 11 |
 
@@ -244,12 +243,11 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `crm-hygiene`: keeps the CRM clean
   - `time-study`: measures where a month's time went
 - **Recurring Summaries**
-  - `nightly-sweep-orchestrator`: sweeps each finished day into tasks, notes and a Daily Note
-  - `daily-plan-orchestrator`: plans and closes the workday, twice a weekday
+  - `daily-planner`: plans and closes the workday, twice a weekday
 - **Chief of Staff**
   - `chief-of-staff-cycle-orchestrator`: runs one unattended chief-of-staff cycle
 - **Decision Playbooks**
-  - `playbook-orchestrator`: keeps the playbook pipeline moving, weekly
+  - `decision-playbooks-curator`: keeps the playbook pipeline moving, weekly
 - **Toolbox Maintenance**
   - `toolbox-maintenance-auditor`: the weekly audit of the toolbox itself and the automation's activity
   - `toolbox-maintenance-skill-harvester`: the monthly harvest of new skills from past sessions

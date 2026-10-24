@@ -391,8 +391,7 @@ def test_a_redirect_is_refused_so_the_token_never_leaves(tmp_path, monkeypatch):
     assert seen == [("/mcp", "Bearer abc")]
 
 
-@pytest.mark.parametrize("tool", ["daily-plan", "daily-plan-orchestrator", "recurring-summaries-daily-planner",
-                                  "daily-planner"])
+@pytest.mark.parametrize("tool", ["daily-plan", "recurring-summaries-daily-planner", "daily-planner"])
 def test_a_plan_by_the_agent_old_or_new_name_is_read(tool):
     problems = c.plan_problems(morning_plan(tool=tool), DAY, "morning")
     assert not any(p.startswith("tool is") for p in problems), problems

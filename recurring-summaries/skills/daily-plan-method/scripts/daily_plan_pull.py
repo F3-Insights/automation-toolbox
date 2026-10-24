@@ -16,7 +16,7 @@ What it writes (--out, JSON):
   note       whether the day's plan note exists and which passes it holds.
   evening    also done_today, sent (mail sent today), notes (created today), morning_plan
              (from --morning, else the state folder, else parsed from the note), packets (the
-             day by domain, for the accomplishment gatherer) and tomorrow (the next working
+             day by domain, for daily-plan-method's section Gather one domain) and tomorrow (the next working
              day's calendar).
 
 The calendar clean-up: cancelled rows and rows the owner declined are dropped; rows sharing
@@ -392,7 +392,7 @@ def morning_plan(state, day, note, explicit):
 
 
 def packets(calendar, done, sent, made, goals):
-    """The day by domain, in the accomplishment gatherer's packet shape. Mail, notes and
+    """The day by domain, in the packet shape of daily-plan-method's section Gather one domain. Mail, notes and
     meetings carry no domain in the Portal, so they go in one unfiled packet."""
     empty = {"meeting": [], "sent_email": [], "created_note": [], "completed_task": [], "started_task": [],
              "created_draft": []}

@@ -12,7 +12,7 @@ Where the toolbox stands, what is next, and what has not been proven yet. Design
 ## Not yet proven
 
 - The scripts are tested against invented data and fake servers, not against live Sage Intacct, Portal or GitHub accounts. Treat a first live run of any workflow as a supervised one.
-- The chief of staff's cycle, the nightly sweep and the playbook pipeline have been tested against fakes, never end to end against a live Portal and scheduler.
+- The chief of staff's cycle and the playbook pipeline have been tested against fakes, never end to end against a live Portal and scheduler.
 - `home-infrastructure-method` and `health-routine-method` ship as method drafts without commands.
 - Plugin packaging has not been checked with `claude plugin validate`.
 

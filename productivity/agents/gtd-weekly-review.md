@@ -1,6 +1,6 @@
 ---
 name: gtd-weekly-review
-description: "Prepares the owner's GTD weekly review for a 30-minute approval. From the facts gathered before the session (trust score against last week, projects and next actions, WAITING follow-ups, overdue, stale and someday tasks, next week's calendar, said-but-not-seen) it has productivity-worker propose one action per task and writes one review with one numbered approval list; on the approve pass it reports what will be applied. Start it as the main session or from the weekly-review Automation; it never writes to the Portal. Use for \"do my weekly review\". Not for a daily plan (daily-plan-orchestrator) or project health (projects-health-review)."
+description: "Prepares the owner's GTD weekly review for a 30-minute approval. From the facts gathered before the session (trust score against last week, projects and next actions, WAITING follow-ups, overdue, stale and someday tasks, next week's calendar, said-but-not-seen) it has productivity-worker propose one action per task and writes one review with one numbered approval list; on the approve pass it reports what will be applied. Start it as the main session or from the weekly-review Automation; it never writes to the Portal. Use for \"do my weekly review\". Not for a daily plan (daily-planner) or project health (projects-health-review)."
 model: opus
 color: green
 skills: [orchestration-workstream, task-stack-workstream, weekly-review-workstream, waiting-on-tracker-method]

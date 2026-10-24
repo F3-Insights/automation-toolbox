@@ -19,18 +19,19 @@ skills:
   # Finance holds a copy since it converted.
   erp-ledger-pull: [accounting, finance]
   brand-guide: [marketing, learning, process-engineering, reporting]
-  unslop: [marketing, accounting, chief-of-staff, finance, process-engineering, productivity, projects, reporting, sales, software]
+  unslop: [marketing, accounting, chief-of-staff, finance, learning, process-engineering, productivity, projects, reporting, sales, software]
   unslop-deliverable: [marketing, finance, process-engineering, projects, reporting]
   unslop-editorial: [marketing, projects]
-  unslop-email: [marketing, accounting, productivity, projects, sales]
+  unslop-email: [marketing, accounting, productivity, projects, sales, learning]
   unslop-proposal: [marketing, projects, sales]
   unslop-technical: [marketing, software]
+  youtube-transcript: [obsidian, marketing]
   # The reviewer checklists (migration plan D4). Each lists only its source department until
   # the departments that use it convert; a department taking review-numbers also takes
   # report-tieout, whose command it runs.
-  review-facts: [reporting, personal, compliance, process-engineering, sales, projects]
+  review-facts: [reporting, personal, compliance, process-engineering, sales, projects, decision-playbooks, learning, marketing]
   review-numbers: [reporting, personal, finance, accounting, process-engineering, projects]
-  review-red-team: [reporting, finance, process-engineering, sales, projects, strategy]
+  review-red-team: [reporting, finance, process-engineering, sales, projects, strategy, learning, marketing]
   review-completeness: [process-engineering, personal, compliance]
   evidence-check: [compliance, accounting]
   # Transcript cleanup and the one-transcript claim inventory (migration plan, process-engineering).

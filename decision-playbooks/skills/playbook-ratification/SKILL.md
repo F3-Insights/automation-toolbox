@@ -1,8 +1,8 @@
 ---
 name: playbook-ratification
-description: Run the owner's ratification session over their playbook folder. Offers the next queue items and inbox proposals sized to the time they have, walks only the flagged bullets and conflicts as focused questions, records every verdict as it is given, and promotes a ratified draft into its function's playbooks, then rebuilds the index with playbook_index.py. Use for "let's ratify", "review the playbook proposals", "I have ten minutes for playbooks". Not for drafting a playbook; use playbook-distilling.
+description: Run the owner's ratification session over their playbook folder. Offers the next queue items and inbox proposals sized to the time they have, walks only the flagged bullets and conflicts as focused questions, records every verdict as it is given, and promotes a ratified draft into its function's playbooks, then rebuilds the index with decision-playbooks-playbook-index. Use for "let's ratify", "review the playbook proposals", "I have ten minutes for playbooks". Not for drafting a playbook; use playbook-distilling.
 argument-hint: '[optional: the playbook or proposal to start with]'
-allowed-tools: Bash(python3 ~/.claude/skills/playbook-ratification/scripts/playbook_index.py:*), Bash(git -C:*), Read, Write, Edit, AskUserQuestion
+allowed-tools: Bash(decision-playbooks-playbook-index:*), Bash(git -C:*), Read, Write, Edit, AskUserQuestion
 ---
 
 # Ratify playbooks
@@ -21,7 +21,7 @@ The folder has a shared ratification pipeline (`_inbox/`, `verdicts/`, `voice/`,
    - move `<function>/drafts/<name>-playbook-draft.md` to `<function>/playbooks/<name>.md`, inside the function that owns it;
    - set its frontmatter `status: ratified v1.0, YYYY-MM-DD`;
    - tick it in the ratification queue;
-   - rebuild the index: `python3 ~/.claude/skills/playbook-ratification/scripts/playbook_index.py <folder>`;
+   - rebuild the index: `decision-playbooks-playbook-index <folder>`;
    - if the decision store holds this playbook, its status changes there only by the owner's own process; this session changes the files.
 6. **Commit per playbook, not per session**, when the folder is a git repository: stage the files you changed by name and commit with a message naming the playbook and the verdict count. One playbook ratified is one commit, so the history stays readable.
 7. **Close.** Report what was ratified, the verdicts recorded, and what is next in the queue with its estimated time. Do not press the owner to continue.
@@ -36,4 +36,4 @@ The folder has a shared ratification pipeline (`_inbox/`, `verdicts/`, `voice/`,
 
 ## The index
 
-`scripts/playbook_index.py` rebuilds `INDEX.md` from the frontmatter of every playbook, policy, draft and brief: ratified playbooks first, then policies, drafts and briefs, each function under its own heading. Headings and their order come from the optional table `function_labels` under `[playbook-ratification]` in the owner settings; a function folder with no label is listed under its folder name. An optional `meta/INDEX-FOOTER.md` is appended as written, for pointers to rules kept elsewhere.
+`decision-playbooks-playbook-index` rebuilds `INDEX.md` from the frontmatter of every playbook, policy, draft and brief: ratified playbooks first, then policies, drafts and briefs, each function under its own heading. Headings and their order come from the optional table `function_labels` under `[playbook-ratification]` in the owner settings; a function folder with no label is listed under its folder name. An optional `meta/INDEX-FOOTER.md` is appended as written, for pointers to rules kept elsewhere.
