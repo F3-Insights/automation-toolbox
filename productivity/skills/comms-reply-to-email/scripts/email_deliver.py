@@ -13,7 +13,9 @@ and presses Send. The guard rails live here, in code. It refuses, and pushes not
 - WRONG_RECIPIENT: the draft is not for the pinned contact, is addressed to anyone who is not
   one of that contact's addresses, carries a Cc or Bcc (a pushed reply applies neither), or
   the pinned email was not sent by the contact (Outlook addresses a reply to the sender);
-- ALREADY_REPLIED: the owner sent a message on the thread after the pinned email;
+- ALREADY_REPLIED: the owner sent a message on the thread after the pinned email, unless
+  --follow-up says the draft is meant to follow one (a promised delivery, a holding reply or a
+  nudge the task keeper drafted); the result then lists the later message under `followed`;
 - OUTBOUND_HOLD, OUTBOUND_ERROR: outbound-check (comms-draft-check), re-run here with this
   draft left out of the ledger, holds or could not run. RECENT_CONTACT refuses unless
   --allow-recent-contact (the owner asked for this reply), and the result records the override.
@@ -24,7 +26,7 @@ delivery-intent.json beside the check record, so a push that lands before a cras
 trace.
 
 Inputs: --draft, --check (the checker's JSON record), --contact, --email, and optionally
---allow-recent-contact, --dry-run and --config (an MCP config in place of the setting).
+--allow-recent-contact, --follow-up, --dry-run and --config (an MCP config in place of the setting).
 Prints one JSON object. Exit 0 delivered, handoff_link or would_deliver (dry run), 3 refused
 or push_failed, 2 on an error.
 
@@ -86,7 +88,7 @@ def write_intent(check_path, draft_id, **extra):
 
 
 def deliver(portal, draft_id, check_path, contact_id, email, allow_recent_contact=False, dry_run=False,
-            gate=outbound_gate):
+            gate=outbound_gate, follow_up=False):
     draft_id, contact_id, email_id = c.bare_id(draft_id), c.bare_id(contact_id), c.bare_id(email)
     if not (draft_id and contact_id and email_id):
         raise c.Failure("--draft, --contact and --email are all required")
@@ -152,7 +154,9 @@ def deliver(portal, draft_id, check_path, contact_id, email, allow_recent_contac
         when = c.parse_time(pinned.get("received_at"))
         later_sent = [m for m in messages if str(m.get("direction") or "").lower() == "sent"
                       and when and (c.parse_time(m.get("received_at")) or when) > when]
-        if later_sent:
+        if later_sent and follow_up:
+            out["followed"] = [c.email_ref(m.get("id")) for m in later_sent]
+        elif later_sent:
             refuse("ALREADY_REPLIED", "the owner sent a message on this thread after the pinned email "
                                       f"({later_sent[-1].get('received_at')})")
 
@@ -212,12 +216,15 @@ def main():
     parser.add_argument("--email", required=True, help="the pinned email ref or id")
     parser.add_argument("--allow-recent-contact", action="store_true",
                         help="the owner asked for this reply: a RECENT_CONTACT hold does not refuse it")
+    parser.add_argument("--follow-up", action="store_true",
+                        help="the draft follows the owner's own later message on the thread (a promised "
+                             "delivery, a holding reply, a nudge): a later sent message does not refuse it")
     parser.add_argument("--dry-run", action="store_true", help="run every check, push nothing")
     parser.add_argument("--config", default="", help="the MCP config holding the Portal (default: the setting)")
     args = parser.parse_args()
     try:
         result = deliver(c.client(args.config or None), args.draft, args.check, args.contact, args.email,
-                         args.allow_recent_contact, args.dry_run)
+                         args.allow_recent_contact, args.dry_run, follow_up=args.follow_up)
     except Exception as exc:
         c.fail(exc if isinstance(exc, c.Failure) else f"email-deliver could not complete: {type(exc).__name__}: {exc}")
     c.emit(result, EXIT.get(result["status"], c.ERROR))
