@@ -14,7 +14,7 @@ Prints a ranked markdown table, or with --json the list of project objects. Warn
 stderr. Exit 0 ok, 2 on any error.
 
 Example:
-  python3 project_scoreboard.py --json --domain "Acme Components" --limit 20
+  python3 scoreboard.py --json --domain "Acme Components" --limit 20
 """
 
 import argparse

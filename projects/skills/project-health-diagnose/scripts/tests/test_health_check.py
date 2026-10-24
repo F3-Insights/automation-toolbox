@@ -3,7 +3,7 @@
 import json
 from datetime import date, datetime, timedelta, timezone
 
-import project_health_check as chk
+import health_check as chk
 
 TODAY = date(2026, 10, 4)
 NOW = datetime(2026, 10, 4, 12, tzinfo=timezone.utc)

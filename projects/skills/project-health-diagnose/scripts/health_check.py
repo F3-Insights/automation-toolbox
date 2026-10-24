@@ -25,7 +25,7 @@ When the Portal cannot be read the first line is "STALE: ..." and the exit is 0.
 bad argument or a missing setting.
 
 Example:
-  python3 project_health_check.py --format json --out RUN/health.json
+  python3 health_check.py --format json --out RUN/health.json
 """
 
 import argparse

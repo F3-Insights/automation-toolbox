@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import pytest
 
 import _common as cm
-import project_scoreboard as sb
+import scoreboard as sb
 
 NOW = datetime(2026, 9, 19, 12, tzinfo=timezone.utc)
 DOMAINS = [{"id": "dom-acme", "name": "Acme Components"}, {"id": "dom-nw", "name": "Northwind Traders"}]
