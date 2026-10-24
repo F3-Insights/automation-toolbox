@@ -2,12 +2,12 @@
 name: review-register
 description: The review register, a folder of YAML tables that holds what is open, at risk, reconciled, owed by the owner and proposed for one review (a close, an engagement, a portfolio). Other skills record their open items, risks and proposals in it and read it back for status, briefs and memos. Use to add, list, close or render register rows.
 argument-hint: "[register folder] [summary|list|render|add|close]"
-allowed-tools: Read, Bash(python3 ~/.claude/skills/review-register/scripts/register.py:*)
+allowed-tools: Read, Bash(projects-register:*)
 ---
 
 # The review register
 
-One folder per review, one YAML file per table, written only by `python3 ~/.claude/skills/review-register/scripts/register.py --dir <folder> <subcommand>`. Never edit the files by hand: every write stamps `updated_at` and appends to the row's `history`.
+One folder per review, one YAML file per table, written only by `projects-register --dir <folder> <subcommand>`. Never edit the files by hand: every write stamps `updated_at` and appends to the row's `history`.
 
 ## Tables
 

@@ -98,7 +98,7 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 | Every night | `nightly-sweep-orchestrator` | The day's email turned into tasks and notes, and a Daily Note with what needs you |
 | Every weekday | `daily-plan-orchestrator` | The morning's three priorities and an evening close |
 | Every week | `cash-forecast-orchestrator` | The 13-week cash forecast rolled forward, with the low point called out |
-| Every week | `client-delivery-orchestrator` | One engagement's plan, risks and status, ready for the sponsor |
+| Every week | `projects-client-delivery` | One engagement's plan, risks and status, ready for the sponsor |
 | Every week | `weekly-report-orchestrator` | The leadership weekly, drafted from the week's record |
 | Month end | `month-end-orchestrator` | The close worked like a close team: reconciliations, accruals, flux, a review trail |
 | Month end | `board-package-orchestrator` | The board package drafted from the finished close, tied out and red-teamed |
@@ -171,7 +171,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
-| [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews, pre-mortems | 13 / 11 |
+| [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews; a Claude Code plugin | 7 / 13 |
 | [Process Engineering](process-engineering/) | Assessments, interview synthesis, process maps, workshops, automation scoping, surveys | 12 / 7 |
 | [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 8 / 3 |
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
@@ -183,11 +183,11 @@ Each folder at the root is a department. Open its README for what is inside and 
 <summary><b>Orchestrators in delivery</b> (25)</summary>
 
 - **Projects**
-  - `project-engagement-kickoff-orchestrator`: sets up a newly signed engagement as drafts to adopt
-  - `client-delivery-orchestrator`: project-manages one engagement like a delivery lead, twice a week
-  - `project-health-orchestrator`: the weekly project-health pass over active projects
-  - `tech-portfolio-orchestrator`: prepares a client's technology portfolio status before its steering meeting
-  - `project-engagement-closeout-orchestrator`: closes a finished engagement with acceptance evidence and a final invoice check
+  - `projects-engagement-kickoff`: sets up a newly signed engagement as drafts to adopt
+  - `projects-client-delivery`: project-manages one engagement like a delivery lead, twice a week
+  - `projects-health-review`: the weekly project-health pass over active projects
+  - `projects-tech-portfolio`: prepares a client's technology portfolio status before its steering meeting
+  - `projects-engagement-closeout`: closes a finished engagement with acceptance evidence and a final invoice check
 - **Process Engineering**
   - `assessment-intake-orchestrator`: turns a pre-engagement assessment into an anonymized summary
   - `discovery-synthesis-orchestrator`: turns discovery interviews and documents into a read-out and feedback by topic

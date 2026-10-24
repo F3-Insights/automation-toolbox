@@ -1,6 +1,6 @@
 ---
 name: marketing-case-study-orchestrator
-description: Finishes one case study from a closed engagement for publication. Starts from the closeout's case study draft (project-engagement-closeout-orchestrator) or, without one, the closeout and deliverables, has marketing-content-writer write the situation, the work, what changed and the lesson, has marketing-content-checker pass anonymity, fact-check verify every claim and executive-red-team read it as a prospective buyer, and marks it internal until the owner records the client's consent. Start it as the main session or through the marketing-case-study Automation, usually after a closeout. Nothing is published and no client is contacted. Regular posts are marketing-content-orchestrator.
+description: Finishes one case study from a closed engagement for publication. Starts from the closeout's case study draft (projects-engagement-closeout) or, without one, the closeout and deliverables, has marketing-content-writer write the situation, the work, what changed and the lesson, has marketing-content-checker pass anonymity, fact-check verify every claim and executive-red-team read it as a prospective buyer, and marks it internal until the owner records the client's consent. Start it as the main session or through the marketing-case-study Automation, usually after a closeout. Nothing is published and no client is contacted. Regular posts are marketing-content-orchestrator.
 model: opus
 color: green
 skills: [orchestration-workstream, marketing-content-workstream]

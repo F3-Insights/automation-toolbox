@@ -1,9 +1,9 @@
 ---
 name: project-landscape
-description: Weekly interactive review of the owner's Insights Portal project portfolio against their goals, recent email and client engagements, through a finance and business-owner lens. Recommends closures, new projects and restructuring one domain at a time, then applies only what the owner approves. Use on a Friday, or whenever the project list no longer matches the work. Not for per-project status (project-checkin), the unattended stall diagnosis (project-health-orchestrator) or goals against time spent (goal-alignment-orchestrator).
+description: Weekly interactive review of the owner's Insights Portal project portfolio against their goals, recent email and client engagements, through a finance and business-owner lens. Recommends closures, new projects and restructuring one domain at a time, then applies only what the owner approves. Use on a Friday, or whenever the project list no longer matches the work. Not for per-project status (project-checkin), the unattended stall diagnosis (projects-health-review) or goals against time spent (strategy-goal-alignment).
 argument-hint: '[domain focus]'
 model: opus
-allowed-tools: Agent, Bash, Read, Write, Edit, AskUserQuestion, mcp__insights-portal__list_entities,
+allowed-tools: Agent, Bash(projects-scoreboard:*), Bash(productivity-calendar-time:*), Bash(strategy-goal-alignment-check:*), Read, Write, Edit, AskUserQuestion, mcp__insights-portal__list_entities,
   mcp__insights-portal__priority_review, mcp__insights-portal__hierarchy, mcp__insights-portal__get,
   mcp__insights-portal__update_project, mcp__insights-portal__create_project,
   mcp__insights-portal__create_task, mcp__insights-portal__update_task,
@@ -46,44 +46,39 @@ Approach every project through the owner's lens:
 - Personal projects
 - Internal tooling
 
-## Step 0: Score the portfolio, then dispatch the goal auditor
+## Step 0: Score the portfolio, then dispatch the goal audit
 
-This is the interactive review. The unattended one is the monthly goal alignment (`goal-alignment-orchestrator`): read its latest note first, `NOTE.md` in the newest month folder of the goal-alignment home (`goal-alignment/<yyyy>/<yyyy-mm>/` under the owner setting `state_dir`), with the month's hours by domain and the items the owner has not answered yet (`python3 ~/.claude/skills/goal-alignment-workstream/scripts/goal_alignment_check.py <yyyy-mm>` lists them). Do not re-propose an item that is waiting on their answer there; take it up live instead, and tell them to answer it on the alignment task so the approve pass applies it. If the owner does not run the goal alignment, skip this.
+This is the interactive review. The unattended one is strategy's monthly goal alignment (`strategy-goal-alignment`): read its latest note first, `NOTE.md` in the newest month folder of the goal-alignment home (`goal-alignment/<yyyy>/<yyyy-mm>/` under the owner setting `state_dir`), with the month's hours by domain and the items the owner has not answered yet (with the strategy plugin on, `strategy-goal-alignment-check <yyyy-mm>` lists them). Do not re-propose an item that is waiting on their answer there; take it up live instead, and tell them to answer it on the alignment task so the approve pass applies it. If the owner does not run the goal alignment, skip this.
 
-First run the two deterministic commands:
+First run the deterministic commands:
 
 ```bash
-python3 ~/.claude/skills/project-landscape/scripts/project_scoreboard.py --json
-python3 ~/.claude/skills/calendar-time/scripts/calendar_time.py --json --since <14 days ago> --until <today>
+projects-scoreboard --json
+productivity-calendar-time --json --since <14 days ago> --until <today>
 ```
 
-The scoreboard returns one object per active project with `project_id`, `name`, `domain`, `goal`, task counts and `flags` such as `NO_GOAL`, `NO_OWNER`, `NO_TASKS`, `NO_NEXT_TASK` and `STALE_30D`, computed in code over the whole portfolio in a fixed number of Portal reads. Pass that JSON to the auditor as its `scoreboard` input so it spends its own reads on the goal side instead of walking the hierarchy for facts already in hand. If the command fails, dispatch without it and say in your report that the auditor walked the hierarchy instead.
+`projects-scoreboard` returns one object per active project with `project_id`, `name`, `domain`, `goal`, task counts and `flags` such as `NO_GOAL`, `NO_OWNER`, `NO_TASKS`, `NO_NEXT_TASK` and `STALE_30D`, computed in code over the whole portfolio in a fixed number of Portal reads. If it fails, dispatch without it and say in your report that the audit walked the hierarchy instead.
 
-`calendar-time` answers "where did the meeting time go" for the same window: rows read, availability blocks and clones dropped, and hours summed against hours of wall clock. Run it once with no scope for the window total, and once per domain you want hours for, scoped with `--scope-domain <the domain's email domain>` where the owner or that scope's spec note gives one and otherwise `--scope-title '(?i)<the domain's short name>'`. Pass the JSON to the auditor as its `calendar_time` input; it is what turns finding 5 from a best-effort count into hours. If the command fails, dispatch without it and say in your report that the auditor counted the calendar by hand. It reports meeting time only and its scope match is a heuristic, so say both when you quote its numbers.
+`productivity-calendar-time` is the productivity plugin's command; run it only when that plugin is on. It answers "where did the meeting time go" for the same window: rows read, availability blocks and clones dropped, and hours summed against hours of wall clock. Run it once with no scope for the window total, and once per domain you want hours for, scoped with `--scope-domain <the domain's email domain>` where the owner or that scope's spec note gives one and otherwise `--scope-title '(?i)<the domain's short name>'`. If it is not available or fails, dispatch without it and say the audit counted the calendar by hand. It reports meeting time only and its scope match is a heuristic, so say both when you quote its numbers.
 
-Then dispatch `goal-auditor` and let it run while you gather the landscape. It reads the goal hierarchy, the owner's private goals document when the caller supplies its path, and the last fourteen days of calendar, and it returns where the stated goals and the actual work have come apart.
+Then dispatch one `projects-worker` on the `goal-audit` skill, section Audit standalone, and let it run while you gather the landscape:
 
 ```
 Agent(
-    subagent_type="goal-auditor",
+    subagent_type="projects-worker",
     description="Goal alignment audit",
     prompt="""
-Audit goal alignment across every domain.
+Load the goal-audit skill and follow its section Audit standalone.
 
 Window: the last 14 days.
 Focus: <the domain from $ARGUMENTS, or "all domains">
-Goals document: <the path the caller supplied, or "none supplied">
+Goals document: <the path the owner supplied, or "none supplied">
 
-scoreboard: <the JSON from `python3 ~/.claude/skills/project-landscape/scripts/project_scoreboard.py --json`, verbatim, or "not supplied:
-python3 ~/.claude/skills/project-landscape/scripts/project_scoreboard.py failed with <the error>">
+scoreboard: <the JSON from `projects-scoreboard --json`, verbatim, or "not supplied:
+projects-scoreboard failed with <the error>">
 
-calendar_time: <the JSON from `python3 ~/.claude/skills/calendar-time/scripts/calendar_time.py --json`, verbatim, one block per scope with the
---scope-domain or --scope-title it was run with, or "not supplied: calendar-time failed with
-<the error>">
-
-Return your standard report: the seven findings, each with evidence _refs and one proposed
-action from the closed list, plus the meeting hours by domain and the could-not-determine
-list.
+calendar_time: <the JSON from `productivity-calendar-time --json`, verbatim, one block per scope
+with the --scope-domain or --scope-title it was run with, or "not supplied: <why>">
 """
 )
 ```
@@ -254,9 +249,9 @@ If a project has a check-in note with Key Contacts, Timeline, and standing proce
 
 ## Step 4c: The goal alignment list
 
-The domain walk above asks whether the portfolio is well formed. This step asks a different question: whether the portfolio is pointed at the stated goals at all. Fold the auditor's seven findings into **one numbered list, across every domain**, ordered by consequence rather than by finding type, and put it to the owner once.
+The domain walk above asks whether the portfolio is well formed. This step asks a different question: whether the portfolio is pointed at the stated goals at all. Fold the audit's seven findings into **one numbered list, across every domain**, ordered by consequence rather than by finding type, and put it to the owner once.
 
-Merge before you present. A project the domain walk already proposed closing and the auditor independently listed as a candidate to stop is one line, not two, and say that both passes reached it. Drop any finding the owner already resolved in the domain walk.
+Merge before you present. A project the domain walk already proposed closing and the audit independently listed as a candidate to stop is one line, not two, and say that both passes reached it. Drop any finding the owner already resolved in the domain walk.
 
 One line per item, in this shape:
 
@@ -266,7 +261,7 @@ One line per item, in this shape:
      <the specific change: which goal, which project, which priority, whose name>
 ```
 
-Under the list, print the auditor's meeting-count-by-domain table and its could-not-determine lines, so the owner sees what the recommendations rest on and what they do not. Say with the table that calendar events carry no domain, so those counts are a best-effort attribution rather than hours measured.
+Under the list, print the audit's meeting-count-by-domain table and its could-not-determine lines, so the owner sees what the recommendations rest on and what they do not. Say with the table that calendar events carry no domain, so those counts are a best-effort attribution rather than hours measured.
 
 Then ask one question, answerable in a line:
 

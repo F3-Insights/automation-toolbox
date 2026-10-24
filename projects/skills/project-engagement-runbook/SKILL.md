@@ -1,8 +1,8 @@
 ---
 name: project-engagement-runbook
-description: A default eight-step consulting engagement lifecycle (sponsor prep, discovery workshop, contract, kickoff, interviews, weekly updates, findings readout, build), each step naming its deliverable and the skill or tool that makes it. Use at the start of an engagement to lay out the plan and scaffold the folders, or mid-engagement for "what step comes next". It points to the skill that does each step (for example project-engagement-kickoff-orchestrator, interview-synthesis, comms-client-status-update) rather than doing it.
+description: A default eight-step consulting engagement lifecycle (sponsor prep, discovery workshop, contract, kickoff, interviews, weekly updates, findings readout, build), each step naming its deliverable and the skill or tool that makes it. Use at the start of an engagement to lay out the plan and scaffold the folders, or mid-engagement for "what step comes next". It points to the job or skill that does each step (for example the engagement-kickoff Automation, interview synthesis, the client weekly update) rather than doing it.
 argument-hint: "[client] [workstream] [start | where-are-we | next]"
-allowed-tools: Read, Glob, Grep, Write, Bash(python3 ~/.claude/skills/project-engagement-workstream/scripts/engagement_folders.py:*), mcp__insights-portal__get, mcp__insights-portal__list_entities, mcp__insights-portal__search
+allowed-tools: Read, Glob, Grep, Write, Bash(projects-engagement-folders:*), mcp__insights-portal__get, mcp__insights-portal__list_entities, mcp__insights-portal__search
 ---
 
 # Engagement runbook
@@ -17,7 +17,7 @@ This is a default pattern for a consulting engagement, from a first sponsor call
 
 **3. Contract.** A prompt thank-you note, then the workshop summary. The firm's contract set, for example a master agreement, an exhibit on software and IP where the work produces any, and a statement of work with Background, Goals, Scope, Methodology, Terms and Acceptance. Red-team the package with `executive-red-team` before it goes, and send it when the sponsor will have time to read it. Defaults worth considering, each one changeable: qualitative goals, no named client staff in the SOW, "which may include" on scope, invoicing terms stated once, a bullet that lets the timeline flex. Maker: `unslop-proposal` for the edit pass; the package templates once built.
 
-**4. Post-signature setup.** In order: the IT or admin one-to-one first (access, auth paths, sandbox, what can be exported); the sponsor framing note (short bullets, every word load-bearing); invite the technical voices; the sponsor-issued all-staff announcement (no threatening metric words); interview invites via the coordinator (for example 60 minutes each, inside a two-week window). Scaffold the folders with `engagement-folders` (its default subfolders are From Client, Shared with Client, Transcripts, Consultant Transcripts, Weekly Report and Kick off Material; rename them to the firm's own) and, where the firm keeps one, a sibling `<firm>-<client>` repo. Maker: `comms-draft-email` for each note.
+**4. Post-signature setup.** In order: the IT or admin one-to-one first (access, auth paths, sandbox, what can be exported); the sponsor framing note (short bullets, every word load-bearing); invite the technical voices; the sponsor-issued all-staff announcement (no threatening metric words); interview invites via the coordinator (for example 60 minutes each, inside a two-week window). Scaffold the folders with `projects-engagement-folders` (its default subfolders are From Client, Shared with Client, Transcripts, Consultant Transcripts, Weekly Report and Kick off Material; rename them to the firm's own) and, where the firm keeps one, a sibling `<firm>-<client>` repo. Maker: `comms-draft-email` for each note.
 
 **5. Kickoff.** One deck per workstream: team, focus areas lifted from the SOW with the active one boxed, what we heard reframed positively, a decide track and a build track, short sprints (two weeks is a common default), first-sprint targets. Plus a brief on the firm's delivery method, for example Align, Set up, Specify, Build and iterate. Maker: `writing-seminar-builder` with the kickoff template once built.
 
@@ -29,7 +29,7 @@ This is a default pattern for a consulting engagement, from a first sponsor call
 
 ## Folder discipline, which is half the method
 
-`<Client> - General/` holds kickoff and workshop materials and the general transcript folder. `<Client> - YYYY-MM <Workstream>/` per workstream, each with the standard subfolders (the six `engagement-folders` creates by default, or the firm's own). **From Client** and **Shared with Client** are the two directions of the boundary; nothing shared goes anywhere else, so the question "what have they seen" always has one answer. Filenames carry the date; the date in the filename is authoritative over the file's mtime.
+`<Client> - General/` holds kickoff and workshop materials and the general transcript folder. `<Client> - YYYY-MM <Workstream>/` per workstream, each with the standard subfolders (the six `projects-engagement-folders` creates by default, or the firm's own). **From Client** and **Shared with Client** are the two directions of the boundary; nothing shared goes anywhere else, so the question "what have they seen" always has one answer. Filenames carry the date; the date in the filename is authoritative over the file's mtime.
 
 ## Using this skill
 

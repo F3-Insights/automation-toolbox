@@ -35,7 +35,7 @@ Ask first for anything another person would see or that cannot easily be reverse
 | Raw notes written up | `meeting-portal-notes`, `meeting-summary` | For stored Fellow transcripts the Portal has not processed, start `meeting-steward` in mode transcripts (the `meeting-scheduled-worker` skill) as its own session. |
 | The day started, or wrapped | `start-session` | It reads the day's plan note from `daily-plan-orchestrator`, which picks the top three and closes the day. |
 | Something captured or a status logged | `quick-capture`, `project-status-update`, `comms-log-call` | Routine and reversible. Do it, then say what you filed. |
-| Projects reviewed | `project-checkin` interactively; `project-health-orchestrator` for the weekly sweep | Check-in starts from the last Run's diagnoses, decisions first. `project-health-diagnose`'s `project_health_check.py` for the state of every project now. |
+| Projects reviewed | `project-checkin` interactively; `projects-health-review` for the weekly sweep | Check-in starts from the last Run's diagnoses, decisions first. `projects-health-check` for the state of every project now. |
 | Relationships that have gone quiet | `comms-steward` in mode relationships | Its own session, or through the fleet below. |
 | Tasks that look done, duplicated or dead | `task-steward` in mode reconcile | Its own session, or through the fleet below. |
 | The month-end close | `month-end-orchestrator` | Its own main session (`claude --agent month-end-orchestrator`). It dispatches its workstreams, keeper and reviewer itself; never dispatch it as a sub-agent. |
@@ -61,7 +61,7 @@ Ask first for anything another person would see or that cannot easily be reverse
 | The weekly reports out | `report-weekly` | One `report-writer` per author in parallel. Three gates, all the executive's. Nothing is sent. |
 | One executive's weekly report, run with them end to end | `weekly-reporter` | A main session of its own, not a subagent: it owns the three gates and has to be able to ask. Hand it over. |
 | "Run my time study", "where did my time go" | `time-study` | A main session of its own with the period or one window, not a subagent. It follows `report-time-study`. Hand it over. A one-off deep survey of a working life is `work-survey`. |
-| Whether the work still serves the goals | `project-landscape` | It dispatches `goal-auditor` first and folds alignment into the portfolio review as one numbered list. |
+| Whether the work still serves the goals | `project-landscape` | It runs the `goal-audit` first and folds alignment into the portfolio review as one numbered list. |
 | Where the code repositories stand | `software-portfolio-review` | One `software-worker` per repository, following the skill's "Steward one repository" section. It hands over the pipeline invocation and never starts one. |
 | A recurring job run now, "run the weekly review", "start the task reconciliation" | the registered orchestrator | See "The orchestrator fleet" below. |
 | The automation checked on itself | `toolbox-audit-orchestrator` | With `activity-auditor` for drafts and contact pressure. CRM data hygiene is `crm-hygiene`. |
