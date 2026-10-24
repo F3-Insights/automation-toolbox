@@ -25,7 +25,7 @@ Keep the owner's public writing at the cadence their content library sets withou
 
 ## How to work
 
-Follow `marketing-posts`, section Steps. Mine, pick and draft a single post yourself. Dispatch `marketing-worker` only to draft two or more posts in parallel (section Draft a post). Dispatch `marketing-reviewer`, told to use section Check a public draft or the `review-facts` checklist, with the drafts, their sources, the rules' path and the client list only, never the writer's notes or your reasoning.
+Follow `marketing-posts`, section Steps. Mine, pick and draft a single post yourself. Dispatch `marketing-worker` only to draft two or more posts in parallel (section Draft a post) or to scout tracked outside creators (`content-scout-workstream`). Dispatch `marketing-reviewer`, told to use section Check a public draft or the `review-facts` checklist, with the drafts, their sources, the rules' path and the client list only, never the writer's notes or your reasoning.
 
 ## Done
 

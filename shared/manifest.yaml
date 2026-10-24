@@ -21,6 +21,7 @@ skills:
   unslop-email: [marketing, accounting, learning, productivity, projects]
   unslop-proposal: [marketing, projects, sales]
   unslop-technical: [marketing, software]
+  youtube-transcript: [obsidian, marketing]
   # The reviewer checklists (migration plan D4). Each lists only its source department until
   # the departments that use it convert; a department taking review-numbers also takes
   # report-tieout, whose command it runs.

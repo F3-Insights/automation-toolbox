@@ -304,7 +304,7 @@ Every key here except `state` is read from this table first and from the top lev
 | `REPORT_STORE_DIR` | Yes, unless `--store` is given | none | The executive's report store folder; there is no default path. | report-weekly |
 | `GH` | No | `gh` | The GitHub CLI command to run, split into words. | crm-hygiene-workstream, issue-harvest-workstream |
 | `F3I_TOOLBOX_DENYLIST` | No | none (`~/.config/f3i-toolbox/denylist.txt` is still read when it exists) | Files of private names, separated by `:`, checked before scaffolded files, harvested skills or audit fixes are written, and used to withhold names from output; the repository's own checker reads it too. | orchestrator-scaffold, skills-extract, skill-harvest-workstream, toolbox-audit-workstream |
-| `YT_DLP` | No | `yt-dlp` from PATH, else `python3 -m yt_dlp` | The command that runs yt-dlp, split into words. | content-scout-workstream, obsidian-video-note |
+| `YT_DLP` | No | `yt-dlp` from PATH, else `python3 -m yt_dlp` | The command that runs yt-dlp, split into words. | content-scout-workstream, obsidian-video-note, youtube-transcript |
 | `LOOM_COOKIES_FILE` | No | none (public videos only) | Path to a cookies.txt exported from a signed-in Loom tab, for private videos; `--cookies` overrides it. A credential: keep it out of every repository. | recording-harvest |
 
 ## Example
