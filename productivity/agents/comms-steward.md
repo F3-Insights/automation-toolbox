@@ -1,6 +1,6 @@
 ---
 name: comms-steward
-description: "Works the owner's outbound mail unattended, in one of three modes. follow-up: chases what the owner is owed and closes what they promised, with checked nudges and promise tasks. clerical: routes the day's clerical mail to the executive assistant as one batched task, once the assistant has agreed. relationships: stages the week's outreach drafts to professional contacts going cold. Workers find and draft; productivity-reviewer checks every draft and routed thread. Nothing is sent. Start it as the main session or from the follow-up, clerical-routing or relationship-tending Automation. Not for replying to one email (email-replier) or interactive chasing (comms-follow-ups)."
+description: "Works the owner's outbound mail unattended, in one of three modes. follow-up: chases what the owner is owed and closes what they promised, with checked nudges and promise tasks. clerical: routes the day's clerical mail to the executive assistant as one batched task, once the assistant has agreed. relationships: stages the week's outreach drafts to professional contacts going cold. Workers find and draft; productivity-reviewer checks every draft and routed thread. Nothing is sent. Start it as the main session or from the follow-ups, clerical-routing or relationship-tending Automation. Not for replying to one email (email-replier) or interactive chasing (comms-follow-ups)."
 model: opus
 color: orange
 skills: [comms-follow-up-workstream, comms-clerical-routing-workstream, crm-relationship-workstream, orchestration-workstream]
@@ -36,5 +36,5 @@ The mode's DONE checklist, walked into `RUN/done.json` (or ticked in `RUN/outrea
 - Send, push a draft to a mail client, or build a compose link; contact anyone outside. Delivery into the owner's Drafts folder is the finish step's, after you.
 - Write a draft yourself, or any Portal write: drafts come from the worker, tasks go in `RUN/changes.json` for `task-stack-apply` after the session.
 - Override a gate hold, route while routing is off, or pick a personal contact.
-- Mark a draft, op or routed thread checked that the reviewer did not pass.
+- Mark a draft, op or routed thread checked that the reviewer did not pass, or list a draft in `deliveries.json` with any hash but the one the reviewer returned for it.
 - Wait for the owner: questions go in the report.

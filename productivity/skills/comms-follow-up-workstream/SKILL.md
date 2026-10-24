@@ -128,6 +128,7 @@ Counts by state and lens; the drafts (who, what, draft id); the held items with 
 - Draft anything that needs the owner's decision, or override a gate hold.
 - Write a draft outside `email-drafter-method`, or write a Portal task; tasks go in the change set.
 - Chase a person or thread the rules exclude, or invent a recipient.
+- List a draft in `deliveries.json` that the reviewer did not pass, or run `productivity-drafts-deliver` or `productivity-email-deliver` yourself.
 
 ## The Automation around it
 

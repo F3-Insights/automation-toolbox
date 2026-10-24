@@ -19,10 +19,10 @@ From Sentinel, an Automation launches a main agent by name and its brief names t
 | `task-steward` | `capture` | task-capture | Turns said-but-not-seen commitments and quick-capture lines into tasks, never twice |
 | | `clarify` | task-clarify | Daily GTD clarify: files, retitles, dates and sets WAITING on open tasks |
 | | `reconcile` | task-reconcile | Nightly: closes done, duplicate and dead tasks on evidence; every cancel reviewer-passed |
-| `comms-steward` | `follow-up` | follow-up | Chases what the owner is owed and closes what they promised: checked nudges, promise tasks |
+| `comms-steward` | `follow-up` | follow-ups | Chases what the owner is owed and closes what they promised: checked nudges and promise deliveries put in Outlook Drafts by `productivity-drafts-deliver`, promise tasks; a code precheck skips a quiet morning |
 | | `clerical` | clerical-routing | Routes clerical mail to the assistant as one batched task a day, once the assistant has agreed |
 | | `relationships` | relationship-tending | Weekly outreach drafts to cooling professional contacts, one reason each |
-| `meeting-steward` | `prep` | meeting-prep | One checked, findable prep note per external meeting of the day |
+| `meeting-steward` | `prep` | meeting-prep, meeting-prep-morning | One checked, findable prep note per external meeting of the day, from the meetings `productivity-meeting-prep-pick` picked in code (evening: the next working day; morning: what was added overnight) |
 | | `transcripts` | meeting-worker | Unprocessed Fellow recordings to Portal notes and tasks, a few per run, written only by `productivity-meeting-publish` |
 | `email-replier` | | email-reply | One reply as a checked draft in Outlook Drafts, asking the owner only their decisions |
 | `gtd-weekly-review` | | weekly-review | The GTD weekly review as one numbered approval list |
@@ -63,9 +63,24 @@ Departments not yet converted (sales, reporting, learning, projects, recurring-s
 
 ## Commands
 
-In `bin/`, one per script: `productivity-find-contact`, `-find-email`, `-email-context-pack`, `-email-draft-show`, `-email-deliver`, `-outbound-check`, `-notify-owner`; `-meeting-pending`, `-existing`, `-fetch`, `-validate`, `-publish`, `-acknowledge`, `-skip`; `-prepare-transcript`, `-portal-read`, `-check-evidence` (meeting-portal-notes); `-task-capture-queue`, `-record`, `-check`; `-weekly-review-gather`, `-pack`, `-check`, `-changes`, `-publish`; `-calendar-steward-scan`, `-calendar-apply`, `-calendar-steward-check`, `-calendar-time`; `-portal-issue-file`; `-time-study-collect`, `-tool`, `-day-lint`, `-said-not-seen`, `-check`. The shared copy's commands keep one unprefixed name: `task-stack-apply`, `task-stack-check`, `task-stack-queue`, `task-stack-report`. Each prints `--help`.
+In `bin/`, one per script: `productivity-find-contact`, `-find-email`, `-email-context-pack`, `-email-draft-show`, `-email-deliver`, `-drafts-deliver`, `-outbound-check`, `-notify-owner`; `-follow-up-check`; `-meeting-prep-pick`; `-meeting-pending`, `-existing`, `-fetch`, `-validate`, `-publish`, `-acknowledge`, `-skip`; `-prepare-transcript`, `-portal-read`, `-check-evidence` (meeting-portal-notes); `-task-capture-queue`, `-record`, `-check`; `-weekly-review-gather`, `-pack`, `-check`, `-changes`, `-publish`; `-calendar-steward-scan`, `-calendar-apply`, `-calendar-steward-check`, `-calendar-time`; `-portal-issue-file`; `-time-study-collect`, `-tool`, `-day-lint`, `-said-not-seen`, `-check`. The shared copy's commands keep one unprefixed name: `task-stack-apply`, `task-stack-check`, `task-stack-queue`, `task-stack-report`. Each prints `--help`.
 
 Not in this repository: `meeting-summary-to-pdf` (`meeting-summary`) and the `timestudy` program, a separate checkout `productivity-time-study-tool` runs.
+
+## How drafts reach Outlook, and other decisions (2026-10-24)
+
+The action engine's extensions to this department, each with the decision the spec left open.
+
+| Piece | What it does | Decided |
+|---|---|---|
+| `productivity-drafts-deliver --run RUN --dry-run-if=...` | The one path every unattended job takes into the owner's Outlook Drafts folder: a finish step reads `RUN/deliveries.json` (`tool: drafts-deliveries`) and runs `productivity-email-deliver` once per reviewer-passed draft with every guard. Nothing goes out; the owner presses Send. | A `reply` passes the cooldown; a `delivery` or `holding` (the owner's own promise) passes the cooldown and may follow his own later message; a `nudge` may follow his message and keeps every other hold. It writes `RUN/deliver.json` on a dry Run and a live one alike, with `dry_run` in it, so a cursor or ledger reads one file. Ported from the 2026-10-07 task keeper's `keeper_deliver.py` with its tests. |
+| `productivity-notify-owner --channel teams, email or both` | Reaches the owner on Teams (email as the fallback), by email only, or both. | Ported from the same design. The email path goes only to the owner's own address from `whoami`. |
+| `productivity-follow-up-check --precheck` | `NOTHING` when no WAITING follow-up is due, no delegated task is stale or overdue, no thread the owner wrote last is silent past 3 business days and no promise task is due within 2 days. | The windows are flags with those defaults; the rules file's own values go on the Automation's command line. |
+| `productivity-meeting-prep-pick --precheck`, or `--day D --out RUN/picks.json` | The day's events, skipped or ranked, searched for their prep note, and capped, in code. | The rules file's cap, the owner's own firm's domains and the client-staff minutes are flags (`--cap`, `--home-domains`, `--staff-minutes`), not settings. A meeting already prepped takes its place under the cap, so the evening and morning Runs together stay within it except to keep a higher rank. A blank `--day` is today before noon and the next working day from noon. |
+| `productivity-weekly-review-gather --close-candidates FILE` | Each project another job found finished or quiet becomes a ready decisions item: a) close, b) keep, c) hold. | Closing cancels the project's open tasks first; a COMPLETED close with no evidence in the file cites the project itself, since the owner's answer is the approval; the default is close unless the candidate names unfinished work, then keep; at most 10 a week. `--said-dir` is optional and an absent folder is reported, not failed. |
+| `task-stack-capture` sources | A said-not-seen source marked `optional = true` may be absent. | A machine without the time study captures from its quick-capture note alone. |
+
+Relationship outreach stays a Portal draft: an outreach note answers no email, and `productivity-email-deliver` pushes only threaded replies. A `--new` mode for standalone drafts is left for later, once the Portal's push of a draft that answers nothing is confirmed.
 
 ## Settings and environment
 
