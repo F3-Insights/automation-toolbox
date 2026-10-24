@@ -1030,7 +1030,10 @@ def render_pack(review, items, inputs, week):
     else:
         body = ["No said-but-not-seen list covers this week."]
     section("said", body)
-    section("decisions", [] if any(it["section"] == "decisions" for it in items) else ["None this week."])
+    close = (inputs.get("close_candidates") or {}).get("items") or []
+    body = ([f"{len(close)} project(s) look finished or quiet and are offered for closing: answer a to close, "
+             f"b to keep, c to put on hold."] if close else [])
+    section("decisions", body + ([] if any(it["section"] == "decisions" for it in items) else ["None this week."]))
 
     cad = inputs.get("cadence") or {}
     body = []
@@ -1049,7 +1052,7 @@ def render_pack(review, items, inputs, week):
 
 def load_inputs(folder):
     """The gathered inputs by name, each None when absent."""
-    names = ("stack", "projects", "waiting", "tasks", "calendar", "said", "cadence", "carried")
+    names = ("stack", "projects", "waiting", "tasks", "calendar", "said", "cadence", "carried", "close_candidates")
     return {n: maybe_json(Path(folder) / f"{n}.json") for n in names}
 
 

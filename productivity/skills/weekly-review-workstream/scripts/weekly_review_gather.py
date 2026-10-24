@@ -15,7 +15,12 @@ The pack pass writes RUN/inputs/:
   tasks.json     the owner's overdue and stale tasks, the someday/maybe candidates (no goal,
                  long overdue or long untouched), and the queue worth their answer (--queue)
   calendar.json  next week's meetings from the calendar-time command, with overlaps
-  said.json      the time study's said-but-not-seen items of this week (--said-dir)
+  said.json      the time study's said-but-not-seen items of this week (--said-dir; optional:
+                 no folder given, or one that does not exist, is an empty list with the reason)
+  close_candidates.json
+                 the projects another job found finished or quiet (--close-candidates, a JSON file
+                 of candidates; optional), each with a ready `decisions` item: a) close it, with
+                 its open tasks cancelled first, b) keep it, c) put it on hold
   cadence.json   whether this is the month's last review (the monthly pulse) and a quarter's
   carried.json   last week's items left unsettled, so they come back rather than rot
 The approve pass reads the published review and every answer (the review task's comments,
@@ -27,7 +32,7 @@ Settings: portal_mcp_config (and portal_server); state_dir, or --home (the home 
 Portal that cannot be read in the pack pass (a pack without facts is not a pack).
 
 Example:
-  python3 weekly_review_gather.py --run RUN --said-dir TIME_STUDY/out
+  python3 weekly_review_gather.py --run RUN --said-dir TIME_STUDY/out --close-candidates STATE/close-candidates.json
 """
 
 import argparse
@@ -41,6 +46,7 @@ from pathlib import Path
 import _common as c
 
 QUEUE, STALE_DAYS = 30, 30
+MAX_CLOSE = 10
 SOMEDAY_OVERDUE_DAYS, SOMEDAY_STALE_DAYS = 30, 60
 PRIORITY = {"P1": 1, "P2": 2, "P3": 3, "P4": 4}
 CALENDAR_TIME = c.skill_file("calendar-time", "scripts", "calendar_time.py")
@@ -200,6 +206,8 @@ def said(said_dir, week):
     if not (said_dir or "").strip():
         return {"present": False, "windows": [], "items": [], "reason": "no said-not-seen folder given"}
     folder = Path(said_dir).expanduser()
+    if not folder.is_dir():
+        return {"present": False, "windows": [], "items": [], "reason": f"no said-not-seen folder at {folder}"}
     monday, sunday = week["monday"], week["sunday"]
     windows, items = [], []
     for path in sorted(folder.glob("said-not-seen-*.json")):
@@ -219,6 +227,85 @@ def said(said_dir, week):
                                                      "domain", "why_not_seen", "text")})
     return {"present": bool(windows), "windows": windows, "items": items,
             "reason": None if windows else f"no said-not-seen list in {folder} covers {week['week']}"}
+
+
+def candidate_rows(data):
+    """The candidate rows of a close-candidates file: a list, or a list under one of the usual keys."""
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        for key in ("close_candidates", "candidates", "items"):
+            if isinstance(data.get(key), list):
+                return data[key]
+    raise c.Bad("the close-candidates file holds no list of candidates")
+
+
+def close_item(row, project, open_tasks, label):
+    """The decisions item for one close candidate: a) close, b) keep, c) hold."""
+    ref = f"portal://project/{project['id']}"
+    name = " ".join(str(project.get("name") or row.get("name") or "").split()) or ref
+    close_as = str(row.get("close_as") or row.get("status") or "COMPLETED").strip().upper()
+    if close_as not in c.PROJECT_CLOSE_STATUSES:
+        close_as = "COMPLETED"
+    evidence = str(row.get("evidence") or "").strip()
+    evidence = evidence if c.evidence_ref(evidence) else ref
+    why = " ".join(str(row.get("why") or "").split()) or "Another job found it finished or quiet"
+    purpose, unfinished = row.get("purpose"), row.get("unfinished")
+    reason = f"Weekly review {label}: closed as {close_as.lower()} on the owner's answer. {why}"[:300]
+    ops = [{"op": "cancel", "task": f"portal://task/{t['id']}",
+            "reason": f"Weekly review {label}: its project {name} closed as {close_as.lower()}"[:300]}
+           for t in open_tasks]
+    ops.append({"op": "project_close", "project": ref, "status": close_as, "evidence": evidence, "reason": reason})
+    count = f" and cancel its {len(open_tasks)} open task(s)" if open_tasks else ""
+    proposal = f"Close {name} as {close_as.lower()}{count}"
+    if purpose and close_as == "COMPLETED":
+        proposal += f"; its purpose, {' '.join(str(purpose).split())}, is met"
+    return {"section": "decisions", "title": f"Close the project {name}?"[:c.TITLE_MAX],
+            "proposal": proposal[:300], "why": (why + (f" Still open: {unfinished}." if unfinished else ""))[:300],
+            "evidence": evidence, "default": "b" if unfinished else "a",
+            "choices": {"a": f"Close it as {close_as.lower()}{count}", "b": "Keep it open",
+                        "c": "Put it on hold"},
+            "options": {"a": ops, "b": [],
+                        "c": [{"op": "project_edit", "project": ref, "set": {"status": "ON_HOLD"},
+                               "reason": f"Weekly review {label}: put on hold on the owner's answer"}]}}
+
+
+def close_candidates(path, corpus, label):
+    """The close candidates another job left for this review, each as a ready decisions item.
+    No file given, or none at the path, is an empty list with the reason."""
+    if not (path or "").strip():
+        return {"present": False, "items": [], "skipped": [], "reason": "no close-candidates file given"}
+    file = Path(path).expanduser()
+    if not file.is_file():
+        return {"present": False, "items": [], "skipped": [], "reason": f"no close-candidates file at {file}"}
+    rows = candidate_rows(c.read_json(file))
+    projects = {str(p.get("id")).lower(): p for p in corpus.get("project", [])}
+    open_by_project = {}
+    for t in corpus.get("task", []):
+        if c.is_open_task(t) and t.get("project_id"):
+            open_by_project.setdefault(str(t["project_id"]).lower(), []).append(t)
+    items, skipped, seen = [], [], set()
+    for row in rows:
+        row = row if isinstance(row, dict) else {}
+        pid = c.project_id(row.get("project") or row.get("project_id") or row.get("id"))
+        name = row.get("name")
+        if not pid:
+            skipped.append({"name": name, "reason": "no project id"})
+        elif pid in seen:
+            continue
+        elif pid not in projects:
+            skipped.append({"project": pid, "name": name, "reason": "not in the Portal's projects"})
+        elif not c.is_active_project(projects[pid]):
+            skipped.append({"project": pid, "name": name, "reason": "already closed or archived"})
+        elif len(items) >= MAX_CLOSE:
+            skipped.append({"project": pid, "name": name, "reason": f"more than {MAX_CLOSE} this week"})
+        else:
+            seen.add(pid)
+            items.append({"project": f"portal://project/{pid}", "name": projects[pid].get("name"),
+                          "why": row.get("why"), "purpose": row.get("purpose"), "unfinished": row.get("unfinished"),
+                          "open_tasks": len(open_by_project.get(pid, [])),
+                          "item": close_item(row, projects[pid], open_by_project.get(pid, []), label)})
+    return {"present": True, "file": str(file), "items": items, "skipped": skipped, "reason": None}
 
 
 def carried(home, week):
@@ -264,7 +351,8 @@ def read_corpus(client):
             "project": c.page_through(client, "project")[0], "task": c.page_through(client, "task")[0]}
 
 
-def pack_pass(client, run, home, week, today, said_dir, fallback, stale_days, queue, config=None, server=None):
+def pack_pass(client, run, home, week, today, said_dir, fallback, stale_days, queue, config=None, server=None,
+              close_file=""):
     owner = c.owner_contact(client)
     corpus = read_corpus(client)
     folder = run / "inputs"
@@ -273,7 +361,8 @@ def pack_pass(client, run, home, week, today, said_dir, fallback, stale_days, qu
     stack = c.stack_check(folder / "stack.json", today.isoformat(), stale_days, before, config, server)
     derived = derive(corpus, owner, today, week, stale_days, queue)
     inputs = {**derived, "calendar": calendar(week, config, server), "said": said(said_dir, week),
-              "cadence": cadence(week), "carried": carried(home, week)}
+              "cadence": cadence(week), "carried": carried(home, week),
+              "close_candidates": close_candidates(close_file, corpus, week["week"])}
     for name, value in inputs.items():
         c.write_json(folder / f"{name}.json", value)
     o, b = stack["overall"], stack.get("baseline") or {}
@@ -288,7 +377,9 @@ def pack_pass(client, run, home, week, today, said_dir, fallback, stale_days, qu
         f"{derived['projects']['active']} projects lack a next action; {t['overdue']} overdue, {t['stale']} stale, "
         f"{t['someday_candidates']} someday candidates, {t['queued']} queued; {w['waiting']} WAITING "
         f"({w['follow_up_overdue']} follow-ups overdue, {w['follow_up_due']} due); {cal_text}; said-not-seen "
-        f"{len(s['items']) if s['present'] else 'none'}. Inputs in {folder}")
+        f"{len(s['items']) if s['present'] else 'none'}; close candidates "
+        f"{len(inputs['close_candidates']['items']) if inputs['close_candidates']['present'] else 'none'}. "
+        f"Inputs in {folder}")
 
 
 def approve_pass(client, run, folder, week, published, form):
@@ -316,7 +407,9 @@ def main(argv=None, client=None):
     p.add_argument("--pass", dest="wanted", default="auto", help="auto, pack or approve")
     p.add_argument("--home", default="", help="The weekly-review home (default <state_dir>/weekly-review)")
     p.add_argument("--answers", default="", help="The owner's answers from the launch form")
-    p.add_argument("--said-dir", default="", help="The time study's out/ folder with said-not-seen-*.json")
+    p.add_argument("--said-dir", default="", help="The time study's out/ folder with said-not-seen-*.json (optional)")
+    p.add_argument("--close-candidates", default="",
+                   help="A JSON file of projects another job found finished or quiet (optional)")
     p.add_argument("--baseline", default="", help="A task_stack_check.py json to compare with when no earlier week has one")
     p.add_argument("--as-of", default="", help="Judge as of this date (yyyy-mm-dd); blank: today")
     p.add_argument("--stale-days", type=int, default=STALE_DAYS)
@@ -339,7 +432,7 @@ def main(argv=None, client=None):
         client = client or c.Portal(args.config or None, args.server or None)
         if chosen == "pack":
             line = pack_pass(client, run, root, wk, today, args.said_dir, args.baseline, args.stale_days, args.queue,
-                             args.config or None, args.server or None)
+                             args.config or None, args.server or None, args.close_candidates)
         else:
             line = approve_pass(client, run, folder, wk, published, args.answers)
         c.write_json(run / "pass.json", {"schema": c.PASS_SCHEMA, "week": wk, "pass": chosen, "home": str(root),

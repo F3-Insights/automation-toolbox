@@ -207,3 +207,59 @@ def test_other_skills_scripts_come_from_this_checkout():
     toolbox = c.SKILL_DIR.parents[2]
     for path in (c.TASK_STACK_CHECK, c.TASK_STACK_APPLY, ga.CALENDAR_TIME):
         assert path.is_file() and toolbox in path.parents, path
+
+
+def test_said_dir_is_optional_and_an_absent_folder_is_said(tmp_path):
+    week = c.resolve_week("2030-W10")
+    assert ga.said("", week)["reason"] == "no said-not-seen folder given"
+    got = ga.said(str(tmp_path / "nowhere"), week)
+    assert got["present"] is False and got["items"] == [] and "no said-not-seen folder at" in got["reason"]
+
+
+def test_close_candidates_become_ready_decision_items(tmp_path):
+    from conftest import CORPUS, P_EMPTY, P_STORE, P_WAIT
+    corpus = {**CORPUS, "project": CORPUS["project"] + [{"id": uid(703), "name": "Old fixtures", "status": "COMPLETED"}]}
+    path = tmp_path / "close-candidates.json"
+    path.write_text(json.dumps({"close_candidates": [
+        {"project": f"portal://project/{P_EMPTY}", "name": "Supplier review", "why": "No activity in 40 days",
+         "close_as": "CANCELLED"},
+        {"project": P_STORE, "why": "Every task done", "purpose": "the store reset for spring",
+         "evidence": f"portal://note/{uid(650)}"},
+        {"project": P_WAIT, "why": "Quiet", "unfinished": "the shelf order is still waiting"},
+        {"project": P_STORE, "why": "listed twice"},
+        {"project": uid(703), "why": "already closed"},
+        {"project": uid(799), "why": "not in the Portal"}]}))
+    got = ga.close_candidates(str(path), corpus, "2030-W10")
+    assert [i["name"] for i in got["items"]] == ["Supplier review", "Spring store reset", "Shelf order"]
+    assert [s["reason"] for s in got["skipped"]] == ["already closed or archived", "not in the Portal's projects"]
+    supplier, store, shelf = (i["item"] for i in got["items"])
+    assert [op["op"] for op in supplier["options"]["a"]] == ["cancel", "project_close"]   # task 3 is open there
+    assert supplier["options"]["a"][-1]["status"] == "CANCELLED" and supplier["default"] == "a"
+    assert store["options"]["a"][-1]["evidence"] == f"portal://note/{uid(650)}" and "purpose" in store["proposal"]
+    assert [op["op"] for op in store["options"]["a"]][-1] == "project_close"
+    assert shelf["default"] == "b" and shelf["options"]["c"][0]["set"] == {"status": "ON_HOLD"}
+    assert shelf["options"]["a"][-1]["evidence"] == f"portal://project/{P_WAIT}"
+    review_doc = review(items=[i["item"] for i in got["items"]])
+    items, problems = c.validate_review(review_doc, "2030-W10")
+    assert problems == [] and all(it["section"] == "decisions" for it in items)
+    assert c.resolve(items, [{"source": "a", "text": "1) a 2) a 3) c"}])["ops"][-1]["op"] == "project_edit"
+
+
+def test_close_candidates_are_optional_and_reach_the_inputs(home, tmp_path, monkeypatch, capsys):
+    assert ga.close_candidates("", CORPUS, "2030-W10")["present"] is False
+    assert "no close-candidates file at" in ga.close_candidates(str(tmp_path / "none.json"), CORPUS, "2030-W10")["reason"]
+    path = tmp_path / "cc.json"
+    path.write_text(json.dumps([{"project": uid(701), "why": "Quiet"}]))
+    run, code = gather(home, tmp_path, monkeypatch, "--close-candidates", str(path))
+    assert code == 0 and "close candidates 1" in capsys.readouterr().out
+    assert json.loads((run / "inputs" / "close_candidates.json").read_text())["items"][0]["name"] == "Supplier review"
+    path.write_text(json.dumps({"nothing": True}))
+    run, code = gather(home, tmp_path, monkeypatch, "--close-candidates", str(path))
+    assert code == 2
+
+
+def test_the_pack_names_the_close_candidates():
+    items, _ = c.validate_review(review(), "2030-W10")
+    inputs = {"close_candidates": {"present": True, "items": [{"name": "Supplier review"}]}}
+    pack = c.render_pack(review(), items, inputs, c.resolve_week("2030-W10"))
+    assert "1 project(s) look finished or quiet and are offered for closing" in pack
