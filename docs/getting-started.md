@@ -51,24 +51,24 @@ Skills that need nothing beyond Claude Code are the quickest way to see what the
 
 ## 3. Run a full workflow: a pre-mortem
 
-The [strategy](../strategy/) department's `pre-mortem` shows the whole pattern at small scale: an orchestrating skill, two sub-agents, two approval gates, and a written brief at the end. It needs only a web search tool.
+The [strategy](../strategy/) department's `pre-mortem` shows the whole pattern at small scale: one skill, the department's worker for two slices and its reviewer for a cold read, two approval gates, and a written brief at the end. It needs only a web search tool.
 
 1. In a working folder for a company (a git repository is ideal), create the knowledge base from the fictional examples the skill ships with:
 
    ```bash
    mkdir -p context initiatives/new-plant
-   for f in ~/.claude/skills/pre-mortem/context-examples/*.example.md; do
+   for f in ~/coding-projects/automation-toolbox/strategy/skills/pre-mortem/context-examples/*.example.md; do
      cp "$f" "context/$(basename "$f" .example.md).md"
    done
    ```
 
 2. Write the plan you want stress-tested in `initiatives/new-plant/plan.md`, and its numbers (costs, volumes, timing) in `initiatives/new-plant/quant-inputs.yaml`.
 
-3. Start Claude Code in that folder and ask:
+3. Start Claude Code in that folder with the strategy plugin (`claude --plugin-dir ~/coding-projects/automation-toolbox/strategy`) and ask:
 
    > Run a pre-mortem on the new-plant initiative.
 
-The skill dispatches `pre-mortem-investigator` to surface the plan's stated, implied and missing assumptions, then stops at **Gate 1** for you to approve them. Next it dispatches `pre-mortem-researcher` for sourced outside evidence, writes the kill-shot risks and a decision brief, and stops at **Gate 2** for your decision. It is resumable: leave at either gate and ask again later, and it picks up from the files it has written.
+The skill has `strategy-worker` surface the plan's stated, implied and missing assumptions, then stops at **Gate 1** for you to approve them. Next the worker gathers sourced outside evidence, the skill writes the kill-shot risks and a decision brief, `strategy-reviewer` reads it cold, and it stops at **Gate 2** for your decision. It is resumable: leave at either gate and ask again later, and it picks up from the files it has written.
 
 Replace the fictional `context/` files with your own company's before relying on the result.
 

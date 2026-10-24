@@ -102,7 +102,7 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 | Every week | `weekly-report-orchestrator` | The leadership weekly, drafted from the week's record |
 | Month end | `month-end-orchestrator` | The close worked like a close team: reconciliations, accruals, flux, a review trail |
 | Month end | `board-package-orchestrator` | The board package drafted from the finished close, tied out and red-teamed |
-| Monthly | `goal-alignment-orchestrator` | Goals set against projects and where the time went, as one approval list |
+| Monthly | `strategy-goal-alignment` | Goals set against projects and where the time went, as one approval list |
 | On demand | `software-developer` | A repository's issues worked into verified pull requests, builds in parallel worktrees (draft) |
 
 ## Quick start
@@ -134,7 +134,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 |---|---|:---:|
 | [Accounting](accounting/) | Month-end close, reconciliations, journal entries, accruals, collections, intercompany, cost accounting, audit support, 1099s | 22 / 20 |
 | [Finance](finance/) | Forecasts, budgets, 13-week cash, one-off analysis, investor obligations | 13 / 5 |
-| [Strategy](strategy/) | Goals checked against projects and where the time went, and pre-mortems on strategic plans | 5 / 4 |
+| [Strategy](strategy/) | Goals checked against projects and where the time went, and pre-mortems on strategic plans; a Claude Code plugin | 3 / 2 |
 | [Executive Reporting](reporting/) | Board packages, leadership weeklies, results memos, client updates, and the reviewers every report passes | 16 / 7 |
 
 <details>
@@ -157,7 +157,7 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `analysis-orchestrator`: drafts a one-off analysis, scenario model or what-if
   - `investor-posting-orchestrator`: keeps contractual investor data-room postings on time
 - **Strategy**
-  - `goal-alignment-orchestrator`: prepares the monthly check of goals against projects and time spent
+  - `strategy-goal-alignment`: prepares the monthly check of goals against projects and time spent
 - **Reporting**
   - `board-package-orchestrator`: drafts one company's monthly board package from its finished close
   - `weekly-report-orchestrator`: prepares the weekly report to the leadership team

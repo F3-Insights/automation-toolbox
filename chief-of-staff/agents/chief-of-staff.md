@@ -45,7 +45,7 @@ Ask first for anything another person would see or that cannot easily be reverse
 | An engagement planned | `project-engagement-runbook` | Names the step, its deliverable and the skill that makes it. `project-engagement-onboarding` and `project-engagement-baseline` sit inside it. |
 | Interviews synthesized | `interview-synthesis` | Three or more transcripts: dispatch one `transcript-reader` per transcript in parallel first. |
 | A process map | `process-flow-orchestrator` | Its own session; it fans out the transcripts and runs the three audits. |
-| A plan stress-tested | `pre-mortem` | Runs `pre-mortem-investigator` and `pre-mortem-researcher` in parallel. |
+| A plan stress-tested | `pre-mortem` | Has `strategy-worker` surface the assumptions, then gather outside evidence, with a gate after each. |
 | A workshop designed | `workshop-design` | |
 | A finished deliverable reviewed | `executive-red-team`, `fact-check`, `completeness-audit` | See the briefing note below. |
 | Writing cleaned up | `unslop` | The router picks the sub-skill. Everything drafted goes through it. |
