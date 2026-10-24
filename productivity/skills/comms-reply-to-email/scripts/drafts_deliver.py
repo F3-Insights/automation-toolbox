@@ -29,9 +29,11 @@ RUN/deliveries.json, written by the session:
 
 With no deliveries.json there is nothing to deliver (status `nothing`). A set written by a
 dry-run session is never delivered live (refused DRY_RUN). --max-drafts is a runaway backstop:
-past it the rest are left in the Portal and listed. Writes RUN/deliver.json (or
-deliver-dry-run.json), each result carrying the entry's task, needs_your_word and question so
-a ledger can name the drafts that need the owner's word. Exit 0 when it ran, 3 when the set is
+past it the rest are left in the Portal and listed. Writes RUN/deliver.json on a dry run and
+a live one alike, with `dry_run` in it (a dry run's results are `would_deliver`), so whatever
+reads the Run (a cursor that moves only once delivery ran, the ledger) finds one file; each
+result carries the entry's task, needs_your_word and question so a ledger can name the drafts
+that need the owner's word. Exit 0 when it ran, 3 when the set is
 refused whole, 2 when it could not run.
 """
 
@@ -191,7 +193,7 @@ def main(argv=None, runner=run_deliver):
             result = deliver(run, dry_run, a.max_drafts, runner)
         except Refused as exc:
             c.emit({"tool": "drafts-deliver", "status": "refused", "code": exc.code, "reason": exc.reason}, c.STOP)
-        atomic_json(run / ("deliver-dry-run.json" if dry_run else "deliver.json"), result)
+        atomic_json(run / "deliver.json", result)
     except c.Failure as exc:
         c.emit({"tool": "drafts-deliver", "status": "error", "reason": str(exc)}, c.ERROR)
     c.emit(result, c.OK)

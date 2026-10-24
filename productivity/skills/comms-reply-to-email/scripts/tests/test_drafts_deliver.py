@@ -99,7 +99,7 @@ def test_a_dry_run_sessions_set_is_never_delivered_live(run_dir):
     code, runner = go(run_dir)
     assert code == 3 and runner.calls == []
     code, runner = go(run_dir, "--dry-run")
-    assert code == 0 and "--dry-run" in runner.calls[0] and (run_dir / "deliver-dry-run.json").is_file()
+    assert code == 0 and "--dry-run" in runner.calls[0] and result(run_dir)["dry_run"] is True
 
 
 @pytest.mark.parametrize("value, dry", [("true", True), ("false", False)])
@@ -107,7 +107,7 @@ def test_the_schedulers_dry_run_placeholder(run_dir, value, dry):
     write(run_dir, entry(1))
     code, runner = go(run_dir, f"--dry-run-if={value}")
     assert code == 0 and ("--dry-run" in runner.calls[0]) is dry
-    assert (run_dir / ("deliver-dry-run.json" if dry else "deliver.json")).is_file()
+    assert result(run_dir)["dry_run"] is dry and not (run_dir / "deliver-dry-run.json").exists()
 
 
 def test_an_unclear_dry_run_placeholder_delivers_nothing(run_dir):
