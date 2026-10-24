@@ -1,6 +1,6 @@
 ---
 name: orchestrator-scaffold
-description: Build a new orchestrator (an agent that runs one recurring workflow end to end through sub-agents, a reviewer and a check tool) from a short spec instead of by hand, or lint one that exists. Holds the design the pattern follows, the agent file standard with its two templates (orchestrator and sub-agent), the rule for when a piece is an agent rather than a skill, and a worked example spec. Use for "build an orchestrator for X", "write a new agent" or "check this orchestrator against the design". How each worker behaves is orchestration-workstream; drift across the whole toolbox is toolbox-audit-orchestrator.
+description: Build a new orchestrator (an agent that runs one recurring workflow end to end through sub-agents, a reviewer and a check tool) from a short spec instead of by hand, or lint one that exists. Holds the design the pattern follows, the agent file standard with its two templates (orchestrator and sub-agent), the rule for when a piece is an agent rather than a skill, and a worked example spec. Use for "build an orchestrator for X", "write a new agent" or "check this orchestrator against the design". How each worker behaves is orchestration-workstream; drift across the whole toolbox is toolbox-maintenance-auditor.
 argument-hint: "[spec.yaml] or [lint orchestrator-name]"
 ---
 
