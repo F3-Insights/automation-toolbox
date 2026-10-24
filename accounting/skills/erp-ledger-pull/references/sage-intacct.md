@@ -1,9 +1,3 @@
----
-name: sage-intacct-reference
-description: "Reference for Sage Intacct in a close, loaded by other skills rather than for a user request: how its REST API behaves for any company (objects, fields, sign conventions, report services, the traps that cost a day) and, in import-format.md beside it, the GL journal-entry import CSV layout that actually imports. Load it before reading the ledger with erp-ledger-pull or drafting an import file with month-end-journal-entry on an Intacct company."
-user-invocable: false
----
-
 # Sage Intacct REST v1: behaviour that holds for any company
 
 Generic; do not rediscover. What is specific to one company (its entities, its integration users, its permission history, its data start date) belongs in that company's Month-End folder, in `SYSTEMS.md`.
@@ -31,7 +25,7 @@ Generic; do not rediscover. What is specific to one company (its entities, its i
 - Always check `len(rows) == totalCount`; always re-pull after the team books entries (a month can move after "final"); state the data vintage on every output.
 
 ## Imports
-- GL journal-entry import CSVs: see `import-format.md` beside this file.
+- GL journal-entry import CSVs: see `import-format.md` beside this file (the `month-end-journal-entry` skill builds and lints them).
 
 ## Trial balance and GL reports
 - Balances are not query objects (`general-ledger/account-balance` etc. answer REST-1033 'not supported in version 1'). Intacct's reports are REPORT SERVICES: `services/reports/general-ledger/trial-balance`, `.../account-balance`, `.../details` (POST with parameters; then `services/reports/status` and `services/reports/download`). They answer REST-3007 until the API user's role has Run permission on the GL reports.

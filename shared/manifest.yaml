@@ -14,6 +14,10 @@ skills:
   comms-confirm: [accounting, finance, process-engineering, projects, reporting, sales]
   office-files: [accounting, compliance, finance, reporting, sales]
   report-tieout: [accounting, chief-of-staff, process-engineering, reporting]
+  # The ERP read (migration plan, accounting): the ledger pull, trial balance, GL detail and
+  # normalizer, the AR/AP hygiene and budget-detail checks, and the Sage Intacct reference.
+  # Finance adds itself when it converts.
+  erp-ledger-pull: [accounting]
   brand-guide: [marketing, learning, process-engineering, reporting]
   unslop: [marketing, accounting, chief-of-staff, finance, process-engineering, productivity, projects, reporting, sales, software]
   unslop-deliverable: [marketing, finance, process-engineering, projects, reporting]
@@ -25,7 +29,7 @@ skills:
   # the departments that use it convert; a department taking review-numbers also takes
   # report-tieout, whose command it runs.
   review-facts: [reporting]
-  review-numbers: [reporting]
+  review-numbers: [reporting, accounting]
   review-red-team: [reporting]
   review-completeness: [process-engineering]
-  evidence-check: [compliance]
+  evidence-check: [compliance, accounting]

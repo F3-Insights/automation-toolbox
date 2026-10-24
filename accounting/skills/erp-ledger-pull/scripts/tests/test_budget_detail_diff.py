@@ -70,7 +70,7 @@ def test_cli(tmp_path):
 
 
 def test_a_form_feed_inside_a_quoted_cell_does_not_split_the_upload_row(tmp_path):
-    from _common import load_table
+    from _budget import load_table
 
     path = tmp_path / "upload.csv"
     with path.open("w", newline="", encoding="utf-8") as fh:

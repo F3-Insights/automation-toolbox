@@ -18,7 +18,7 @@ Checks, printed as one JSON object:
      the documents older than --old-days and at least --old-min.
 
 Example:
-    python3 ar_ap_hygiene.py --snap ./snapshots/2026-09 --month 2026-09 --as-of 2026-09-30
+    ar-ap-hygiene --snap ./snapshots/2026-09 --month 2026-09 --as-of 2026-09-30
 """
 
 from __future__ import annotations

@@ -2,8 +2,8 @@
 """Compare the budget detail Sage Intacct holds with the budget upload sheet, and find the
 freshest forecast.
 
-    python3 budget_detail_diff.py --detail budget-detail.json --list-budgets
-    python3 budget_detail_diff.py --detail budget-detail.json --upload "forecast upload.csv" [--budget-id ID]
+    budget-detail-diff --detail budget-detail.json --list-budgets
+    budget-detail-diff --detail budget-detail.json --upload "forecast upload.csv" [--budget-id ID]
 
 --detail is a pull of Intacct's budget detail (rows with budget.id, glAccount.id,
 dimensions.department.id, dimensions.location.id, reportingPeriod.id such as
@@ -28,7 +28,7 @@ import re
 import sys
 from collections import defaultdict
 
-from _common import load_pull, load_table, money, reporting_period_month
+from _budget import load_pull, load_table, money, reporting_period_month
 
 DATED = re.compile(r"(\d{4})[-_]?(\d{2})")
 
