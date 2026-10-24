@@ -11,6 +11,8 @@ Run as `productivity-reviewer`, briefed to follow this skill, section The tests,
 
 ## The tests, in order
 
+Read each draft first with `productivity-email-draft-show DRAFT_ID`: it prints what would be sent and the draft's `content_hash`.
+
 1. **Recipient.** `get` the draft: its `recipient_to` resolves to the contact the brief named (`related_contact_id` and the address match a message that contact sent, or the contact record found by that address). A different person, a group address or a guess is FAIL.
 2. **Not a duplicate.** No other open draft to that recipient or on that thread (`list_entities` drafts), and no sent mail, meeting or call with them inside the cooldown the rules give (default 3 business days for a nudge, 21 days for outreach), unless the brief says the owner approved the override.
 3. **Facts.** Every date, number, name, event and claim in the body is in a source ref the brief lists or in the Portal record of that contact. One fact you cannot find is FAIL.
@@ -21,8 +23,8 @@ Run as `productivity-reviewer`, briefed to follow this skill, section The tests,
 
 ## The return
 
-The `orchestration-workstream` block, `workstream: "comms-draft-check"`, one `items` row per draft: `test` `draft`, `item` the draft id, `state` `PASS` or `FAIL`, `evidence` the ref you checked against, `note` the failed test and the one fix ("remove the second ask", "the call was on the 3rd, not the 4th"). Never prose without the block.
+The `orchestration-workstream` block, `workstream: "comms-draft-check"`, one `items` row per draft: `test` `draft`, `item` the draft id, `state` `PASS` or `FAIL`, `evidence` the ref you checked against, `note` the failed test and the one fix ("remove the second ask", "the call was on the 3rd, not the 4th"), and, on a PASS, `content_hash` exactly as `productivity-email-draft-show` printed it. The hash is what `productivity-drafts-deliver` delivers against: a draft changed after your check is refused, so a PASS is valid for that content and no other. Never prose without the block.
 
 ## Later tools
 
-- `email-draft-show` and `outbound-check` granted to the checker, so tests 1 and 2 run in code.
+- `outbound-check` granted to the checker, so test 2 runs in code (`productivity-drafts-deliver` already re-runs it before every push).

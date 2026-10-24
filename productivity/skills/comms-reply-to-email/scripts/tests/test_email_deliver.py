@@ -133,6 +133,16 @@ def test_a_reply_already_sent_after_the_email_refuses(portal, capsys, tmp_path):
     assert code == 3 and "ALREADY_REPLIED" in codes(out) and pushes(portal) == []
 
 
+def test_a_follow_up_draft_may_follow_the_owners_own_later_message(portal, capsys, tmp_path):
+    add_draft(portal)
+    portal.emails["m5"] = {"thread": "T1", "direction": "sent", "from_address": "owner@owner.test",
+                           "to_addresses": ["dana@acme.test"], "received_at": ago(0, 1), "subject": "Re: Kickoff",
+                           "contact_id": None, "body": "I'll get it to you this week."}
+    code, out = deliver(capsys, write_check(tmp_path, portal), "--allow-recent-contact", "--follow-up")
+    assert code == 0 and out["status"] == "delivered" and out["followed"] == ["portal://email/m5"]
+    assert pushes(portal) == ["d1"]
+
+
 def test_the_cooldown_holds_unless_the_owner_asked_for_the_reply(portal, capsys, tmp_path):
     portal.emails["m1"]["received_at"] = ago(2)   # the owner wrote on the thread two days ago, before m3
     add_draft(portal)

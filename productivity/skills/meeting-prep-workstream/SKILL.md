@@ -1,6 +1,6 @@
 ---
 name: meeting-prep-workstream
-description: The daily meeting-prep pass, loaded by meeting-steward in prep mode and by the productivity-reviewer it dispatches, not for a user request; adds to orchestration-workstream and meeting-prep. Covers MEETING-PREP-RULES.md first, the Steps, which meetings get a pack (external, ranked, capped), what a pack holds (attendees, last touch, open items, what the owner owes them, the goal of the meeting), the already-prepped check, the note title and associations, the findability check that defines done, the DONE checklist, the section Check a pack and the shapes.
+description: The daily meeting-prep pass, loaded by meeting-steward in prep mode and by the productivity-reviewer it dispatches, not for a user request; adds to orchestration-workstream and meeting-prep. Covers MEETING-PREP-RULES.md first, the Steps, which meetings get a pack (external, ranked, capped) and the pick that does it in code (productivity-meeting-prep-pick, picks.json), what a pack holds (attendees, last touch, open items, what the owner owes them, the goal of the meeting), the already-prepped check, the note title and associations, the findability check that defines done, the DONE checklist, the section Check a pack and the shapes.
 ---
 
 # Preparing meetings
@@ -9,8 +9,8 @@ This skill extends `orchestration-workstream`. The single-meeting method is `mee
 
 ## Steps
 
-1. [judgment] `whoami`; read `MEETING-PREP-RULES.md` (input `prep_rules`) and `meeting-prep`. Work out `day` (default: tomorrow on an evening Run, today on a morning Run) and its local window.
-2. [judgment] Pick: list the day's events, classify, rank and cap them, and skip those already prepped (Which meetings). For each kept event call `meeting_prep` and draft its pack from `references/pack-template.md`. Save the picks to `RUN/preparer.json`.
+1. [judgment] `whoami`; read `MEETING-PREP-RULES.md` (input `prep_rules`), `meeting-prep` and `RUN/picks.json`, which `productivity-meeting-prep-pick` wrote before the session (Picked in code). Without it, run `productivity-meeting-prep-pick --day DAY --out RUN/picks.json` yourself, with the rules' cap, domains and minutes as flags.
+2. [judgment] Pick: take `picks.json`'s `picks` as the meetings to prep, in its rank order. Overrule a pick or a skip only where the rules file says otherwise or the record shows the code misread the event, and record each such change with its reason. For each kept event call `meeting_prep` and draft its pack from `references/pack-template.md`. Save the picks and any overrules to `RUN/preparer.json`.
    → no external meeting to prep: step 6
 3. [hand-off: productivity-worker] Complete each pack, in parallel: `waiting-on-tracker-method` scoped to the meeting's attendees with lens D and `since` 60 days ago (model sonnet); `portal-research`, section Research a person, for an attendee `meeting_prep` left thin (model haiku). Add "What the owner owes them" and "The goal of this meeting", every line with its ref.
 4. [hand-off: productivity-reviewer] Check the packs (section Check a pack), with the packs and the rules path only.
@@ -41,6 +41,25 @@ The `meeting-prep` note sections (meeting, when and where, attendees with relati
 The full layout is in `references/pack-template.md` inside this skill.
 
 Every attendee line, every open item and every owed item carries a ref. Nothing private to another client and nothing from the owner's private notes goes in a note; the Portal is shared.
+
+## Picked in code
+
+`productivity-meeting-prep-pick` does Which meetings before the session: the day's window in the owner's zone, the clone duplicates collapsed, each event skipped with its reason or kept as a candidate, the ranks, the already-prepped search on the exact note title, and the cap. A meeting already prepped takes its place under the cap, so the morning Run picks up only what the evening Run left or what was added overnight. `--day` takes a date, `today`, `tomorrow` or `next-working-day`. The rules file's values reach it as flags from the Automation: `--cap`, `--home-domains` (the owner's own firm's mail domains; any other domain the owner holds an address at is a client's) and `--staff-minutes` (a client's staff meeting longer than this counts as external). With `--precheck` it prints `NOTHING` when no meeting is left to prep, and the Automation starts no session.
+
+`RUN/picks.json`:
+
+```json
+{"tool": "meeting-prep-pick", "version": 1, "day": "2026-10-06", "timezone": "<zone>", "cap": 5,
+ "counts": {"events": 9, "candidates": 4, "picked": 2, "prepped": 1, "dropped": 1, "skipped": 5},
+ "picks": [{"event": "portal://calendar_event/<id>", "title": "...", "rank": 2, "why": "external attendees",
+            "start_local": "10:00", "end_local": "10:30", "minutes": 30, "owner_role": "attendee",
+            "series": false, "attendees": ["..."], "external_domains": ["..."],
+            "note_title": "Meeting Prep: ... - 2026-10-06"}],
+ "prepped": [{"note": "portal://note/<id>", "...": "the pick's fields"}],
+ "dropped": [{"reason": "cap", "...": "the pick's fields"}],
+ "skipped": [{"event": "...", "title": "...", "start_local": "12:00", "reason": "personal"}],
+ "warnings": []}
+```
 
 ## The note
 
@@ -74,7 +93,10 @@ For `productivity-reviewer`, given the packs and the rules file's path only, nev
 
 Return the `orchestration-workstream` block, `workstream: "meeting-prep-check"`, one `items` row per pack: `test` `prep`, `item` the event ref, `state` PASS or FAIL, `evidence` the ref read, `note` the claim to fix.
 
+## The Automation around it
+
+Two Automations run this mode: one in the evening for the next working day (`--day next-working-day`) and one in the morning for today (`--day today`). Each has the precheck `productivity-meeting-prep-pick --precheck --day DAY` and prepares `productivity-meeting-prep-pick --day DAY --out RUN/picks.json`, both with the same `--cap`, `--home-domains` and `--staff-minutes` from the rules file. The session writes the notes itself (`create_note`); there is no change set to apply.
+
 ## Later tools
 
-- `meeting-prep-pick`: the day's events, the ranking, the cap and the already-prepped check in code, before the session.
 - `note-findable`: write-then-search verification of a note by title, in code.

@@ -46,6 +46,18 @@ def test_an_unreadable_source_is_reported_and_others_still_read(sources, tmp_pat
     assert len(items) == 6
 
 
+def test_an_absent_optional_said_not_seen_folder_is_no_items_not_a_failure(sources, tmp_path):
+    data = json.loads(sources.read_text())
+    data["sources"].append({"name": "heard", "kind": "said-not-seen", "path": str(tmp_path / "no-time-study"),
+                            "optional": True})
+    data["sources"].append({"name": "heard-required", "kind": "said-not-seen", "path": str(tmp_path / "gone")})
+    sources.write_text(json.dumps(data))
+    items, reports = c.gather(c.load_sources(str(sources))[0])
+    by = {r["name"]: r for r in reports}
+    assert by["heard"]["readable"] is True and by["heard"]["items"] == 0
+    assert by["heard-required"]["readable"] is False and len(items) == 6
+
+
 def test_sources_come_from_settings_when_no_file_is_given(no_owner_settings, tmp_path):
     no_owner_settings.write_text(f'[task-stack-capture]\nsources = [{{name = "inbox", kind = "markdown-inbox", '
                                  f'path = "{tmp_path / "x.md"}", optional = true}}]\n')
