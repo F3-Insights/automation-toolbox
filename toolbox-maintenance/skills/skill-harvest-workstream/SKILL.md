@@ -33,7 +33,7 @@ For `toolbox-maintenance-skill-harvester`. Nobody may watch the Run: never ask; 
 
 1. [judgment] Orient. Read the rules file, `skills-extract`'s `SKILL.md` and `rules.md`, and the month's folder in the harvest folder if it exists. Write `RUN/plan.json`: the pass, the scopes, the window, the picks.
    → draft pass: step 5
-2. [hand-off: toolbox-maintenance-worker] Mine. One worker per scope, in parallel, on section Mine one scope, with the scope, the window, the owner context path and `RUN/scopes/<scope>/`. A reply without the json block goes back once for it.
+2. [hand-off: toolbox-maintenance-worker] Mine. One worker per scope, in parallel, on section Mine one scope, with the scope, the window, the owner context path and its work folder, `<harvest folder>/<yyyy-mm>/scopes/<scope>/` (on a dry run `RUN/scopes/<scope>/`), so the draft pass and the branch command find the pack later. A reply without the json block goes back once for it.
 3. [judgment] Merge and review the inbox. Merge the scopes' candidates into the month's `candidates.md`, one numbering, duplicates joined, existing skills first. Read the skills inbox and write `inbox-review.md`. On a dry run both stay in `RUN`.
 4. [judgment] Close the harvest pass. Walk DONE: harvest into `RUN/done.md`, citing evidence per line, and report the candidates as one numbered list the owner can answer "1) ok 2) no".
    → reported: done
@@ -41,7 +41,7 @@ For `toolbox-maintenance-skill-harvester`. Nobody may watch the Run: never ask; 
 6. [hand-off: toolbox-maintenance-reviewer] Check each draft on section Check a skill draft, with the draft, the inventory, the pack, the owner context and the rules file, never the worker's reasoning. A FAIL goes back to its worker once with the fixes; a second FAIL leaves that draft out.
    → FAIL: step 5 (max 1)
 7. [judgment] Copy each passed draft's files unchanged from `RUN/drafting/` to the same place under `RUN/drafts/`, which holds only passed drafts, since the branch command stages everything there. Write `RUN/harvest-note.md`: one generic line per passed draft (what it does, where it would live, what it replaces) and the retirement and inbox proposals.
-8. [script] Name-check the note: `toolbox-maintenance-name-check RUN/harvest-note.md --pack <a scope's pack.json> --names <owner context>`. `HITS` lists file, line and kind: rewrite those lines generically.
+8. [script] Name-check the note: `toolbox-maintenance-name-check RUN/harvest-note.md --pack <each scope's pack.json> --names <owner context>`. `HITS` lists file, line and kind: rewrite those lines generically.
    → `HITS`: step 7 (max 2)
 9. [judgment] Close the draft pass. Walk DONE: draft into `RUN/done.md`, citing evidence per line; item 2 rests on the reviewer. Report each draft's path and verdict. After the session the finish step runs `toolbox-maintenance-skill-harvest-branch` to stage the passed drafts on a review branch.
    → reported: done
@@ -73,6 +73,7 @@ Return the block with `workstream: "skill-harvest-check"`: one item, test `draft
 ## Files
 
 - `<harvest folder>/<yyyy-mm>/candidates.md`: the month's merged list in `skills-extract`'s candidate format, existing skills first, numbered once across all scopes.
+- `<harvest folder>/<yyyy-mm>/scopes/<scope>/`: each scope's `pack.json`, `skills.json` and candidate list, private.
 - `<harvest folder>/<yyyy-mm>/inbox-review.md`: each skills inbox entry with its date and a verdict, `live`, `applied` (it says so, or the change is in the toolbox) or `stale` (older than the rules' age with no action), and the proposed action.
 - `RUN/harvest-note.md`: the generic harvest note. It becomes the review branch's commit message, so it is name-checked like a draft.
 
@@ -81,10 +82,10 @@ Return the block with `workstream: "skill-harvest-check"`: one item, test `draft
 After a draft pass whose drafts all passed the reviewer, the finish step stages them:
 
 ```bash
-toolbox-maintenance-skill-harvest-branch --run RUN --pack <the scope's pack.json> --names <owner context>
+toolbox-maintenance-skill-harvest-branch --run RUN --packs-in <harvest folder> --names <owner context>
 ```
 
-It refuses a Run folder inside any working tree of the toolbox (the live checkout above all), a draft that is a symbolic link and any draft outside `<department>/skills/<name>/` of an existing department, runs the `skills-extract` name check over the drafts and the commit message it writes from the note (which also reads the toolbox's private-name denylist files), adds a worktree in the Run folder on a new `skill-harvest/<date>` branch of the toolbox the `repo` setting under `[skill-harvest-workstream]` names, copies the drafts in, runs the toolbox's own check over them (no check script, no commit), commits them by name and removes the worktree. The live checkout's files and branch are never touched; it never merges and never pushes; the owner reviews the branch. A private name in anything it prints or stores is written `(withheld)`. `--dry-run` checks only.
+It refuses a Run folder inside any working tree of the toolbox (the live checkout above all), a draft that is a symbolic link and any draft outside `<department>/skills/<name>/` of an existing department, runs the `skills-extract` name check over the drafts and the commit message it writes from the note, with every scope's pack under the Run folder and the `--packs-in` folder (it also reads the toolbox's private-name denylist files), adds a worktree in the Run folder on a new `skill-harvest/<date>` branch of the toolbox the `repo` setting under `[skill-harvest-workstream]` names, copies the drafts in, runs the toolbox's own check over them (no check script, no commit), commits them by name and removes the worktree. The live checkout's files and branch are never touched; it never merges and never pushes; the owner reviews the branch. A private name in anything it prints or stores is written `(withheld)`. `--dry-run` checks only.
 
 ## DONE: harvest (the main agent checks each item and cites its evidence)
 

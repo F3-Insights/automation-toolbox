@@ -12,7 +12,8 @@ What it does:
    `<department>/skills/<name>/` of a department the toolbox already has.
 2. Writes the commit message (the harvest note's text) to RUN/commit-message.md and runs the
    skills-extract name check over the drafts and that message (it reads the same private-name
-   denylist files the toolbox check reads), with --pack and --names passed through.
+   denylist files the toolbox check reads), with --names passed through and the packs: each --pack,
+   every RUN/scopes/*/pack.json, and every [<month>/]scopes/*/pack.json under a --packs-in folder.
 3. Adds a worktree at RUN/toolbox on a new branch `skill-harvest/<yyyy-mm-dd>` (`-2`, `-3` when
    taken) from the base (default `main`, else `master`), copies the drafts in, and runs the
    toolbox's own scripts/toolbox_check.py over the copied files. No check script, no commit.
@@ -214,12 +215,29 @@ def stage(run, repo, base=None, packs=(), names=(), checker=NAME_CHECK, dry_run=
                     f"not merged, not pushed"}
 
 
+def found_packs(run, given=(), folders=()):
+    """The packs the name check reads: those given, then every `scopes/<scope>/pack.json` in the Run
+    folder and, for each --packs-in folder (the harvest folder, where a draft pass finds the packs an
+    earlier harvest pass wrote), every `scopes/<scope>/pack.json` below it. Sorted, no repeats."""
+    paths = [Path(p).expanduser() for p in given]
+    for root in [run, *[Path(f).expanduser() for f in folders]]:
+        paths += sorted(root.glob("scopes/*/pack.json")) + sorted(root.glob("*/scopes/*/pack.json"))
+    seen, out = set(), []
+    for path in paths:
+        key = path.resolve()
+        if key not in seen:
+            seen.add(key)
+            out.append(str(path))
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Stage the skill harvest's drafts on a review branch of the toolbox; never merge or push.")
     ap.add_argument("--run", required=True, help="the Run folder holding drafts/ and harvest-note.md")
     ap.add_argument("--repo", help="the toolbox checkout (default: the `repo` setting under [skill-harvest-workstream])")
     ap.add_argument("--base", help="the branch to start from (default main, else master)")
     ap.add_argument("--pack", action="append", default=[], help="a session pack whose private_terms the name check uses; repeatable")
+    ap.add_argument("--packs-in", action="append", default=[], help="a folder whose scopes/*/pack.json (or <month>/scopes/*/pack.json) the name check also reads, e.g. the harvest folder; repeatable. RUN/scopes/*/pack.json is always read")
     ap.add_argument("--names", action="append", default=[], help="an owner context or names list for the name check; repeatable")
     ap.add_argument("--name-check", default=NAME_CHECK, help="the name check script (default: the skills-extract skill's)")
     ap.add_argument("--dry-run", action="store_true", help="check the drafts only; make no branch")
@@ -234,7 +252,7 @@ def main(argv=None):
         repo = Path(str(repo_value)).expanduser()
         if not repo.is_dir():
             raise Refused(f"{repo} is not a folder")
-        result = stage(run, repo, args.base, args.pack, args.names, args.name_check, args.dry_run)
+        result = stage(run, repo, args.base, found_packs(run, args.pack, args.packs_in), args.names, args.name_check, args.dry_run)
     except Refused as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
