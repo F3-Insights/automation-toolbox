@@ -225,7 +225,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Personal Productivity](productivity/) | Email, meetings, tasks, calendar, CRM upkeep, weekly planning | 10 / 39 |
 | [Recurring Summaries](recurring-summaries/) | The daily plan: the morning's three, the evening close | 3 / 3 |
 | [Chief of Staff](chief-of-staff/) | Routes requests to the right piece and runs an unattended daily cycle over the owner's agents, with start-of-day, quick capture, status and work-survey tools | 8 / 6 |
-| [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 5 |
+| [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 8 |
 | [Obsidian](obsidian/) | Video notes into the vault inbox, a vault gardener that only proposes, and an outside-creator scout | 1 / 4 |
 | [Toolbox Maintenance](toolbox-maintenance/) | A weekly audit of this toolbox with lint fixes on a review branch, an automation activity audit, and a monthly skill harvest from past sessions | 8 / 3 |
 | [Personal](personal/) | Household, health check-ins, home infrastructure, personal finance review, tax season | 11 / 6 |
@@ -247,7 +247,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 - **Chief of Staff**
   - `chief-of-staff-cycle-orchestrator`: runs one unattended chief-of-staff cycle
 - **Decision Playbooks**
-  - `playbook-orchestrator`: keeps the playbook pipeline moving, weekly
+  - `decision-playbooks-curator`: keeps the playbook pipeline moving, weekly
 - **Toolbox Maintenance**
   - `toolbox-audit-orchestrator`: the weekly audit of the toolbox itself
   - `skill-harvest-orchestrator`: the monthly harvest of new skills from past sessions

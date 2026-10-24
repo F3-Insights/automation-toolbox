@@ -1,0 +1,5 @@
+{
+  "name": "decision-playbooks",
+  "description": "Writes down how the owner decides: decision cases mined from sent mail and recorded narrations, distilled into cited playbook proposals, a weekly ratification packet, and the owner's ratification session, with the skills and commands they use.",
+  "version": "0.1.0"
+}

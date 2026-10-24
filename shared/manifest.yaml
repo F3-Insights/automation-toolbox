@@ -24,7 +24,7 @@ skills:
   # The reviewer checklists (migration plan D4). Each lists only its source department until
   # the departments that use it convert; a department taking review-numbers also takes
   # report-tieout, whose command it runs.
-  review-facts: [reporting]
+  review-facts: [reporting, decision-playbooks]
   review-numbers: [reporting]
   review-red-team: [reporting]
   review-completeness: [process-engineering]
