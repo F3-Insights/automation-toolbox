@@ -48,10 +48,9 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 SKILL = "daily-plan-method"
 SKILL_DIR = Path(__file__).resolve().parents[1]
 TOOL, VERSION = "daily-plan", 1
-# What a plan file's "tool" may say: the tool, or the name of the agent that wrote it, now
-# and after the department migration renamed it daily-planner (recurring-summaries-daily-planner
-# is the name the plan once proposed). The older names may go once no Run folder holds them.
-PLAN_TOOLS = (TOOL, "daily-plan-orchestrator", "recurring-summaries-daily-planner", "daily-planner")
+# What a plan file's "tool" may say: the tool, or the name of the agent that wrote it
+# (daily-planner; recurring-summaries-daily-planner is the name the migration plan proposed).
+PLAN_TOOLS = (TOOL, "recurring-summaries-daily-planner", "daily-planner")
 PASSES = ("morning", "evening")
 OUTCOMES = ("done", "moved", "carried", "dropped")
 NOON = 12

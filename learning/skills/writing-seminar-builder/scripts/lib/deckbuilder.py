@@ -1,4 +1,4 @@
-"""Reusable python-pptx layout primitives for the seminar-builder skill.
+"""Reusable python-pptx layout primitives for the writing-seminar-builder skill.
 
 Per-seminar build scripts import these helpers to construct branded slides.
 The style tokens below mirror `references/deck-styling.md` - keep both in sync

@@ -20,7 +20,7 @@ claude --plugin-dir ~/coding-projects/automation-toolbox/recurring-summaries --a
 | `recurring-summaries-worker` | | One slice the planner hands it: one domain packet gathered into done-list candidates (section Gather one domain), on a cheap model |
 | `recurring-summaries-reviewer` | | Independent PASS or FAIL on each medium-confidence completion, by `task-stack-workstream`'s Check task-stack ops; edits nothing |
 
-The change set is signed `daily-planner`; `task-stack-apply` and the plan file's `tool` check also accept the old name `daily-plan-orchestrator`.
+The change set is signed `daily-planner`; `task-stack-apply`'s alias table maps it to the name its markers were first written under.
 
 ## Skills
 

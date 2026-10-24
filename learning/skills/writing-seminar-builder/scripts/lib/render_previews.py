@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render each slide of a generated .pptx to a PNG preview.
 
-This is part of the seminar-builder skill's Step 4 visual-verification loop.
+This is part of the writing-seminar-builder skill's Step 4 visual-verification loop.
 After building a deck, render previews and visually inspect each slide for
 cramped text, overlaps, off-balance layouts, or unpolished visuals before
 declaring the deck done.
