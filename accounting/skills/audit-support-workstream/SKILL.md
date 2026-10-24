@@ -41,7 +41,7 @@ The `orchestration-workstream` block: `items` one row per request (`test` `reque
 
 ## DONE checklist
 
-Checked by the orchestrator against `STATUS.md` and the support folder; the starred ones are confirmed by `compliance-evidence-checker`, and every schedule with figures by `numbers-reviewer`.
+Checked by the orchestrator against `STATUS.md` and the support folder; the starred ones are confirmed by `compliance-reviewer` with the `evidence-check` checklist, and every schedule with figures by `numbers-reviewer`.
 
 1. Every request in the latest export has a state in `{yyyy}/STATUS.md`.
 2. * Every `provided` state cites where it went.

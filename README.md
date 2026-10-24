@@ -173,7 +173,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 |---|---|:---:|
 | [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews, pre-mortems | 13 / 11 |
 | [Process Engineering](process-engineering/) | Assessments, interview synthesis, process maps, workshops, automation scoping, surveys | 12 / 7 |
-| [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 8 / 3 |
+| [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 5 / 9 |
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
 | [Sales & Business Development](sales/) | Pipeline reviews, lead intake, proposals and statements of work, contract audits | 6 / 2 |
 | [Marketing & Writing](marketing/) | Content and case studies, brand, and the unslop editing skills | 4 / 8 |
@@ -196,9 +196,9 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `automation-scoping-orchestrator`: turns a to-be map into a ranked automation backlog with a business case per item
   - `survey-analytics-orchestrator`: runs a client survey season as a checklist
 - **Compliance**
-  - `compliance-calendar-orchestrator`: keeps the compliance calendar honest, weekly
-  - `it-governance-orchestrator`: runs IT and AI governance as a control checklist
-  - `wind-down-orchestrator`: drives one legal entity's wind-down to dissolution
+  - `compliance-calendar-keeper`: keeps the compliance calendar honest, weekly
+  - `compliance-it-governance`: runs IT and AI governance as a control checklist
+  - `compliance-entity-wind-down`: drives one legal entity's wind-down to dissolution
 - **Software**
   - `software-developer`: the software factory; works one repository's GitHub issues into verified pull requests, like a lead engineer (draft)
   - `software-issue-collector`: turns notes, mail, tasks and meeting commitments about the software into filed issues

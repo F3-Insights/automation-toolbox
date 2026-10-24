@@ -54,7 +54,7 @@ The books, close to close: the month-end close run like a controller runs a clos
 | `vendor-1099-workstream` | Vendor states, complete W-9s, TINs to last four, the two passes | none |
 | `audit-support-workstream` | Request states, support indexes, done for audit support | none |
 
-Several pieces load skills from other departments by name: `orchestration-workstream` (software), `comms-confirm` and `task-stack-workstream` (productivity), `unslop-email` (marketing), `numbers-reviewer`, `month-end-results-writer` and `month-end-results-report` (reporting), `compliance-evidence-checker` (compliance) and `comms-client-status-update`.
+Several pieces load skills from other departments by name: `orchestration-workstream` (software), `comms-confirm` and `task-stack-workstream` (productivity), `unslop-email` (marketing), `numbers-reviewer`, `month-end-results-writer` and `month-end-results-report` (reporting), `compliance-reviewer` (compliance) and `comms-client-status-update`.
 
 ## Scripts
 
