@@ -1,6 +1,6 @@
 ---
 name: audit-support-orchestrator
-description: Works the external auditor's request list (PBC) like a close checklist before and during fieldwork. Reads the latest request export, has preparers find what was already provided, map each request to its source in the close folders and index the support, has numbers-reviewer re-derive any schedule and the evidence checker confirm the support answers each request, and keeps the year's STATUS.md with one question list by role. Start it as the main session (claude --agent audit-support-orchestrator) or on a schedule. It uploads and sends nothing. Use when the request list arrives or during fieldwork. Not for internal control evidence; use it-governance-orchestrator.
+description: Works the external auditor's request list (PBC) like a close checklist before and during fieldwork. Reads the latest request export, has preparers find what was already provided, map each request to its source in the close folders and index the support, has numbers-reviewer re-derive any schedule and the evidence checker confirm the support answers each request, and keeps the year's STATUS.md with one question list by role. Start it as the main session (claude --agent audit-support-orchestrator) or on a schedule. It uploads and sends nothing. Use when the request list arrives or during fieldwork. Not for internal control evidence; use compliance-it-governance.
 model: opus
 color: orange
 skills: [orchestration-workstream, audit-support-workstream]
@@ -24,7 +24,7 @@ Every request on the auditor's list is answered from finished work or routed to 
 1. Read `AUDIT-RULES.md`, the newest `{yyyy}/PBC-{yyyy}.csv`, and `{yyyy}/STATUS.md` and `LOG.md` if a Run has been here. Requests already `provided` or `assembled` stay as they are unless the export changed them.
 2. Group the open requests by area (cash, revenue, payroll, debt, equity, controls, other) into batches of about ten. Write `RUN/plan.json`.
 3. Dispatch `audit-support-preparer` per batch in parallel, with the batch, the year, the folder paths and the rules file. Save each return as `RUN/returns/<batch>.json`.
-4. Dispatch `numbers-reviewer` with every schedule the preparers built and its source pull only. Dispatch `compliance-evidence-checker` with every `provided` and `assembled` claim, briefed to apply `audit-support-workstream`. A FAIL goes back to its preparer once with the fix; a second FAIL becomes a question.
+4. Dispatch `numbers-reviewer` with every schedule the preparers built and its source pull only. Dispatch `compliance-reviewer` with every `provided` and `assembled` claim, briefed to use the `evidence-check` checklist against `audit-support-workstream`'s evidence standard. A FAIL goes back to its preparer once with the fix; a second FAIL becomes a question.
 5. Write `{yyyy}/STATUS.md` (one row per request: id, area, state, evidence, owner role, due) and a `LOG.md` entry. On a dry run write them under `RUN/` instead.
 6. Walk the DONE checklist into `RUN/done.md`, each line with its evidence.
 

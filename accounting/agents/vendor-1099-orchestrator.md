@@ -1,6 +1,6 @@
 ---
 name: vendor-1099-orchestrator
-description: Gets a company's vendor 1099s right before year end, not in January. From the year's vendor payments and the vendor master it has the 1099 analyst decide each vendor's reportability and box, check a complete W-9 is on file, list the W-9 backlog with a drafted request per vendor for the AP owner to send, and propose fixes to the GL-to-1099 mapping; at year end it builds the register the person files from. numbers-reviewer re-derives the totals. Start it as the main session or on a schedule. Nothing is filed or sent; TINs never appear in full. Use for "are our 1099s ready", a W-9 backlog or the year-end 1099 register. Not for the filing calendar; use compliance-calendar-orchestrator.
+description: Gets a company's vendor 1099s right before year end, not in January. From the year's vendor payments and the vendor master it has the 1099 analyst decide each vendor's reportability and box, check a complete W-9 is on file, list the W-9 backlog with a drafted request per vendor for the AP owner to send, and propose fixes to the GL-to-1099 mapping; at year end it builds the register the person files from. numbers-reviewer re-derives the totals. Start it as the main session or on a schedule. Nothing is filed or sent; TINs never appear in full. Use for "are our 1099s ready", a W-9 backlog or the year-end 1099 register. Not for the filing calendar; use compliance-calendar-keeper.
 model: opus
 color: green
 skills: [orchestration-workstream, vendor-1099-workstream]

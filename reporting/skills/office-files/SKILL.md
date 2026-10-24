@@ -5,7 +5,7 @@ description: Reads Excel workbooks, PDFs and PowerPoint decks for other skills a
 
 # Office files
 
-Three scripts, each run by path. Each needs one package, declared at the top of the script, so `uv run` or `pipx run` installs it; with plain `python3` the package must be installed.
+Three scripts. In a department plugin each is a command on PATH (`excel-handle`, `pdf-handle`, `powerpoint-handler`); elsewhere run the script in this skill's `scripts/` with `python3`. Each needs one package, declared at the top of the script, so `uv run` or `pipx run` installs it; with plain `python3` the package must be installed.
 
 | Script | Package | What it does |
 |---|---|---|
@@ -16,14 +16,14 @@ Three scripts, each run by path. Each needs one package, declared at the top of 
 ## Calling them
 
 ```
-python3 ~/.claude/skills/office-files/scripts/excel_handle.py analyze book.xlsx
-python3 ~/.claude/skills/office-files/scripts/excel_handle.py read book.xlsx --sheet Detail --columns "Account,Amount" --rows 50
-python3 ~/.claude/skills/office-files/scripts/excel_handle.py extract book.xlsx --column Amount --condition ">1000" --output big.csv
-python3 ~/.claude/skills/office-files/scripts/excel_handle.py convert book.xlsx --all-sheets
-python3 ~/.claude/skills/office-files/scripts/excel_handle.py process book.xlsx --column Status --col-operation frequency
-python3 ~/.claude/skills/office-files/scripts/pdf_handle.py --operation text --pdf-path agreement.pdf
-python3 ~/.claude/skills/office-files/scripts/pdf_handle.py --operation merge -f a.pdf -f b.pdf --output-filename both.pdf
-python3 ~/.claude/skills/office-files/scripts/powerpoint_handler.py --ppt-file deck.pptx --output-format markdown
+excel-handle analyze book.xlsx
+excel-handle read book.xlsx --sheet Detail --columns "Account,Amount" --rows 50
+excel-handle extract book.xlsx --column Amount --condition ">1000" --output big.csv
+excel-handle convert book.xlsx --all-sheets
+excel-handle process book.xlsx --column Status --col-operation frequency
+pdf-handle --operation text --pdf-path agreement.pdf
+pdf-handle --operation merge -f a.pdf -f b.pdf --output-filename both.pdf
+powerpoint-handler --ppt-file deck.pptx --output-format markdown
 ```
 
 Each script's `--help` lists every option. Excel output is JSON; the PDF and deck scripts print text by default and JSON on request. A failure exits non-zero with one line on stderr.
@@ -32,5 +32,5 @@ Each script's `--help` lists every option. Excel output is JSON; the PDF and dec
 
 - `read` and `extract` print at most 200 rows (`--limit N` to change it, `--limit 0` for all). When rows were cut, the JSON says so in `note` and `rows_shown`, while `rows` stays the full count. `--output` always writes every row, so write a long sheet to a file and read that.
 - The first row of a sheet is its header. A formula cell shows its last calculated value, so a workbook never opened in Excel since it was written shows blanks there.
-- `pdf_handle.py` reads the text layer only. A scanned PDF comes back with empty pages, which the summary counts; read it as an image instead.
+- `pdf-handle` reads the text layer only. A scanned PDF comes back with empty pages, which the summary counts; read it as an image instead.
 - Legacy .xls and .ppt files are not read; save them as .xlsx or .pptx first.

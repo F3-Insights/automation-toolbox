@@ -173,7 +173,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 |---|---|:---:|
 | [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews, pre-mortems | 13 / 11 |
 | [Process Engineering](process-engineering/) | Assessments, interview synthesis, process maps, workshops, automation scoping, surveys | 12 / 7 |
-| [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 8 / 3 |
+| [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 5 / 9 |
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
 | [Sales & Business Development](sales/) | Pipeline reviews, lead intake, proposals and statements of work, contract audits | 6 / 2 |
 | [Marketing & Writing](marketing/) | Content and case studies, brand, and the unslop editing skills | 4 / 8 |
@@ -196,9 +196,9 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `automation-scoping-orchestrator`: turns a to-be map into a ranked automation backlog with a business case per item
   - `survey-analytics-orchestrator`: runs a client survey season as a checklist
 - **Compliance**
-  - `compliance-calendar-orchestrator`: keeps the compliance calendar honest, weekly
-  - `it-governance-orchestrator`: runs IT and AI governance as a control checklist
-  - `wind-down-orchestrator`: drives one legal entity's wind-down to dissolution
+  - `compliance-calendar-keeper`: keeps the compliance calendar honest, weekly
+  - `compliance-it-governance`: runs IT and AI governance as a control checklist
+  - `compliance-entity-wind-down`: drives one legal entity's wind-down to dissolution
 - **Software**
   - `software-developer`: the software factory; works one repository's GitHub issues into verified pull requests, like a lead engineer (draft)
   - `software-issue-collector`: turns notes, mail, tasks and meeting commitments about the software into filed issues
@@ -229,7 +229,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 5 |
 | [Obsidian](obsidian/) | Video notes into the vault inbox, a vault gardener that only proposes, and an outside-creator scout | 1 / 4 |
 | [Toolbox Maintenance](toolbox-maintenance/) | A weekly audit of this toolbox with lint fixes on a review branch, an automation activity audit, and a monthly skill harvest from past sessions | 8 / 3 |
-| [Personal](personal/) | Household, health check-ins, home infrastructure, personal finance review, tax season | 11 / 6 |
+| [Personal](personal/) | Household, health check-ins, home infrastructure, personal finance review, tax season | 6 / 11 |
 
 <details>
 <summary><b>Orchestrators for the operator</b> (19)</summary>
@@ -254,7 +254,7 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `toolbox-maintenance-auditor`: the weekly audit of the toolbox itself and the automation's activity
   - `toolbox-maintenance-skill-harvester`: the monthly harvest of new skills from past sessions
 - **Personal**
-  - `household-orchestrator`, `health-routine-orchestrator`, `home-infrastructure-orchestrator`, `personal-finance-review-orchestrator`, `personal-tax-season-orchestrator`
+  - `personal-household-keeper`, `personal-health-check-in`, `personal-home-infrastructure-check`, `personal-finance-review-prep`, `personal-tax-season-checklist`
 
 </details>
 
