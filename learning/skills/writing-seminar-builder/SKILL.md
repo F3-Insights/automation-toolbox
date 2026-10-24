@@ -1,6 +1,6 @@
 ---
 name: writing-seminar-builder
-description: Build business-led AI seminars and other executive teaching decks as self-contained HTML from this skill's presentation library. Use when the owner wants to develop a seminar, webinar, talk, workshop deck, hands-on lab or speaking session, has a "seed idea" or "topic for a talk", or wants a concept turned into scripted slides for a business audience, even without the word seminar. Not for a client status deck (project-status-deck) or a workshop the room works through (workshop-design). Unattended, start learning-seminar-orchestrator.
+description: Build business-led AI seminars and other executive teaching decks as self-contained HTML from this skill's presentation library. Use when the owner wants to develop a seminar, webinar, talk, workshop deck, hands-on lab or speaking session, has a "seed idea" or "topic for a talk", or wants a concept turned into scripted slides for a business audience, even without the word seminar. Not for a client status deck (project-status-deck) or a workshop the room works through (workshop-design). Unattended, start learning-seminar-builder.
 ---
 
 # Seminar Builder
@@ -96,17 +96,31 @@ When the input is an existing deck plus feedback (a delivered-session note, "it 
 
 Check `presentation/slide-types/_INDEX.md` for its status. If the element is not yet built, either compose it from existing primitives, or add a new element: build the CSS into `deck-kit/`, document it in `presentation/elements/<id>.md` (paste-ready), and mark it coded in the index, so the next deck can reuse it. Verify the new element in Playwright before relying on it.
 
-## Run by learning-seminar-orchestrator
+## Steps
 
-`learning-seminar-orchestrator` runs this workflow in passes, so no one has to sit in the session. The method above is unchanged; only who asks and who red-teams moves.
+The unattended passes `learning-seminar-builder` runs, so no one has to sit in the session; by hand, follow The workflow above. The method is unchanged; only who asks and who red-teams moves: the owner answers one numbered list, and `learning-reviewer` is the red team. Inputs: the seminar (a slug, or a seed idea), the pass (`outline`, `build` or `revise`; default outline for a seed, revise for a slug with feedback), the answers (the owner's answers and outline approval, or the feedback), instructions, dry run (build in the Run folder, never under `Content/Seminars/`).
 
-- **Outline pass** (steps 1 to 3). Read what the owner brought (the seed, notes, a prior transcript) and the seminar catalog (`_catalog.md`, see "The training folder"). Write `_content-map.md` and the outline table, then `questions.md`: the scope questions (a) and (b), the material only the presenter has (c), every figure the deck would show (the owner approves each), and the outline itself for approval, all as one numbered list with a recommended answer each. Stop.
-- **Build pass** (steps 4 to 6). Only with the owner's answers and their approval of the outline in the brief. Record (a) and (b) at the top of `_content-map.md`, build, verify in Playwright (open `index.html` by its `file://` path; screenshots into the Run folder).
-- **Red team** (step 7). The orchestrator, not the builder, dispatches `executive-red-team` with the scroll view, (a) and (b), and nothing of the builder's reasoning; the builder then revises and re-verifies. At most two rounds; what is still open goes to the owner.
-- **Revise pass.** The "Revising an existing deck" section, with the feedback from the brief.
-- **Dry run.** The deck is built in the Run folder, never under `Content/Seminars/`.
+1. [judgment] Orient. Read the training folder's `CONTEXT.md` (if any) and its seminar catalog; for an existing slug, its `index.html` and `_content-map.md`. Write RUN/plan.json: the pass, the slug, the folder it builds in.
+   → no training folder (setting `training_dir` or the caller's path): stop
+   → pass outline: step 2
+   → pass build: step 3
+   → pass revise: step 5
+2. [judgment] Outline pass (workflow steps 1 to 3): read what the owner brought (the seed, notes, a prior transcript) and `_catalog.md`; write `_content-map.md` and the outline table, then `questions.md`: the scope questions (a) and (b), the material only the presenter has (c), every figure the deck would show (the owner approves each), and the outline itself for approval, as one numbered list with a recommended answer each. No HTML.
+   → written: step 8
+3. [judgment] The approval gate: the answers must hold the owner's approval of the outline.
+   → no approval in the answers: step 2
+4. [judgment] Build (workflow steps 4 and 5): record (a) and (b) at the top of `_content-map.md` from the answers, then build the HTML deck and the offer slide.
+   → built: step 6
+5. [judgment] Revise: the section Revising an existing deck, with the feedback from the brief or the red team's findings; change the minimum that resolves them.
+6. [judgment] Verify in Playwright (workflow step 6): open `index.html` by its `file://` path, press through every build, measure overflow and one-line headlines, screenshots into the Run folder.
+   → a check fails: step 5 (max 2)
+7. [hand-off: learning-reviewer] Red team, told to use the `review-red-team` checklist, with the deck's scroll view (first without notes, for the silent read), (a), (b) and nothing else: never the content map or your reasoning. The formal question: starting from (a), did this deck deliver (b)? Hunt catchphrases, salesy lines, topic titles and the AI tells (workflow step 7).
+   → FAIL, first round: step 5 (max 1)
+   → PASS, or a second FAIL (what is still open goes to the owner): step 8
+8. [judgment] Walk the DONE checklist below into RUN/DONE.md with evidence per item (the outline pass reports its questions instead), and report: the pass, the deck's path, the questions as one numbered list with a recommended answer each, the red team's verdict by round, and the proposed catalog line.
+   → reported: done
 
-### DONE (the orchestrator checks each item and cites its evidence)
+## DONE (the builder checks each item and cites its evidence)
 
 1. (a) assumed knowledge and (b) expected outcomes are recorded in `_content-map.md` from the owner's answers, not from the builder's guess.
 2. At least one first-person example and one named friction are on slides, or their absence is a question to the owner.
@@ -116,6 +130,6 @@ Check `presentation/slide-types/_INDEX.md` for its status. If the element is not
 6. No prices, no em-dashes, and every figure on a slide is one the owner approved.
 7. The seminar duplicates nothing in `_catalog.md`; its catalog line is proposed, not written.
 
-### Later tools
+## Later tools
 
-- `seminar-check`: compute items 4 and 6 from the HTML (overflow report, em-dash and price scan, figures against the approved list).
+- `learning-seminar-check`: compute items 4 and 6 from the HTML (overflow report, em-dash and price scan, figures against the approved list).

@@ -37,9 +37,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Add the skill's scripts/ folder to sys.path so we can import deckbuilder.
+# Add the skill's scripts/lib/ folder to sys.path so we can import deckbuilder.
 # Point this at wherever the writing-seminar-builder skill is installed.
-SKILL_SCRIPTS = Path("<path-to-writing-seminar-builder>") / "scripts"
+SKILL_SCRIPTS = Path("<path-to-writing-seminar-builder>") / "scripts" / "lib"
 sys.path.insert(0, str(SKILL_SCRIPTS))
 
 from deckbuilder import (

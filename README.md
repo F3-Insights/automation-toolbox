@@ -176,7 +176,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
 | [Sales & Business Development](sales/) | Pipeline reviews, lead intake, proposals and statements of work, contract audits | 6 / 2 |
 | [Marketing & Writing](marketing/) | Content and case studies, brand, and the unslop editing skills | 4 / 13 |
-| [Training & Community](learning/) | Seminar and workshop decks, peer learning groups | 4 / 2 |
+| [Training & Community](learning/) | Seminar and workshop decks, peer learning groups | 3 / 8 |
 
 <details>
 <summary><b>Orchestrators in delivery</b> (25)</summary>
@@ -211,8 +211,8 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `marketing-post-writer`: runs the editorial pipeline
   - `marketing-case-study-writer`: finishes one case study from a closed engagement
 - **Training**
-  - `learning-seminar-orchestrator`: builds or revises one seminar, workshop or lab deck end to end
-  - `learning-community-orchestrator`: runs one session of a peer learning group
+  - `learning-seminar-builder`: builds or revises one seminar, workshop or lab deck end to end
+  - `learning-community-host`: runs one session of a peer learning group
 
 </details>
 

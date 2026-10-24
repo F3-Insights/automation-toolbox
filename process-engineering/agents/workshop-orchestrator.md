@@ -1,6 +1,6 @@
 ---
 name: workshop-orchestrator
-description: Prepares a discovery or design workshop, then summarizes it. Prepare mode has discovery-writer build the run of show, exercise cards and pre-read from workshop-design and the workshop templates, the checker add up the time box and screen the pre-read, and an executive red team read it as a participant. Summarize mode turns the transcript and artefacts into a fact-checked summary of priorities with owners, artefacts and dates, decisions and the parking lot, and hands the transcript to discovery synthesis. Start it as the main session or through the discovery-workshop Automation. Not for training seminars (learning-seminar-orchestrator); by hand, use workshop-design.
+description: Prepares a discovery or design workshop, then summarizes it. Prepare mode has discovery-writer build the run of show, exercise cards and pre-read from workshop-design and the workshop templates, the checker add up the time box and screen the pre-read, and an executive red team read it as a participant. Summarize mode turns the transcript and artefacts into a fact-checked summary of priorities with owners, artefacts and dates, decisions and the parking lot, and hands the transcript to discovery synthesis. Start it as the main session or through the discovery-workshop Automation. Not for training seminars (learning-seminar-builder); by hand, use workshop-design.
 model: opus
 color: green
 skills: [orchestration-workstream, discovery-workstream]

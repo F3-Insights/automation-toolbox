@@ -1,6 +1,6 @@
 # Deck Styling
 
-The visual style for seminar decks built by this skill. F3 Insights is the default brand. To rebrand, edit this file **and** the matching constants at the top of `scripts/deckbuilder.py`; they're intentionally duplicated so the markdown stays human-readable and the Python stays executable.
+The visual style for seminar decks built by this skill. F3 Insights is the default brand. To rebrand, edit this file **and** the matching constants at the top of `scripts/lib/deckbuilder.py` (the older PowerPoint kit); they're intentionally duplicated so the markdown stays human-readable and the Python stays executable.
 
 This file covers two things: the visual style tokens (colors, fonts, dimensions) and the slide-type catalog (what layouts the helpers support and when each is appropriate).
 
@@ -92,7 +92,7 @@ If the visual concept calls for something none of the layouts cover, compose it 
 
 ## Flowcharts: use `flowkit`, not `add_rect`
 
-For any slide that's a process flow, workflow diagram, or step sequence (including the required Workflow Backbone Diagram from `workflow-depth.md`), use `scripts/flowkit.py`, not rectangles painted to look like flowchart boxes. Flowkit uses native python-pptx flowchart shapes (rounded rectangles, diamonds, directional arrows) that look professional and remain editable in PowerPoint.
+For any slide that's a process flow, workflow diagram, or step sequence (including the required Workflow Backbone Diagram from `workflow-depth.md`), use `scripts/lib/flowkit.py`, not rectangles painted to look like flowchart boxes. Flowkit uses native python-pptx flowchart shapes (rounded rectangles, diamonds, directional arrows) that look professional and remain editable in PowerPoint.
 
 Import alongside `deckbuilder`:
 
