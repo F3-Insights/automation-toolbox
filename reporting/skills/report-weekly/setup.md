@@ -19,7 +19,7 @@ It is set once and reviewed every quarter. Everything downstream reads it, so an
 
 ## Before the first question
 
-1. Ask where the author's **store folder** is, the one folder this workflow reads and writes: the profile, the continuity ledger, the weekly records, the edit-size series and the work orders all live in it. There is no default path in any of these commands. Then start the form: `python3 ~/.claude/skills/report-weekly/scripts/report_profile.py init --out <store>/profile.md`. If the Portal collection tier is in use, the profile can also live as a note titled `Weekly report profile`, and the working file stays in the store so `report-profile` has something local to read.
+1. Ask where the author's **store folder** is, the one folder this workflow reads and writes: the profile, the continuity ledger, the weekly records, the edit-size series and the work orders all live in it. There is no default path in any of these commands. Then start the form: `reporting-report-profile init --out <store>/profile.md`. If the Portal collection tier is in use, the profile can also live as a note titled `Weekly report profile`, and the working file stays in the store so `report-profile` has something local to read.
 2. Read the template so the questions follow its sections in order: `reference/weekly-report-profile.md` beside this file.
 3. Tell the executive what the interview covers and roughly how long it takes: twelve sections, about half of them one question each.
 
@@ -47,7 +47,7 @@ Order the categories by how much the reader cares. That order is also the preced
 
 For each one they do name: where the number comes from, either a figure the facts set supplies, written `facts:<key>`, or one they give at a gate, written `supplied by hand`; and how often it moves, weekly, monthly, quarterly or annual. Say plainly that a figure with no value is reported as not available that week and that nothing is ever invented.
 
-**Do not ask about the financial table.** The narrative is the product. A table is a Gate 2 question every week, and whatever the executive has by then goes in verbatim through `python3 ~/.claude/skills/report-weekly/scripts/report_facts.py add-table`. The weekly flow never requires one and never asks the profile for its shape.
+**Do not ask about the financial table.** The narrative is the product. A table is a Gate 2 question every week, and whatever the executive has by then goes in verbatim through `reporting-report-facts add-table`. The weekly flow never requires one and never asks the profile for its shape.
 
 **Round 5, the direct reports.** Who reports to this seat, by role, and what does each one report on? Where and when does their weekly report arrive: mail from an address with a subject pattern, a note with a title pattern, or a file under a glob. This is what makes the cascade work: their report is more detailed in their area and the head's report pulls out what the leadership team needs.
 
@@ -65,14 +65,14 @@ Then the names map, optional and a minute's work: **who comes up often enough in
 
 ## Then check it
 
-Run `python3 ~/.claude/skills/report-weekly/scripts/report_profile.py validate --profile <path>` and show the executive the result in full, warnings included. Errors and warnings are different things and say so:
+Run `reporting-report-profile validate --profile <path>` and show the executive the result in full, warnings included. Errors and warnings are different things and say so:
 
 - An **error** is something no correct profile has: a missing section, a tier that is not one of the three, a standing metric with no source, a category naming a seat the profile does not declare, a review date that does not parse. Fix every one before finishing.
 - A **warning** is worth their eye and may still be right: a category count outside three to seven, a category with no signals, a metric with no cadence, an empty exclusion list, no standing metrics at all. Read each one out, ask whether to change it, and change only what they ask for. A warning the executive has considered and kept is a decision, not a defect, and "no standing metrics" is the commonest of those.
 
 Re-run `validate` after each fix. Finish only on a clean exit.
 
-Then show them the categories in the order the pipeline will use them: `python3 ~/.claude/skills/report-weekly/scripts/report_profile.py show --profile <path> --outline`. That is a projection of this same document, not a second one to keep in step. **The weekly run reads the profile itself**, so there is one thing to edit and nothing to retype.
+Then show them the categories in the order the pipeline will use them: `reporting-report-profile show --profile <path> --outline`. That is a projection of this same document, not a second one to keep in step. **The weekly run reads the profile itself**, so there is one thing to edit and nothing to retype.
 
 ## Where it is stored
 
@@ -86,5 +86,5 @@ In the author's store folder, and where the executive says beyond that:
 Tell the executive three things and stop:
 
 1. Where the profile is stored and how to edit it. It is theirs, it is plain Markdown, and editing it is the supported way to change what the report covers.
-2. The next step is the first weekly run (`SKILL.md` from Step 2), which reads this profile, sorts the week into its categories and comes back with two gates before a word is written. It will ask at Gate 2 whether there is a table to add, and anything they have, a spreadsheet range, a CSV, a pasted grid, goes in as it stands.
-3. The review is due on the date in the profile. `python3 ~/.claude/skills/report-weekly/scripts/report_profile.py due --profile <path>` answers whether it has come round, and this interview is run again to work through it.
+2. The next step is the first weekly run (`SKILL.md` from Stage 2), which reads this profile, sorts the week into its categories and comes back with two gates before a word is written. It will ask at Gate 2 whether there is a table to add, and anything they have, a spreadsheet range, a CSV, a pasted grid, goes in as it stands.
+3. The review is due on the date in the profile. `reporting-report-profile due --profile <path>` answers whether it has come round, and this interview is run again to work through it.

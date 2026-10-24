@@ -43,7 +43,7 @@ One department head gives the rest of the leadership team an executive update. A
 | 5 | Draft | Model for prose, code for tables | Confirmed outline, evidence and facts into a draft |
 | 6 | Verify | Code | Traceability, figures tie to facts, carry-overs answered, form, length, exclusions |
 | 7 | Gate 3 | Executive | Edits and approves |
-| 8 | Publish | Code renders, executive sends | Word or PDF file, and an email draft to the team |
+| 8 | Publish | Code renders, executive sends | Word or PDF file, and a covering note for the executive's own email |
 | 9 | Record | Code | Final text, facts, evidence and gate answers stored; next week reads them |
 | 10 | Learn | Code proposes, executive approves | Gate 3 edits and gate answers into outline and style changes |
 
@@ -61,13 +61,13 @@ Stage 1F runs on its own clock with its own tie-out. The report consumes what 1F
 - **Gate 1 weight** follows what the week found: a full category confirmation when the system proposes a change, one line otherwise. To be tuned from use.
 - **Two exclusion lists:** never published, and never recorded.
 - **The size of the author's edits at Gate 3 is tracked** as the measure of whether this works.
-- **Delivery:** a PDF attached to an email draft in the author's own Drafts folder, the Word file kept beside it in the organisation's document folder. The covering email is written by the one drafter, behind the outbound gate. The system never sends.
+- **Delivery:** a PDF the author attaches to their own email, the Word file kept beside it in the organisation's document folder. The writer returns a covering note the executive pastes into their own email. The system never drafts or sends mail.
 - **The role profile lives with the organisation's record** (for example a note an assistant can maintain), while the process stays source-agnostic.
 - **Open:** whether any ledger system is ever read directly. The default path does not need one, because the executive supplies the table. A standing metric with no figure still reads "not available this week", and nothing estimates one.
 
 ## The gates when nobody is present
 
-Recurring work can run unattended, act on evidence, and ask only what only the owner can answer. Run that way, the weekly report is `weekly-report-orchestrator`, in a Thursday collection run and a Friday assembly run, and the gates change as follows. The principles above stand; this changes how principle 2 and principle 10 are met when the owner is not in the room, not whether.
+Recurring work can run unattended, act on evidence, and ask only what only the owner can answer. Run that way, the weekly report is `reporting-weekly-report`, in a Thursday collection run and a Friday assembly run, and the gates change as follows. The principles above stand; this changes how principle 2 and principle 10 are met when the owner is not in the room, not whether.
 
 - **Gates 1 and 2 are asked every week, as one numbered list on the owner's task list** (`report-weekly-gates`, through `comms-confirm`), each question with its default written beside it before anyone relies on it.
 - **An unanswered number takes its stated default.** For Gate 1 the default is the standing categories the owner wrote into the profile, with nothing moved, pulled back or struck: the owner's sense of what mattered as of the profile, rather than none at all. For Gate 2 it is no wins added and every missing figure "not available this week". The draft's covering note and `owner-input.md` name every default taken, so a report built on defaults never passes for one the owner shaped.
@@ -80,11 +80,11 @@ The risk this accepts, named: a week whose biggest item sits outside every stand
 
 The critical part of this exercise is the narrative report, not the financial table. Embedding financial data is a side quest the method does not over-fit to.
 
-So the default path for a table is that the executive hands one over. `python3 ~/.claude/skills/report-weekly/scripts/report_facts.py add-table` takes whatever they have, a CSV file, a Markdown pipe table, or a block of cells pasted out of a spreadsheet, and stores it verbatim as a table of kind `supplied` with a title, a required as-of date and a source that defaults to "supplied by the executive". Nothing is computed from it, nothing is footed, and no row or column shape is expected. It renders at `{{table:<key>}}` exactly as a computed table does, and the tie-out checks the prose numbers under the marker against its cells exactly as for a computed one.
+So the default path for a table is that the executive hands one over. `reporting-report-facts add-table` takes whatever they have, a CSV file, a Markdown pipe table, or a block of cells pasted out of a spreadsheet, and stores it verbatim as a table of kind `supplied` with a title, a required as-of date and a source that defaults to "supplied by the executive". Nothing is computed from it, nothing is footed, and no row or column shape is expected. It renders at `{{table:<key>}}` exactly as a computed table does, and the tie-out checks the prose numbers under the marker against its cells exactly as for a computed one.
 
 Gate 2 carries one line about it: "Any table to add this week?"
 
-The computed month-end table, `python3 ~/.claude/skills/report-weekly/scripts/report_facts.py import-table` with its variances, its percent-of-revenue lines and its footing check, stays as an option. **The flow never requires it and the setup interview never asks about it.** Standing metrics in the profile are optional and an empty list is valid. **No ledger-system adapter is written**: the source of a real organisation's figures is a decision for the executive, not for this toolbox.
+The computed month-end table, `reporting-report-facts import-table` with its variances, its percent-of-revenue lines and its footing check, stays as an option. **The flow never requires it and the setup interview never asks about it.** Standing metrics in the profile are optional and an empty list is valid. **No ledger-system adapter is written**: the source of a real organisation's figures is a decision for the executive, not for this toolbox.
 
 Principle 3 stands unchanged, and it is why this is safe. The writer never types a number that is not in a supplied table, in a figure, or in the evidence. Where the figures come from stopped being the question; whether a model produced one never was.
 
@@ -101,7 +101,7 @@ The care goes on the narrative path: the profile, collect, organise, continuity,
 | `<store>/records/<date>/` | one week's record and its manifest | `report-record` |
 | `<store>/edit-size.jsonl` | the Gate 3 edit size, one row per week including the skipped ones | `report-record` |
 | `<store>/workorder/<period>.json` | the week's work order state, and what `resume` reads | `report-workorder` |
-| `<store>/work/<period>/` | the week's working files when it runs unattended across two sessions | `report-weekly-prepare`, `report-weekly-gates` and the orchestrator |
+| `<store>/work/<period>/` | the week's working files when it runs unattended across two sessions | `report-weekly-prepare`, `report-weekly-gates` and `reporting-weekly-report` |
 
 ## The week is a work order
 
@@ -124,12 +124,13 @@ Built for a terminal coding agent first (Claude Code, and Codex where it can fol
 | Layer | Members | Differs per person |
 |---|---|---|
 | Agent, who the executive talks to | `weekly-reporter`, a main-session agent: an executive's admin that runs the flow, owns the gates, asks when anything is unclear, never sends | No |
+| Agent, unattended | `reporting-weekly-report`: the same flow in a Thursday collect run and a Friday assemble run, the gates on the owner's task list | No |
 | Procedure (skill) | `report-weekly`: the weekly flow, with the role profile interview in its `setup.md` and the house style, profile template and older formats in `reference/` | No |
 | Workers, which never talk to the executive | continuity (which ledger items must be answered), audience editor (the leadership test, with a reason per item and a left-out list), writer (house style), intake (structures a free-text report from a direct report), harvester (see below) | No |
 | Tools, deterministic | `report-profile`, `report-workorder`, `report-collect`, `report-organize`, `report-ledger`, `report-questions`, `report-facts`, `report-verify`, `report-render`, `report-record` | No |
 | Adapters, beneath collect and facts | See the three tiers | Yes |
 
-**Workers are prompt files inside the skill folder**, `workers/`, so the whole workflow travels as one folder and a runtime without sub-agents can run a worker's instructions inline, in order. In Claude Code each worker also has a thin registered agent that points at its prompt file, because a registered agent's tool allowlist is what makes "the writer cannot reach a source system" a fact rather than a request.
+**Workers are prompt files inside the skill folder**, `workers/`, so the whole workflow travels as one folder and a runtime without sub-agents can run a worker's instructions inline, in order. In Claude Code the reporting plugin's one worker, `reporting-worker`, is briefed with the worker's file; its tool allowlist is the reporting department's, so "the writer opens no source" is kept by the writer's prompt and by the digest being inlined, not by a narrower allowlist.
 
 **Three tiers of collection, one contract.** Every tier writes the same evidence ledger, so nothing downstream knows which one ran.
 

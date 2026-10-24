@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["pypdf"]
+# ///
 """report-weekly-check: whether the week's leadership report is done, computed from its files.
 
     report_weekly_check.py STORE [--period YYYY-MM-DD] [--phase collect|assemble|auto]
@@ -80,7 +83,7 @@ def check(store, period, phase, report_folder, today):
         gaps.append(f"the profile has {len(pack['outline']['errors'])} error(s); fix the profile")
     gaps += [] if has("digest") else ["no digest.md"]
     gaps += [f"{wanted} ledger candidates and no continuity.txt"] if wanted and not has("continuity") else []
-    gaps += [] if has("editor") else ["no editor.txt from report-audience-editor"]
+    gaps += [] if has("editor") else ["no editor.txt from the audience editor"]
     gaps += [] if has("verdicts") else ["no verdicts.json (report_questions.py verdicts)"]
     tests["evidence"] = {"met": not gaps, "gaps": gaps, "items": items, "ledger_candidates": wanted}
 

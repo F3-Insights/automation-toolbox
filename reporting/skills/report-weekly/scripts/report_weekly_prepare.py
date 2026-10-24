@@ -34,7 +34,7 @@ from _common import (FILES, OK, WORK_DIR, Fail, first_line, json_or_none, now_ut
                      resolve_period, run_main, run_script, store_dir, week_dir, week_start, write_json,
                      write_text)
 
-AGENT = "weekly-report-orchestrator"
+AGENT = "reporting-weekly-report"
 
 
 def prepare(store, period, scope, phase, from_dir, direct_dir, run_dir, dry_run):
@@ -87,7 +87,7 @@ def prepare(store, period, scope, phase, from_dir, direct_dir, run_dir, dry_run)
         step("report_workorder", ["open", "--period", period, "--author", slug(store.name), "--agent", AGENT,
                                   "--store", store, "--no-portal"])
     if tier == "harvester":
-        return finish("STALE", "the profile's tier is harvester: the session dispatches report-harvester to write the "
+        return finish("STALE", "the profile's tier is harvester: the session dispatches reporting-worker on workers/harvester.md to write the "
                                "evidence ledger, then runs this again", collected=False)
     window = ["--since", week_start(period), "--until", (date.fromisoformat(period) + timedelta(days=1)).isoformat(),
               "--outline-file", profile, "--out", file("ledger")]

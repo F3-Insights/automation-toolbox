@@ -37,6 +37,7 @@ import json
 import operator
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -74,7 +75,24 @@ HOUSE_PHRASES = ("on track", "ahead of schedule", "great progress", "successfull
                  "key milestone", "critical finding", "alarming", "major concern", "game-changer",
                  "revolutionary", "seamless", "robust", "leverage", "going forward",
                  "it should be noted", "as previously discussed", "circle back", "cutting-edge")
+# The Close gate's contract with accounting: its named command, which prints the close's four
+# tests of done as JSON ({"done", "met", "tests": {name: {"met"}}}). Sentinel puts every installed
+# plugin's bin/ on PATH for prepare and precheck; without it on PATH (a test, a bare checkout)
+# the same script is found in this toolbox checkout.
+MONTH_END_CHECK_COMMAND = "accounting-month-end-check"
 MONTH_END_CHECK = str(skill_file("month-end-workstream", "scripts", "month_end_check.py"))
+
+
+def month_end_check_argv() -> list[str]:
+    """How to run accounting's close check: its command on PATH, else its script by path."""
+    found = shutil.which(MONTH_END_CHECK_COMMAND)
+    if found:
+        return [found]
+    script = Path(MONTH_END_CHECK).expanduser()
+    if not script.is_file():
+        raise FileNotFoundError(f"{MONTH_END_CHECK_COMMAND} is not on PATH and month-end-check is not "
+                                f"installed at {script}")
+    return [sys.executable, str(script)]
 
 
 class Bad(Exception):
@@ -984,18 +1002,16 @@ def match_location(name: str, location: str) -> str:
 # --------------------------------------------------------------------------- the close
 
 def close_state(per: Period) -> dict:
-    """Whether the close is done by the rules' Close gate. The month-end-check gate runs the
-    month-end-workstream skill's check script on the close folder."""
+    """Whether the close is done by the rules' Close gate. The month-end-check gate runs
+    accounting's close check (month_end_check_argv) on the close folder."""
     rules = per.rules
     attested = per.period in rules.closed_by_hand
     state = {"gate": rules.close_gate, "attested": attested, "done": attested, "check": None}
     if rules.close_gate == "month-end-check":
-        script = Path(MONTH_END_CHECK).expanduser()
         try:
-            if not script.is_file():
-                raise FileNotFoundError(f"month-end-check is not installed at {script}")
-            done = subprocess.run([sys.executable, str(script), str(per.company.close), "--period", per.period,
-                                   "--format", "json"], capture_output=True, text=True, timeout=300)
+            done = subprocess.run(month_end_check_argv() + [str(per.company.close), "--period", per.period,
+                                                            "--format", "json"],
+                                  capture_output=True, text=True, timeout=300)
             if done.returncode != 0:
                 raise RuntimeError((done.stderr or done.stdout).strip().splitlines()[-1:] or "failed")
             result = json.loads(done.stdout)

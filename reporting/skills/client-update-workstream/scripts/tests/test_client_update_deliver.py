@@ -114,3 +114,18 @@ def test_other_skills_scripts_come_from_this_checkout():
     toolbox = SCRIPTS.parents[3]
     for path in (cd.EMAIL_DELIVER, cp.REPORT_COLLECT):
         assert path.is_file() and toolbox in path.parents, path
+
+
+def test_draft_show_runs_productivitys_draft_show_from_this_checkout():
+    """The reviewer's draft-show is productivity's email_draft_show.py, so the hash matches delivery's."""
+    import client_update_draft_show as ds
+    assert ds.DRAFT_SHOW.is_file() and ds.DRAFT_SHOW.name == "email_draft_show.py"
+    assert ds.argv(["D1"])[1:] == [str(ds.DRAFT_SHOW), "D1"]
+
+
+def test_draft_show_help_names_the_hash():
+    import subprocess, sys
+    from pathlib import Path
+    script = Path(__file__).resolve().parent.parent / "client_update_draft_show.py"
+    done = subprocess.run([sys.executable, str(script), "--help"], capture_output=True, text=True)
+    assert done.returncode == 0 and "content hash" in done.stdout

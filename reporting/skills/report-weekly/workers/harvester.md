@@ -21,7 +21,7 @@ Code reading a connected system is repeatable and free. You are neither: you cos
 2. List the received mail in the period. Group it into threads on the normalised subject. For each thread: the subject, the counterpart name and email domain, how many messages, when the latest arrived, and whether the executive has answered it.
 3. Read the body of a thread only where the subject and the preview leave the ask unclear, and at most 10 ids per call.
 4. Write the ledger to the output path.
-5. Run `python3 ~/.claude/skills/report-weekly/scripts/report_collect.py --validate <path>` and fix what it names. A ledger that does not validate is a ledger nothing downstream will read.
+5. Run `reporting-report-collect --validate <path>` and fix what it names. A ledger that does not validate is a ledger nothing downstream will read.
 
 Batch every listing. Page rather than raising a limit: a page above about 50 rows fails outright on some connectors and returns nothing at all rather than a short page.
 

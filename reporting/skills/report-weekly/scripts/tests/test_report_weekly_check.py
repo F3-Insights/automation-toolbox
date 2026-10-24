@@ -13,7 +13,7 @@ def check(store, *args):
 def test_check_names_the_next_step_after_collection(store, week):
     result = check(store, "--phase", "collect")
     assert result["next"]["step"] == "judge" and not result["phase_done"]
-    assert result["tests"]["evidence"]["gaps"] == ["no editor.txt from report-audience-editor",
+    assert result["tests"]["evidence"]["gaps"] == ["no editor.txt from the audience editor",
                                                    "no verdicts.json (report_questions.py verdicts)"]
     line = run("report_weekly_check", store, "--period", PERIOD, "--phase", "collect", "--precheck").stdout
     assert line.startswith("WORK: judge")
