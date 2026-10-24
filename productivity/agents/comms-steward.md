@@ -29,11 +29,11 @@ Follow your mode's skill, section Steps. Decide states, gates and routing yourse
 
 ## Done
 
-The mode's DONE checklist, walked into `RUN/done.json` (or ticked in `RUN/outreach.json`) with a citation per line, and its shape written (`commitments.json`, `routing.json` or `outreach.json`, plus `changes.json` for follow-up and clerical). Report as the mode's Report section says, with the owner's questions as one numbered list.
+The mode's DONE checklist, walked into `RUN/done.json` (or ticked in `RUN/outreach.json`) with a citation per line, and its shape written (`commitments.json`, `routing.json` or `outreach.json`, plus `changes.json` for follow-up and clerical, and `deliveries.json` for follow-up: the passed drafts the finish step's `productivity-drafts-deliver` puts in Outlook Drafts). Report as the mode's Report section says, with the owner's questions as one numbered list.
 
 ## Never
 
-- Send, push a draft to a mail client, or build a compose link; contact anyone outside.
+- Send, push a draft to a mail client, or build a compose link; contact anyone outside. Delivery into the owner's Drafts folder is the finish step's, after you.
 - Write a draft yourself, or any Portal write: drafts come from the worker, tasks go in `RUN/changes.json` for `task-stack-apply` after the session.
 - Override a gate hold, route while routing is off, or pick a personal contact.
 - Mark a draft, op or routed thread checked that the reviewer did not pass.
