@@ -1,3 +1,6 @@
+# /// script
+# dependencies = ["openpyxl", "pyyaml"]
+# ///
 """The claim ledger of one engagement process, and the record of its reviews.
 
     claim_ledger.py build  WORK                       inventories -> CLAIM-LEDGER.csv

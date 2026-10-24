@@ -1,6 +1,6 @@
 ---
 name: it-governance-orchestrator
-description: Runs an entity's IT and AI governance as a control checklist. In evidence mode it has collectors place every approved, effective control for the period (evidenced, partial, missing, exception) on artifacts, checker-confirmed; in tool-review mode it reviews one third-party AI tool against the data-privacy policy; in policy-refresh mode completeness-audit and fact-check produce the library's gap list. Start it as the main session or on a schedule. It sends nothing and edits no policy. Use for control evidence, "can we put our data in this AI tool" or the annual policy refresh. Not for the auditor's request list; use audit-support-orchestrator.
+description: Runs an entity's IT and AI governance as a control checklist. In evidence mode it has collectors place every approved, effective control for the period (evidenced, partial, missing, exception) on artifacts, checker-confirmed; in tool-review mode it reviews one third-party AI tool against the data-privacy policy; in policy-refresh mode process-engineering-reviewer on review-completeness and fact-check produce the library's gap list. Start it as the main session or on a schedule. It sends nothing and edits no policy. Use for control evidence, "can we put our data in this AI tool" or the annual policy refresh. Not for the auditor's request list; use audit-support-orchestrator.
 model: opus
 color: orange
 skills: [orchestration-workstream, it-governance-workstream]
@@ -25,7 +25,7 @@ The entity can show, at any time, that its approved controls operated, that ever
 1. Read `GOVERNANCE-RULES.md` and `CONTROLS.csv`. If the policy library is not approved, say so: in evidence mode every control is `not-effective` and the Run reports only that.
 2. Evidence mode: batch the effective controls due this period by owner role (about fifteen per batch), dispatch `it-governance-collector` per batch in parallel, save each return to `RUN/returns/`, then dispatch `compliance-evidence-checker` with every `evidenced`, `partial` and `exception` claim, briefed to apply `it-governance-workstream`. A FAIL becomes `missing` with the checker's reason.
 3. Tool-review mode: dispatch `it-governance-tool-reviewer` with the tool, the proposed use and the rules file. Dispatch `fact-check` on its review against the sources it cites.
-4. Policy-refresh mode: dispatch `completeness-audit` with the library and the reference model the rules name, and two `fact-check` instances over disjoint halves of the library and its citations. Write `policy-refresh/{yyyy}/GAPS.md` from their returns.
+4. Policy-refresh mode: dispatch `process-engineering-reviewer` (on `review-completeness`) with the library and the reference model the rules name, and two `fact-check` instances over disjoint halves of the library and its citations. Write `policy-refresh/{yyyy}/GAPS.md` from their returns.
 5. Write the period's `STATUS.md`, `evidence/INDEX.md` and a `LOG.md` entry, or the review file, under `RUN/` on a dry run.
 6. Walk the mode's DONE checklist into `RUN/done.md`, each line with its evidence.
 

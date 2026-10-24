@@ -1,8 +1,8 @@
 ---
 name: interview-synthesis
-description: Turn three or more stakeholder interview transcripts into two documents, a per-interview Read-Out and an anonymized Feedback by Topic, with (Nx) counts, Notable flags and a leading-question caveat, so the sponsor sees what people said without seeing who said it. Use after discovery interviews on an engagement. Not for a single meeting; use meeting-portal-notes or meeting-followup. For the reviewed discovery pack with the BASELINE, start discovery-synthesis-orchestrator.
+description: Turn three or more stakeholder interview transcripts into two documents, a per-interview Read-Out and an anonymized Feedback by Topic, with (Nx) counts, Notable flags and a leading-question caveat, so the sponsor sees what people said without seeing who said it. Use after discovery interviews on an engagement. Not for a single meeting; use meeting-portal-notes or meeting-followup. For the reviewed discovery pack with the BASELINE, start process-engineering-discovery-synthesis.
 argument-hint: "[folder of transcripts] [engagement or topic name]"
-allowed-tools: Read, Glob, Grep, Write, Bash(python3 ~/.claude/skills/transcript-tools/scripts/srt_transcript_collapse.py:*)
+allowed-tools: Read, Glob, Grep, Write, Agent, Bash(srt-transcript-collapse:*), Bash(transcript-hygiene:*)
 ---
 
 # Interview synthesis
@@ -16,11 +16,11 @@ Both documents are dense: a Read-Out runs to dozens of bullets per interview, an
 
 ## Step 0: collapse the transcripts
 
-Subtitle exports are half noise. Before reading, run each `.srt` or `.vtt` through `python3 ~/.claude/skills/transcript-tools/scripts/srt_transcript_collapse.py <file> --out <same folder>` (the `transcript-tools` skill) so you read `MM:SS Speaker: text` lines, one turn per line. Meeting-tool `.txt` exports are usually already in that form. If the folder holds both the raw export and a collapsed `.txt` of the same meeting, read the `.txt` and ignore the export; do not double-count a meeting.
+Subtitle exports are half noise. Before reading, run each `.srt` or `.vtt` through `srt-transcript-collapse <file> --out <same folder>` (the `transcript-tools` skill) so you read `MM:SS Speaker: text` lines, one turn per line. Meeting-tool `.txt` exports are usually already in that form. If the folder holds both the raw export and a collapsed `.txt` of the same meeting, read the `.txt` and ignore the export; do not double-count a meeting.
 
 ## Step 0b: fan out the reading
 
-With three or more transcripts, do not read them yourself. Once they are collapsed, dispatch one `transcript-reader` agent per transcript, all in a single message so they run in parallel, and give every one of them the same topic tag list so the inventories merge. Each returns a numbered claim inventory with speaker roles, verbatim quotes, locations and leading-question flags, then pain points, stated wishes, numbers mentioned and the contradictions inside that transcript.
+With three or more transcripts, do not read them yourself. Once they are collapsed, dispatch one reader per transcript (in a plugin session, `process-engineering-worker` told to follow `transcript-tools`, section Read one transcript), all in a single message so they run in parallel, and give every one of them the same topic tag list so the inventories merge. Each returns a numbered claim inventory with speaker roles, verbatim quotes, locations and leading-question flags, then pain points, stated wishes, numbers mentioned and the contradictions inside that transcript.
 
 Work from the inventories after that. The per-interview sections in Step 1 come from each reader's inventory and its pain and wishes lists; the `(Nx)` counts in Step 2 come from matching claims across inventories, which is exactly what the shared tag list makes possible. Open a transcript yourself only to settle a question an inventory raised, and say which ones you opened. The leading-question flags feed the caveat block directly: a point four people volunteered is stronger evidence than one four people agreed to.
 
@@ -58,4 +58,4 @@ Both files land in the transcripts folder, named as above with today's date. Say
 
 ## Portal write safety
 
-This skill does not write to the Insights Portal. If a follow-on asks you to file the action items, hand them to `task-stack-capture` and follow the `portal-write-safety` skill.
+This skill does not write to the Insights Portal. Filing the action items as tasks is the productivity plugin's job; hand them over as a list.

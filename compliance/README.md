@@ -24,7 +24,7 @@ Keeps an organization's legal and governance obligations from slipping: a compli
 | `wind-down-workstream` | The reference wind-down sequence with dependencies, step states, the filing packet, legal judgments routed to counsel, the DONE checklist | none |
 | `evidence-check` | Shared reviewer checklist (copy of `shared/skills/evidence-check`): PASS or FAIL per evidence claim on four questions, in the `orchestration-workstream` block | none |
 
-All three extend `orchestration-workstream` (software). The calendar and wind-down pieces also use `task-stack-workstream` (productivity). The IT-governance and wind-down orchestrators dispatch `completeness-audit` (process-engineering) and `fact-check` (reporting). `compliance-evidence-checker` also serves `audit-support-workstream` (accounting).
+All three extend `orchestration-workstream` (software). The calendar and wind-down pieces also use `task-stack-workstream` (productivity). The IT-governance and wind-down orchestrators dispatch `process-engineering-reviewer` on `review-completeness` (process-engineering) and `fact-check` (reporting). `compliance-evidence-checker` also serves `audit-support-workstream` (accounting).
 
 ## Scripts
 

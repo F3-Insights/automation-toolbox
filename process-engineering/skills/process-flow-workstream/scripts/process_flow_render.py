@@ -1,3 +1,6 @@
+# /// script
+# dependencies = ["openpyxl", "pyyaml"]
+# ///
 """Draw the current process map into HTML pages and a narrative, versioned.
 
     process_flow_render.py WORK [--version N] [--shot | --no-shot] [--format text|json]

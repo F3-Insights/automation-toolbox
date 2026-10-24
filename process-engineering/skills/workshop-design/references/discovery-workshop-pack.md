@@ -1,6 +1,6 @@
 # Discovery workshop pack
 
-Four documents produced for a paid leadership discovery workshop, in the order they are written. Used by `workshop-design` and the `workshop-orchestrator`; process visuals for the room come from the `process-flow-workstream` method.
+Four documents produced for a paid leadership discovery workshop, in the order they are written. Used by `workshop-design` and the `discovery-workshop` job; process visuals for the room come from the `process-flow-workstream` method.
 
 ## 1. `collected-ideas.csv`
 

@@ -1,8 +1,8 @@
 ---
 name: project-engagement-baseline
-description: "Turn everything gathered on an engagement (transcripts, workshop outputs, client documents, existing systems) into three documents in sequence: per-source research reports with fixed sections, a one-page BASELINE of what exists and what is missing by target capability with the tensions ranked, and a CONCEPT with numbered positions ready to be grilled. Use once discovery is done, before design or a proposal, or for \"where does this engagement actually stand\". For the unattended interview read-out plus BASELINE, start discovery-synthesis-orchestrator."
+description: "Turn everything gathered on an engagement (transcripts, workshop outputs, client documents, existing systems) into three documents in sequence: per-source research reports with fixed sections, a one-page BASELINE of what exists and what is missing by target capability with the tensions ranked, and a CONCEPT with numbered positions ready to be grilled. Use once discovery is done, before design or a proposal, or for \"where does this engagement actually stand\". For the unattended interview read-out plus BASELINE, start process-engineering-discovery-synthesis."
 argument-hint: "[engagement repo] [research | baseline | concept]"
-allowed-tools: Read, Glob, Grep, Write, Agent, Bash(python3 ~/.claude/skills/transcript-tools/scripts/srt_transcript_collapse.py:*), Bash(python3 ~/.claude/skills/transcript-tools/scripts/transcript_hygiene.py:*)
+allowed-tools: Read, Glob, Grep, Write, Agent, Bash(srt-transcript-collapse:*), Bash(transcript-hygiene:*)
 ---
 
 # Engagement baseline

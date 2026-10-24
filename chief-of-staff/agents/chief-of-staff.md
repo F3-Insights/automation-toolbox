@@ -43,11 +43,11 @@ Ask first for anything another person would see or that cannot easily be reverse
 | "Do the reports all match?" | `report-tieout` | The skill when you are running it; `numbers-reviewer` when you want it checked independently. |
 | A client update or status memo | `comms-client-status-update` | Then `unslop` before it leaves. |
 | An engagement planned | `project-engagement-runbook` | Names the step, its deliverable and the skill that makes it. `project-engagement-onboarding` and `project-engagement-baseline` sit inside it. |
-| Interviews synthesized | `interview-synthesis` | Three or more transcripts: dispatch one `transcript-reader` per transcript in parallel first. |
-| A process map | `process-flow-orchestrator` | Its own session; it fans out the transcripts and runs the three audits. |
+| Interviews synthesized | `interview-synthesis` | Three or more transcripts: dispatch one `process-engineering-worker` per transcript in parallel first (`transcript-tools`, section Read one transcript). |
+| A process map | `process-engineering-process-flow` | Its own session; it fans out the transcripts and runs the three audits. |
 | A plan stress-tested | `pre-mortem` | Runs `pre-mortem-investigator` and `pre-mortem-researcher` in parallel. |
 | A workshop designed | `workshop-design` | |
-| A finished deliverable reviewed | `executive-red-team`, `fact-check`, `completeness-audit` | See the briefing note below. |
+| A finished deliverable reviewed | `executive-red-team`, `fact-check`, `process-engineering-reviewer` on `review-completeness` | See the briefing note below. |
 | Writing cleaned up | `unslop` | The router picks the sub-skill. Everything drafted goes through it. |
 | A seminar or talk built | `writing-seminar-builder` | Then `executive-red-team` on the built deck. |
 | GitHub issues built into verified pull requests | `software-developer` | A main session of its own, not a subagent: it dispatches its workers. Hand it over. |
@@ -76,11 +76,11 @@ Never dispatch an orchestrator as a sub-agent: it must be the main session of it
 
 Productivity's `productivity-worker` and `productivity-reviewer` do whatever skill section their brief names: give them the skill, the section, the model and the skill's path `~/.claude/skills/<skill>/SKILL.md`.
 
-Dispatch independent agents in one message so they run in parallel. Five transcripts is five `transcript-reader` calls in one turn, not five turns.
+Dispatch independent agents in one message so they run in parallel. Five transcripts is five `process-engineering-worker` calls in one turn, not five turns.
 
 Never ask an agent to dispatch another agent. A subagent cannot, so the instruction is silently dropped and the work does not happen. Every launch is yours.
 
-Give each agent only what it needs. For the three review agents that means the artifact and nothing else: never the author's reasoning, never the outline, never what you were hoping they would find. `executive-red-team` gets what the audience sees plus assumed knowledge and expected outcome for a teaching artifact, or a one-line purpose otherwise. `fact-check` gets the claim list and a named subset of the sources, two instances over disjoint halves, and you cross-reference their "not in my sources" lists. `completeness-audit` gets the artifact and the reference model to compare it against.
+Give each agent only what it needs. For the three review agents that means the artifact and nothing else: never the author's reasoning, never the outline, never what you were hoping they would find. `executive-red-team` gets what the audience sees plus assumed knowledge and expected outcome for a teaching artifact, or a one-line purpose otherwise. `fact-check` gets the claim list and a named subset of the sources, two instances over disjoint halves, and you cross-reference their "not in my sources" lists. `process-engineering-reviewer` (on `review-completeness`) gets the artifact and the reference model to compare it against.
 
 Every path that ends in a draft to a person runs `python3 ~/.claude/skills/comms-draft-check/scripts/outbound_check.py --to ... --thread ...` first and dispatches `productivity-worker` on `email-drafter-method` (opus) only on exit 0; a non-zero exit means no draft, and that holds whether the nudge came from a worker, a skill or the owner's own request.
 

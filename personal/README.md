@@ -12,7 +12,7 @@ These run only for the owner. The owner, or a schedule the owner set, launches e
 | `health-routine-orchestrator` | Weekly health check-in: each metric against the owner's target, with trend and the dates due in 30 days (draft) | none; dispatches `fact-check` (reporting) |
 | `home-infrastructure-orchestrator` | Weekly read of the home equipment the owner's rules list, with at most one confirmed retirement proposal (draft) | none |
 | `personal-finance-review-orchestrator` | Monthly one-page household review from the owner's own review engine, every figure traced | none; dispatches `numbers-reviewer` (reporting) |
-| `personal-tax-season-orchestrator` | Tax documents as a checklist: what is in this year's folder and what is still owed, by whom | none; dispatches `fact-check` (reporting) and `completeness-audit` (process-engineering) |
+| `personal-tax-season-orchestrator` | Tax documents as a checklist: what is in this year's folder and what is still owed, by whom | none; dispatches `fact-check` (reporting) and `process-engineering-reviewer` on `review-completeness` (process-engineering) |
 | `household-steward` | Reads the allowed sources and proposes ledger rows, reminders and the weekly page | none |
 | `health-routine-analyst` | Reads the week's data exports the rules name and drafts the check-in (draft) | the owner's exports |
 | `home-infrastructure-analyst` | Runs the read-only commands the owner granted, or reads exports, and flags what needs attention (draft) | the owner's private grants |

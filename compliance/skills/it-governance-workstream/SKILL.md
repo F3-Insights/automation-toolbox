@@ -39,7 +39,7 @@ One review per tool and version of its terms. From the vendor's own published do
 
 ## Policy refresh (policy-refresh mode)
 
-`completeness-audit` compares the library with the reference model the rules name and returns the gaps; `fact-check` checks the library's factual claims against its citations. The output is `GAPS.md`: each gap with the policy section, the proposed change and its source. Agents never edit a policy.
+`process-engineering-reviewer` (on `review-completeness`) compares the library with the reference model the rules name and returns the gaps; `fact-check` checks the library's factual claims against its citations. The output is `GAPS.md`: each gap with the policy section, the proposed change and its source. Agents never edit a policy.
 
 ## DONE checklist
 
@@ -57,7 +57,7 @@ Tool-review mode:
 2. The verdict names the data classes and conditions, and the owner decides it.
 
 Policy-refresh mode:
-1. `completeness-audit` and `fact-check` both ran and `GAPS.md` answers each finding.
+1. `process-engineering-reviewer` (on `review-completeness`) and `fact-check` both ran and `GAPS.md` answers each finding.
 
 Every mode: nothing was sent to a vendor or a person, and no policy or register was edited.
 

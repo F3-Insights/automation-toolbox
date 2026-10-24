@@ -172,7 +172,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
 | [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews, pre-mortems | 13 / 11 |
-| [Process Engineering](process-engineering/) | Assessments, interview synthesis, process maps, workshops, automation scoping, surveys | 12 / 7 |
+| [Process Engineering](process-engineering/) | Assessments, interview synthesis, process maps, workshops, automation scoping, surveys | 8 / 11 |
 | [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 8 / 3 |
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
 | [Sales & Business Development](sales/) | Pipeline reviews, lead intake, proposals and statements of work, contract audits | 6 / 2 |
@@ -189,12 +189,12 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `tech-portfolio-orchestrator`: prepares a client's technology portfolio status before its steering meeting
   - `project-engagement-closeout-orchestrator`: closes a finished engagement with acceptance evidence and a final invoice check
 - **Process Engineering**
-  - `assessment-intake-orchestrator`: turns a pre-engagement assessment into an anonymized summary
-  - `discovery-synthesis-orchestrator`: turns discovery interviews and documents into a read-out and feedback by topic
-  - `process-flow-orchestrator`: maps one process as-is and to-be from transcripts and documents
-  - `workshop-orchestrator`: prepares a discovery or design workshop, then summarizes it
-  - `automation-scoping-orchestrator`: turns a to-be map into a ranked automation backlog with a business case per item
-  - `survey-analytics-orchestrator`: runs a client survey season as a checklist
+  - `process-engineering-assessment-intake`: turns a pre-engagement assessment into an anonymized summary
+  - `process-engineering-discovery-synthesis`: turns discovery interviews and documents into a read-out and feedback by topic
+  - `process-engineering-process-flow`: maps one process as-is and to-be from transcripts and documents
+  - `process-engineering-workshop`: prepares a discovery or design workshop, then summarizes it
+  - `process-engineering-automation-scoping`: turns a to-be map into a ranked automation backlog with a business case per item
+  - `process-engineering-survey-analytics`: runs a client survey season as a checklist
 - **Compliance**
   - `compliance-calendar-orchestrator`: keeps the compliance calendar honest, weekly
   - `it-governance-orchestrator`: runs IT and AI governance as a control checklist

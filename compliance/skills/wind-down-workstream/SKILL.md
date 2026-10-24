@@ -1,6 +1,6 @@
 ---
 name: wind-down-workstream
-description: Reference loaded by wind-down-planner and wind-down-orchestrator, not for a user request; what winding down a legal entity adds to orchestration-workstream. Covers WIND-DOWN-RULES.md, the reference sequence from authorization to records retention with each step's dependencies, step states and evidence, the filing packet (form, authority, fields with sources, fee, signer, proof), legal judgments routed to counsel, sensitive figures kept out of tasks and the DONE checklist. completeness-audit compares a plan with its reference sequence.
+description: Reference loaded by wind-down-planner and wind-down-orchestrator, not for a user request; what winding down a legal entity adds to orchestration-workstream. Covers WIND-DOWN-RULES.md, the reference sequence from authorization to records retention with each step's dependencies, step states and evidence, the filing packet (form, authority, fields with sources, fee, signer, proof), legal judgments routed to counsel, sensitive figures kept out of tasks and the DONE checklist. process-engineering-reviewer on review-completeness compares a plan with its reference sequence.
 ---
 
 # Entity wind-down
@@ -48,7 +48,7 @@ Balances, loans, holders' names and settlement amounts stay in the wind-down fol
 
 ## DONE checklist
 
-The orchestrator checks each item with evidence; 2 is confirmed by `completeness-audit`, 4 by `fact-check`.
+The orchestrator checks each item with evidence; 2 is confirmed by `process-engineering-reviewer` (on `review-completeness`), 4 by `fact-check`.
 
 1. Every step S1 to S14 has a state and evidence or a reason.
 2. No step of the reference sequence is missing for this entity, or its absence is explained.
