@@ -10,7 +10,7 @@
 
 skills:
   orchestration-workstream: [software, accounting, compliance, decision-playbooks, finance, learning, marketing, personal, process-engineering, productivity, projects, recurring-summaries, reporting, sales, strategy, toolbox-maintenance]
-  task-stack-workstream: [productivity, accounting, chief-of-staff, compliance, decision-playbooks, projects, recurring-summaries, sales, strategy]
+  task-stack-workstream: [productivity, accounting, chief-of-staff, compliance, decision-playbooks, projects, recurring-summaries, sales, strategy, toolbox-maintenance]
   comms-confirm: [accounting, finance, process-engineering, projects, reporting, sales]
   office-files: [accounting, compliance, finance, reporting, sales]
   report-tieout: [accounting, chief-of-staff, process-engineering, reporting]

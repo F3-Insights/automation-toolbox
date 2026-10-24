@@ -128,7 +128,7 @@ def changes(run, findings, domain, dry_run):
         body.append(f"From the toolbox audit Run {run.name} (REPORT.md in the Run folder and the audit folder).")
         ops.append({"id": f"t{n}", "op": "create", "title": title[:120], "domain": domain, "description": "\n".join(body),
                     "reason": c.one_line(f.get("title")), "source": source_key(str(f.get("id") or ""))})
-    return {"tool": "task-stack-changes", "version": 1, "orchestrator": "toolbox-audit-orchestrator",
+    return {"tool": "task-stack-changes", "version": 1, "orchestrator": "toolbox-maintenance-auditor",
             "dry_run": dry_run, "ops": ops, "questions": [], "notes": notes}
 
 

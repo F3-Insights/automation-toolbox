@@ -1,0 +1,684 @@
+"""task_stack_apply.py: the task stack's one writer, its rules, its journal and its undo."""
+
+import json
+from datetime import timedelta
+
+import pytest
+
+import task_stack_apply as ap
+import task_stack_report as rp
+from conftest import (D_OPS, D_SALES, EMAIL, EVENT_FUTURE, EVENT_PAST, G_GROW, NOTE, NOW, OTHER, OWNER,
+                      P_AUDIT, P_BUCKET, P_ROUTES, FakePortal, ago, iso, task, uid)
+
+
+def changes(*ops, dry_run=False, questions=None, orchestrator="task-reconcile-orchestrator"):
+    return {"tool": "task-stack-changes", "version": 1, "orchestrator": orchestrator,
+            "dry_run": dry_run, "ops": list(ops), "questions": questions or []}
+
+
+def run(portal, data, tmp_path, dry_run=False, **kw):
+    return ap.apply(portal, data, dry_run, tmp_path / "state", tmp_path / "undo.jsonl", now=NOW, **kw)
+
+
+def by_id(result):
+    return {r["id"]: r for r in result["results"]}
+
+
+def complete(n, evidence=f"portal://email/{EMAIL}", op_id="c1"):
+    return {"id": op_id, "op": "complete", "task": f"portal://task/{uid(n)}", "evidence": evidence,
+            "reason": "Sent the new rate card"}
+
+
+# --------------------------------------------------------------------------- complete and markers
+
+def test_complete_comments_with_evidence_then_closes_logs_and_journals(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card")])
+    result = run(portal, changes(complete(1)), tmp_path)
+    r = by_id(result)["c1"]
+    assert result["status"] == "applied" and r["outcome"] == "applied"
+    assert portal.tasks[uid(1)]["status"] == "DONE"
+    body = portal.comments[uid(1)][0]["body"]
+    assert "Completed: Sent the new rate card" in body and f"portal://email/{EMAIL}" in body and r["marker"] in body
+    log = [json.loads(x) for x in (tmp_path / "undo.jsonl").read_text().splitlines()]
+    assert log[0]["before"] == {"status": "TODO"} and log[0]["after"] == {"status": "DONE"}
+    assert (tmp_path / "state" / "writes.jsonl").is_file()
+
+
+def test_a_rerun_writes_nothing_twice(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card")])
+    run(portal, changes(complete(1)), tmp_path)
+    count = len(portal.writes())
+    again = by_id(run(portal, changes(complete(1, op_id="other-id")), tmp_path))["other-id"]
+    assert again["outcome"] == "unchanged" and len(portal.writes()) == count
+
+
+def test_marker_is_the_content_not_the_op_id_or_reason():
+    a = ap.marker_for("x-orchestrator", dict(complete(1), id="a", reason="one"))
+    b = ap.marker_for("x-orchestrator", dict(complete(1), id="b", reason="two"))
+    assert a == b and a.startswith("tsk") and len(a) == 15
+    assert a != ap.marker_for("y-orchestrator", complete(1))
+    assert ap.source_marker("quick-capture:abc") == ap.marker_for(
+        "any-orchestrator", {"op": "create", "title": "Call Sam", "source": "quick-capture:abc"})
+
+
+@pytest.mark.parametrize("evidence,code", [
+    (f"portal://email/{uid(555)}", "EVIDENCE"),             # does not exist
+    (f"portal://calendar_event/{EVENT_FUTURE}", "EVIDENCE"),  # has not happened
+])
+def test_complete_without_good_evidence_is_refused(tmp_path, evidence, code):
+    portal = FakePortal([task(1, "Send the rate card")])
+    r = by_id(run(portal, changes(complete(1, evidence)), tmp_path))["c1"]
+    assert (r["outcome"], r["code"]) == ("refused", code) and portal.writes() == []
+
+
+def test_evidence_kinds_that_hold(tmp_path):
+    portal = FakePortal([task(i, f"Send pack {i}") for i in (1, 2, 3, 4)])
+    result = by_id(run(portal, changes(
+        complete(1, f"portal://email/{EMAIL}", "a"), complete(2, f"portal://note/{NOTE}", "b"),
+        complete(3, f"portal://calendar_event/{EVENT_PAST}", "c"),
+        complete(4, "https://example.com/acme/repo/pull/7", "d")), tmp_path))
+    assert {r["outcome"] for r in result.values()} == {"applied"}
+
+
+def test_a_closed_task_or_another_persons_task_is_not_touched(tmp_path):
+    portal = FakePortal([task(1, "Send pack", status="DONE"), task(2, "Send pack", owner_contact_id=OTHER),
+                         task(3, "Send pack", status="CANCELLED")])
+    result = by_id(run(portal, changes(complete(2, op_id="b"), complete(3, op_id="c")), tmp_path))
+    assert result["b"]["code"] == "NOT_OWNER" and result["c"]["code"] == "CLOSED"
+    assert portal.writes() == []
+
+
+# --------------------------------------------------------------------------- the set and dry runs
+
+def test_dry_run_writes_nothing_anywhere(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card")])
+    result = run(portal, changes(complete(1)), tmp_path, dry_run=True)
+    assert result["status"] == "would_apply" and by_id(result)["c1"]["outcome"] == "would_apply"
+    assert portal.writes() == [] and not (tmp_path / "undo.jsonl").exists()
+    assert not (tmp_path / "state" / "writes.jsonl").exists()
+
+
+def test_a_dry_run_change_set_is_never_applied_live(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card")])
+    with pytest.raises(ap.Refused) as err:
+        run(portal, changes(complete(1), dry_run=True), tmp_path)
+    assert err.value.code == "DRY_RUN" and portal.writes() == []
+
+
+@pytest.mark.parametrize("data", [
+    [], {"tool": "other", "version": 1, "dry_run": False, "ops": []},
+    {"tool": "task-stack-changes", "version": 2, "dry_run": False, "ops": []},
+    {"tool": "task-stack-changes", "version": 1, "dry_run": "false", "ops": []},
+    {"tool": "task-stack-changes", "version": 1, "dry_run": False, "ops": [{"id": "a"}, {"id": "a"}]},
+])
+def test_a_malformed_set_is_refused_whole(tmp_path, data):
+    with pytest.raises(ap.Refused) as err:
+        run(FakePortal([]), data, tmp_path)
+    assert err.value.code == "INVALID_SET"
+
+
+def test_an_op_needs_a_reason_and_a_producer(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card")])
+    data = changes(dict(complete(1), reason=""), orchestrator=None)
+    data["ops"].append(dict(complete(1), id="c2"))
+    result = by_id(run(portal, data, tmp_path))
+    assert "reason is required" in result["c1"]["reason"]
+    assert result["c2"]["code"] == "INVALID_OP" and "producing orchestrator" in result["c2"]["reason"]
+
+
+def test_max_changes_defers_the_rest(tmp_path):
+    portal = FakePortal([task(i, f"Send pack {i}") for i in (1, 2, 3)])
+    result = by_id(run(portal, changes(*(complete(i, op_id=f"c{i}") for i in (1, 2, 3))), tmp_path, max_changes=2))
+    assert [result[f"c{i}"]["outcome"] for i in (1, 2, 3)] == ["applied", "applied", "deferred"]
+
+
+def test_domain_scope(tmp_path):
+    portal = FakePortal([task(1, "Send pack"), task(2, "Send audit list", project_id=P_AUDIT, domain_id=D_OPS)])
+    result = by_id(run(portal, changes(complete(1, op_id="a"), complete(2, op_id="b")), tmp_path,
+                       domain="operations"))
+    assert result["a"]["code"] == "OUT_OF_SCOPE" and result["b"]["outcome"] == "applied"
+
+
+# --------------------------------------------------------------------------- hand edits
+
+def test_no_hand_edit_window_by_default(tmp_path):
+    """The owner removed the window (2026-10-17): a task edited yesterday is written like any other."""
+    portal = FakePortal([task(1, "Send the rate card", created=40, updated=1)])
+    assert by_id(run(portal, changes(complete(1)), tmp_path))["c1"]["outcome"] == "applied"
+
+
+def test_a_task_changed_inside_the_window_by_someone_else_is_protected(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card", created=40, updated=2)])
+    r = by_id(run(portal, changes(complete(1)), tmp_path, hand_edit_days=7))["c1"]
+    assert (r["outcome"], r["code"]) == ("refused", "HAND_EDIT") and "never written" in r["reason"]
+
+
+def test_never_edited_or_outside_the_window_is_free(tmp_path):
+    portal = FakePortal([task(1, "Send pack", created=2, updated=2), task(2, "Send deck", created=40, updated=8)])
+    result = run(portal, changes(complete(1, op_id="a"), complete(2, op_id="b")), tmp_path, hand_edit_days=7)
+    assert {r["outcome"] for r in result["results"]} == {"applied"}
+
+
+def test_the_journal_tells_its_own_writes_from_a_hand_edit(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card", created=40, updated=40)])
+    edit = {"id": "e1", "op": "edit", "task": uid(1), "set": {"due_date": "2030-03-20"}, "reason": "promised"}
+    run(portal, changes(edit), tmp_path, hand_edit_days=7)
+    second = {"id": "e2", "op": "edit", "task": uid(1), "set": {"priority": 2}, "reason": "client asked"}
+    assert by_id(run(portal, changes(second), tmp_path, hand_edit_days=7))["e2"]["outcome"] == "applied"
+    portal.tasks[uid(1)].update(due_date="2030-04-01", updated_at=iso(NOW - timedelta(hours=3)))
+    result = by_id(run(portal, changes(
+        {"id": "e3", "op": "edit", "task": uid(1), "set": {"due_date": "2030-03-25"}, "reason": "x"},
+        {"id": "e4", "op": "edit", "task": uid(1), "set": {"title": "Send the spring rate card"}, "reason": "y"}),
+        tmp_path, hand_edit_days=7))
+    assert result["e3"]["code"] == "HAND_EDIT" and "due_date" in result["e3"]["reason"]
+    assert result["e4"]["outcome"] == "applied" and portal.tasks[uid(1)]["due_date"] == "2030-04-01"
+
+
+def test_a_change_between_the_read_and_the_write_is_not_overwritten(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card")])
+    original = portal.call
+
+    def racing(tool, args=None):
+        out = original(tool, args)
+        if tool == "create_task_comment":
+            portal.tasks[uid(1)]["title"] = "Send the rate card today"
+        return out
+
+    portal.call = racing
+    r = by_id(run(portal, changes(complete(1)), tmp_path))["c1"]
+    assert r["outcome"] == "failed" and "title changed while this ran" in r["reason"]
+    assert portal.tasks[uid(1)]["status"] == "TODO"
+
+
+# --------------------------------------------------------------------------- edit, merge, cancel
+
+def test_edit_rules(tmp_path):
+    portal = FakePortal([task(1, "Chase the carrier"), task(2, "Chase the bank")])
+    result = by_id(run(portal, changes(
+        {"id": "w1", "op": "edit", "task": uid(1), "set": {"status": "WAITING"}, "reason": "theirs"},
+        {"id": "w2", "op": "edit", "task": uid(2), "set": {"status": "WAITING", "due_date": "2030-03-11"},
+         "reason": "theirs"},
+        {"id": "t1", "op": "edit", "task": uid(1), "set": {"title": "Carrier invoice"}, "reason": "clearer"},
+        {"id": "s1", "op": "edit", "task": uid(1), "set": {"status": "DONE"}, "reason": "no"},
+        {"id": "d1", "op": "edit", "task": uid(1), "set": {"description": "x"}, "reason": "no"},
+        {"id": "p1", "op": "edit", "task": uid(1), "set": {"project_id": P_AUDIT, "domain_id": D_SALES},
+         "reason": "file it"},
+        {"id": "ok", "op": "edit", "task": uid(1), "set": {"status": "WAITING", "due_date": "2030-03-11",
+                                                          "waiting_on_contact_id": OTHER}, "reason": "theirs"},
+    ), tmp_path))
+    assert result["w1"]["code"] == "WAITING_NO_FOLLOW_UP"
+    assert result["w2"]["code"] == "WAITING_NO_PARTY"
+    assert result["t1"]["code"] == "NOT_NEXT_ACTION"
+    assert result["s1"]["code"] == result["d1"]["code"] == "INVALID_OP"
+    assert result["p1"]["code"] == "DOMAIN_MISMATCH"
+    assert result["ok"]["outcome"] == "applied" and portal.tasks[uid(1)]["status"] == "WAITING"
+
+
+def test_merge_keeps_the_older_task_and_completes_the_duplicate(tmp_path):
+    portal = FakePortal([task(1, "Book the van", created=60), task(2, "Book the van", created=30, due_date="2030-03-09",
+                                                                     description="for the Lakeview run")])
+    r = by_id(run(portal, changes({"id": "m1", "op": "merge", "task": uid(2), "into": uid(1),
+                                   "reason": "same commitment"}), tmp_path))["m1"]
+    assert r["outcome"] == "applied"
+    assert portal.tasks[uid(2)]["status"] == "DONE" and portal.tasks[uid(1)]["due_date"] == "2030-03-09"
+    assert "for the Lakeview run" in portal.comments[uid(1)][0]["body"]
+    assert "Duplicate of" in portal.comments[uid(2)][0]["body"]
+
+
+def test_merge_refusals(tmp_path):
+    portal = FakePortal([task(1, "Book the van", created=60), task(2, "Book the van", created=30),
+                         task(3, "Book the van", created=20, owner_contact_id=None)])
+    result = by_id(run(portal, changes(
+        {"id": "a", "op": "merge", "task": uid(1), "into": uid(2), "reason": "x"},
+        {"id": "b", "op": "merge", "task": uid(3), "into": uid(1), "reason": "x"}), tmp_path))
+    assert result["a"]["code"] == "KEEP_OLDER" and result["b"]["code"] == "NOT_SAME_OWNER"
+
+
+def test_cancel_rules(tmp_path):
+    portal = FakePortal([task(1, "Call the old supplier", updated=90), task(2, "Call the broker", updated=10),
+                         task(3, "Audit the stock", project_id=P_AUDIT, domain_id=D_OPS, updated=90),
+                         task(4, "Call the bank", updated=10)])
+    result = by_id(run(portal, changes(
+        {"id": "a", "op": "cancel", "task": uid(1), "reason": "stale", "check": "PASS"},
+        {"id": "b", "op": "cancel", "task": uid(2), "reason": "stale", "check": "PASS"},
+        {"id": "c", "op": "cancel", "task": uid(3), "reason": "stale", "check": "PASS"},
+        {"id": "d", "op": "cancel", "task": uid(4), "reason": "overtaken", "check": "PASS",
+         "evidence": f"portal://note/{NOTE}"},
+        {"id": "e", "op": "cancel", "task": uid(1), "reason": "unchecked"}), tmp_path))
+    # Age alone is no reason (the owner, 2026-10-17): only the cancel with evidence is written.
+    assert result["d"]["outcome"] == "applied"
+    assert {result[k]["code"] for k in "abc"} == {"NO_EVIDENCE"}
+
+
+def test_a_task_created_and_closed_in_one_run_is_not_written(tmp_path):
+    portal = FakePortal([task(1, "Send pack")])
+    made = {"id": "n1", "op": "create", "title": "Answer the workspace question", "domain": D_OPS, "reason": "ask"}
+    closed = {"id": "n2", "op": "complete", "task": "op:n1", "reason": "answered", "evidence": f"portal://note/{NOTE}"}
+    result = by_id(run(portal, changes(made, closed, complete(1, op_id="c")), tmp_path))
+    assert result["n1"]["outcome"] == result["n2"]["outcome"] == "skipped"
+    assert result["c"]["outcome"] == "applied"
+    assert len(portal.tasks) == 1
+
+
+def test_a_reconcile_cancel_needs_the_checkers_pass(tmp_path):
+    portal = FakePortal([task(1, "Call the old supplier", updated=90)])
+    r = by_id(run(portal, changes({"id": "s1", "op": "cancel", "task": uid(1), "reason": "stale"}), tmp_path))["s1"]
+    assert r["code"] == "UNCHECKED" and portal.tasks[uid(1)]["status"] == "TODO"
+
+
+def test_the_reconcilers_new_name_also_needs_the_checkers_pass(tmp_path):
+    portal = FakePortal([task(1, "Call the old supplier", updated=90)])
+    data = changes({"id": "s1", "op": "cancel", "task": uid(1), "reason": "stale"},
+                   orchestrator="productivity-task-reconciler")
+    r = by_id(run(portal, data, tmp_path))["s1"]
+    assert r["code"] == "UNCHECKED" and portal.tasks[uid(1)]["status"] == "TODO"
+    assert {"task-reconcile-orchestrator", "productivity-task-reconciler"} <= set(ap.CHECKED_CANCELS)
+
+
+def test_every_task_steward_mode_needs_the_checkers_pass_on_a_cancel(tmp_path):
+    for mode in ("task-steward-capture", "task-steward-clarify", "task-steward-reconcile"):
+        portal = FakePortal([task(1, "Call the old supplier", updated=90)])
+        data = changes({"id": "s1", "op": "cancel", "task": uid(1), "reason": "stale"}, orchestrator=mode)
+        r = by_id(run(portal, data, tmp_path / mode))["s1"]
+        assert r["code"] == "UNCHECKED" and portal.tasks[uid(1)]["status"] == "TODO", mode
+
+
+def test_a_renamed_agent_writes_the_same_markers_as_its_old_name():
+    """After a department converts, an op its agent proposed before is found, not written again."""
+    op = dict(complete(1), id="c1", reason="one")
+    for new, old in ap.RENAMED_AGENTS.items():
+        assert ap.marker_for(new, op) == ap.marker_for(old, op), new
+        assert ap.AGENT.match(new) and old.endswith("-orchestrator")
+    assert ap.RENAMED_AGENTS["daily-planner"] == ap.RENAMED_AGENTS["recurring-summaries-daily-planner"]
+
+
+def test_this_script_never_deletes():
+    from pathlib import Path
+    text = Path(ap.__file__).read_text()
+    assert "delete_" not in text and '"delete"' not in text
+
+
+# --------------------------------------------------------------------------- create and comment
+
+def test_create_files_dedupes_and_is_found_by_marker(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card")])
+    new = {"id": "n1", "op": "create", "title": "Renew the forklift lease", "domain": D_SALES, "reason": "agreed"}
+    r = by_id(run(portal, changes(new), tmp_path))["n1"]
+    assert r["outcome"] == "applied"
+    created = portal.tasks[r["task"].rsplit("/", 1)[1]]
+    assert created["project_id"] == P_BUCKET and created["owner_contact_id"] == OWNER
+    assert by_id(run(portal, changes(new), tmp_path))["n1"]["outcome"] == "unchanged"
+    dup = {"id": "n2", "op": "create", "title": "Send the rate card", "project": P_ROUTES, "reason": "again"}
+    noun = {"id": "n3", "op": "create", "title": "Rate card", "project": P_ROUTES, "reason": "x"}
+    result = by_id(run(portal, changes(dup, noun), tmp_path))
+    assert result["n2"]["code"] == "DUPLICATE" and result["n3"]["code"] == "NOT_NEXT_ACTION"
+
+
+def test_a_capture_create_is_marked_by_its_source_key_alone(tmp_path):
+    portal = FakePortal([])
+    first = {"id": "n1", "op": "create", "title": "Call Priya about the invoice", "domain": D_SALES,
+             "source": "quick-capture:a1b2", "reason": "captured"}
+    r = by_id(run(portal, changes(first), tmp_path))["n1"]
+    assert r["marker"] == ap.source_marker("quick-capture:a1b2")
+    reworded = dict(first, title="Email Priya regarding the invoice", id="n9")
+    assert by_id(run(portal, changes(reworded, orchestrator="task-capture-orchestrator"), tmp_path))["n9"][
+        "outcome"] == "unchanged"
+
+
+def test_source_is_shaped_and_only_on_a_create():
+    assert ap.shape_problems({"id": "a", "op": "create", "title": "Call Sam", "domain": D_SALES, "reason": "x",
+                              "source": "Bad Key"})
+    assert ap.shape_problems(dict(complete(1), source="quick-capture:x")) == ["source belongs only on a create"]
+
+
+def test_comment_once(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card")])
+    op = {"id": "k1", "op": "comment", "task": uid(1), "body": "Sam has the draft", "reason": "note"}
+    assert by_id(run(portal, changes(op), tmp_path))["k1"]["outcome"] == "applied"
+    assert by_id(run(portal, changes(op), tmp_path))["k1"]["outcome"] == "unchanged"
+    assert len(portal.comments[uid(1)]) == 1
+
+
+def test_a_task_the_owner_delegated_is_theirs_to_close(tmp_path):
+    portal = FakePortal([task(1, "Send pack", owner_contact_id=OTHER, created_by="dana@northwind.test"),
+                         task(2, "Send pack", owner_contact_id=OTHER, created_by_org_member_id=uid(902)),
+                         task(3, "Send pack", owner_contact_id=OTHER, created_by="someone@else.test")])
+    result = by_id(run(portal, changes(complete(1, op_id="a"), complete(2, op_id="b"), complete(3, op_id="c")),
+                       tmp_path))
+    assert result["a"]["outcome"] == "applied" and result["b"]["outcome"] == "applied"
+    assert result["c"]["code"] == "NOT_OWNER"
+
+
+def test_evidence_of_the_ask_lets_any_contact_be_assigned(tmp_path, no_owner_settings):
+    portal = FakePortal([task(1, "Chase the carrier")])
+    op = {"id": "e1", "op": "edit", "task": uid(1), "set": {"owner_contact_id": OTHER},
+          "evidence": f"portal://email/{EMAIL}", "reason": "Dana asked them by email"}
+    assert by_id(run(portal, changes(op), tmp_path))["e1"]["outcome"] == "applied"
+
+
+def test_work_is_assigned_only_to_the_owner_or_the_assignable_list(tmp_path, no_owner_settings):
+    portal = FakePortal([task(1, "Chase the carrier")])
+    op = {"id": "e1", "op": "edit", "task": uid(1), "set": {"owner_contact_id": OTHER}, "reason": "hand over"}
+    assert by_id(run(portal, changes(op), tmp_path))["e1"]["code"] == "NOT_ASSIGNABLE"
+    no_owner_settings.write_text(f'[task-stack-workstream]\nassignable_contacts = ["{OTHER}"]\n')
+    assert by_id(run(portal, changes(op), tmp_path))["e1"]["outcome"] == "applied"
+
+
+# --------------------------------------------------------------------------- projects and goals
+
+def test_project_edit_links_a_goal_and_refuses_a_bucket(tmp_path):
+    portal = FakePortal([task(1, "Plan the routes")])
+    result = by_id(run(portal, changes(
+        {"id": "p1", "op": "project_edit", "project": f"portal://project/{P_ROUTES}", "set": {"goal_id": G_GROW},
+         "reason": "serves growth"},
+        {"id": "p2", "op": "project_edit", "project": P_BUCKET, "set": {"priority": 2}, "reason": "x"}), tmp_path))
+    assert result["p1"]["code"] == "DOMAIN_MISMATCH"   # the goal is in another domain
+    assert result["p2"]["code"] == "BUCKET"
+    portal.goals[G_GROW]["domain_id"] = D_SALES
+    again = by_id(run(portal, changes({"id": "p3", "op": "project_edit", "project": P_ROUTES,
+                                       "set": {"goal_id": G_GROW}, "reason": "serves growth"}), tmp_path))["p3"]
+    assert again["outcome"] == "applied" and portal.projects[P_ROUTES]["goal_id"] == G_GROW
+
+
+def test_close_a_dead_project_after_cancelling_its_last_task_in_the_same_set(tmp_path):
+    portal = FakePortal([task(1, "Plan the routes", created=200, updated=200)])
+    result = by_id(run(portal, changes(
+        {"id": "x1", "op": "cancel", "task": uid(1), "reason": "dead", "check": "PASS",
+         "evidence": f"portal://note/{NOTE}"},
+        {"id": "pc", "op": "project_close", "project": P_ROUTES, "reason": "nothing left"}), tmp_path))
+    assert result["x1"]["outcome"] == "applied" and result["pc"]["outcome"] == "applied"
+    assert portal.projects[P_ROUTES]["status"] == "CANCELLED"
+
+
+def test_project_close_refusals(tmp_path):
+    portal = FakePortal([task(1, "Plan the routes", updated=5), task(2, "Audit stock", project_id=P_AUDIT,
+                                                                      domain_id=D_OPS, status="DONE")])
+    result = by_id(run(portal, changes(
+        {"id": "a", "op": "project_close", "project": P_ROUTES, "reason": "x"},
+        {"id": "b", "op": "project_close", "project": P_AUDIT, "reason": "x"}), tmp_path))
+    assert result["a"]["code"] == "OPEN_TASKS" and result["b"]["code"] == "GOAL_LINKED"
+
+
+def test_goal_edit_and_close(tmp_path):
+    portal = FakePortal([])
+    result = by_id(run(portal, changes(
+        {"id": "g1", "op": "goal_edit", "goal": f"portal://goal/{G_GROW}", "set": {"priority": 1}, "reason": "up"},
+        {"id": "g2", "op": "goal_close", "goal": G_GROW, "status": "CANCELLED", "reason": "retired"}), tmp_path))
+    assert result["g1"]["outcome"] == "applied" and portal.goals[G_GROW]["priority"] == "P1"
+    assert result["g2"]["code"] == "ACTIVE_PROJECTS"
+    closing = by_id(run(portal, changes(
+        {"id": "p", "op": "project_close", "project": P_AUDIT, "status": "COMPLETED",
+         "evidence": f"portal://note/{NOTE}", "reason": "done"},
+        {"id": "g3", "op": "goal_close", "goal": G_GROW, "status": "CANCELLED", "reason": "retired"}), tmp_path))
+    assert closing["g3"]["outcome"] == "applied" and portal.goals[G_GROW]["status"] == "CANCELLED"
+
+
+# --------------------------------------------------------------------------- undo and the command line
+
+def test_undo_puts_old_values_back_and_keeps_later_changes(tmp_path):
+    portal = FakePortal([task(1, "Send the rate card"), task(2, "Send the deck")])
+    run(portal, changes(complete(1, op_id="a"),
+                        {"id": "b", "op": "edit", "task": uid(2), "set": {"due_date": "2030-03-20"}, "reason": "x"}),
+        tmp_path)
+    portal.tasks[uid(2)]["due_date"] = "2030-05-01"
+    rows = ap.read_jsonl(tmp_path / "undo.jsonl")
+    result = ap.undo(portal, rows, False, tmp_path / "state", now=NOW)
+    outcomes = {r["op_id"]: r["outcome"] for r in result["results"]}
+    assert outcomes == {"a": "undone", "b": "refused"}
+    assert portal.tasks[uid(1)]["status"] == "TODO" and portal.tasks[uid(2)]["due_date"] == "2030-05-01"
+
+
+def test_cli_run_folder_dry_run_if_report_and_undo(tmp_path, capsys):
+    portal = FakePortal([task(1, "Send the rate card", created=300, updated=300)])
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "changes.json").write_text(json.dumps(changes(complete(1), questions=[
+        {"ask": "Merge the two freight tasks?", "task": f"portal://task/{uid(1)}", "why": "titles differ"}])))
+    state = str(tmp_path / "state")
+
+    def cli(*argv):
+        with pytest.raises(SystemExit) as done:
+            ap.main(list(argv), client=portal)
+        return done.value.code, capsys.readouterr().out
+
+    code, _ = cli("--run", str(run_dir), "--dry-run-if=maybe", "--state", state)
+    assert code == 2 and portal.writes() == []
+    code, out = cli("--run", str(run_dir), "--dry-run-if=True", "--state", state)
+    assert code == 0 and json.loads(out)["status"] == "would_apply" and portal.writes() == []
+    assert (run_dir / "apply-dry-run.json").is_file() and not (run_dir / "undo.jsonl").exists()
+    (run_dir / "apply-dry-run.json").unlink()
+    code, out = cli("--run", str(run_dir), "--state", state)
+    assert code == 0 and json.loads((run_dir / "apply.json").read_text())["status"] == "applied"
+    assert portal.tasks[uid(1)]["status"] == "DONE"
+
+    with pytest.raises(SystemExit) as done:
+        rp.main(["--run", str(run_dir)])
+    assert done.value.code == 0
+    out = capsys.readouterr().out
+    assert out.startswith("REPORT: 1 applied; missing before.json, after.json")
+    text = (run_dir / "REPORT.md").read_text()
+    assert "Merge the two freight tasks?" in text and "--undo" in text
+
+    code, _ = cli("--undo", str(run_dir / "undo.jsonl"), "--state", state)
+    assert code == 0 and portal.tasks[uid(1)]["status"] == "TODO"
+
+
+def test_cli_needs_a_state_folder(tmp_path, capsys):
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "changes.json").write_text(json.dumps(changes()))
+    with pytest.raises(SystemExit) as done:
+        ap.main(["--run", str(run_dir)], client=FakePortal([]))
+    assert done.value.code == 2 and "state_dir" in capsys.readouterr().out
+
+
+def test_cli_state_folder_from_the_setting(tmp_path, capsys, no_owner_settings):
+    no_owner_settings.write_text(f'state_dir = "{tmp_path / "st"}"\n')
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "changes.json").write_text(json.dumps(changes(complete(1))))
+    with pytest.raises(SystemExit) as done:
+        ap.main(["--run", str(run_dir)], client=FakePortal([task(1, "Send the rate card")]))
+    assert done.value.code == 0 and (tmp_path / "st" / "task-stack" / "writes.jsonl").is_file()
+
+
+def test_markers_are_pinned_so_earlier_writes_are_found_again():
+    # The same values the earlier writer produced: a changed formula would re-create every
+    # captured task and re-post every comment already in the Portal.
+    assert ap.source_marker("inbox:abc123") == "tska76da721302c"
+    op = {"id": "c1", "op": "complete", "task": f"portal://task/{uid(1)}", "evidence": f"portal://email/{EMAIL}",
+          "reason": "Sent the new rate card"}
+    assert ap.marker_for("task-reconcile-orchestrator", op) == PINNED_COMPLETE
+
+
+PINNED_COMPLETE = "tsk1ccc57820952"   # computed by the earlier writer on the same op
+
+
+def test_a_delegated_create_is_made_waiting_on_the_delegate(tmp_path):
+    portal = FakePortal([])
+    op = {"id": "n1", "op": "create", "title": "Collect the lease schedule from Sam", "domain": D_SALES,
+          "owner": OTHER, "waiting_on": OTHER, "waiting_reason": "the lease schedule", "due_date": "2030-03-07",
+          "evidence": f"portal://email/{EMAIL}", "source": "asks:email:abc", "reason": "Asked Sam on 3/4"}
+    r = by_id(run(portal, changes(op), tmp_path))["n1"]
+    assert r["outcome"] == "applied"
+    made = portal.tasks[r["task"].rsplit("/", 1)[1]]
+    assert (made["status"], made["owner_contact_id"], made["waiting_on_contact_id"]) == ("WAITING", OTHER, OTHER)
+    assert by_id(run(portal, changes(op), tmp_path))["n1"]["outcome"] == "unchanged"
+    assert ap.shape_problems(dict(op, due_date=None)) == ["a create with waiting_on needs due_date, its follow-up date"]
+    dry = by_id(run(FakePortal([]), changes(op), tmp_path / "dry", dry_run=True))["n1"]
+    assert dry["outcome"] == "would_apply" and dry["change"]["status"] == "WAITING"
+
+
+def test_a_create_from_mail_links_the_task_to_its_email(tmp_path):
+    portal = FakePortal([])
+    op = {"id": "n1", "op": "create", "title": "Send Sam the rate card", "domain": D_SALES,
+          "source": f"asks:email:{EMAIL}", "source_email": f"portal://email/{EMAIL}", "reason": "Sam asked"}
+    r = by_id(run(portal, changes(op), tmp_path))["n1"]
+    assert portal.tasks[r["task"].rsplit("/", 1)[1]]["email_id"] == EMAIL
+    assert ap.shape_problems(dict(op, source_email="portal://note/x")) == [
+        "source_email is portal://email/<uuid> or the uuid"]
+    assert ap.shape_problems(dict(complete(1), source_email=EMAIL)) == ["source_email belongs only on a create"]
+
+
+class ClearsWaitOnCreate(FakePortal):
+    """A Portal that drops the waiting fields of a task created outside WAITING."""
+
+    def call(self, tool, args=None):
+        out = super().call(tool, args)
+        if tool == "create_task":
+            self.tasks[out["id"]].update(waiting_on_contact_id=None, waiting_reason=None)
+        return out
+
+
+def test_a_delegated_create_sets_who_it_waits_on_with_the_status(tmp_path):
+    portal = ClearsWaitOnCreate([])
+    op = {"id": "n1", "op": "create", "title": "Collect the lease schedule from Sam", "domain": D_SALES,
+          "owner": OTHER, "waiting_on": OTHER, "waiting_reason": "the lease schedule", "due_date": "2030-03-07",
+          "source": "asks:email:abc", "reason": "Asked Sam on 3/4"}
+    r = by_id(run(portal, changes(op), tmp_path))["n1"]
+    made = portal.tasks[r["task"].rsplit("/", 1)[1]]
+    assert (r["outcome"], made["status"], made["waiting_on_contact_id"], made["waiting_reason"]) == (
+        "applied", "WAITING", OTHER, "the lease schedule")
+
+
+def test_a_delivered_ask_is_not_written_at_all(tmp_path):
+    """An ask already delivered is created and closed in one change set: neither is written, so the
+    owner's Portal gets no task that was done before it existed (the owner, 2026-10-17)."""
+    portal = FakePortal([])
+    new = {"id": "n1", "op": "create", "title": "Send Sam the rate card", "domain": D_SALES,
+           "source": "asks:email:def", "reason": "Sam asked on 3/1"}
+    done = {"id": "c1", "op": "complete", "task": "op:n1", "evidence": f"portal://email/{EMAIL}",
+            "reason": "Sent it on 3/2"}
+    result = by_id(run(portal, changes(new, done), tmp_path))
+    assert result["n1"]["outcome"] == result["c1"]["outcome"] == "skipped"
+    assert portal.tasks == {}
+    orphan = by_id(run(portal, changes(dict(done, task="op:n9")), tmp_path))["c1"]
+    assert (orphan["outcome"], orphan["code"]) == ("refused", "NO_TASK")
+
+
+# --------------------------------------------------------------------------- a new project, on approval
+
+KEY = "project:storefront"
+PROPOSAL = (f"Project proposal ({KEY}): open \"Launch the storefront\" in Northwind Sales for these 3 tasks. "
+            "Answer approve, a new name, or no.")
+
+
+def new_project(name="Launch the storefront", op_id="np1", **kw):
+    op = {"id": op_id, "op": "create_project", "name": name, "domain_id": D_SALES, "proposal": KEY,
+          "approval": f"portal://task/{uid(1)}", "description": "Done when: the storefront takes orders",
+          "priority": 2, "reason": "Three tasks share the storefront launch"}
+    op.update(kw)
+    return op
+
+
+def move(n, op_id):
+    return {"id": op_id, "op": "edit", "task": f"portal://task/{uid(n)}",
+            "set": {"project_id": "op:np1", "domain_id": D_SALES}, "reason": "Filed under the new project"}
+
+
+def proposed(answer=None, author="dana@northwind.test"):
+    """Three tasks in the catch-all; the proposal asked on the first, and the owner's answer."""
+    portal = FakePortal([task(n, f"Send the storefront item {n}", project_id=P_BUCKET) for n in (1, 2, 3)])
+    portal.comments[uid(1)].append({"id": uid(4001), "author_email": "dana@northwind.test",
+                                    "body": PROPOSAL + "\n\ntask-steward-clarify via task-stack-apply, op q1. "
+                                                       "Marker: tsk000000000001"})
+    if answer is not None:
+        portal.comments[uid(1)].append({"id": uid(4002), "author_email": author, "body": answer})
+    return portal
+
+
+def test_an_approved_project_is_created_and_its_tasks_moved_into_it(tmp_path):
+    portal = proposed("approve")
+    result = by_id(run(portal, changes(new_project(), move(1, "e1"), move(2, "e2"), move(3, "e3"),
+                                       orchestrator="task-steward-clarify"), tmp_path))
+    assert result["np1"]["outcome"] == "applied"
+    pid = result["np1"]["project"].rsplit("/", 1)[1]
+    made = portal.projects[pid]
+    assert (made["name"], made["domain_id"], made["priority"]) == ("Launch the storefront", D_SALES, "P2")
+    assert result["np1"]["marker"] in made["description"] and "Done when" in made["description"]
+    assert {portal.tasks[uid(n)]["project_id"] for n in (1, 2, 3)} == {pid}
+    again = by_id(run(portal, changes(new_project(), move(1, "e1"), orchestrator="task-steward-clarify"), tmp_path))
+    assert again["np1"]["outcome"] == "unchanged" and again["e1"]["outcome"] == "unchanged"
+    assert sum(1 for x in portal.calls if x[0] == "create_project") == 1
+
+
+@pytest.mark.parametrize("answer,code", [
+    (None, "UNAPPROVED"),
+    ("no, these belong under Delivery routes", "DECLINED"),
+    ("maybe later", "UNAPPROVED"),
+    ("approve\n(posted by task-steward, an agent)", "UNAPPROVED"),   # an agent's words, not the owner's
+])
+def test_no_project_without_the_owners_yes(tmp_path, answer, code):
+    portal = proposed(answer)
+    result = by_id(run(portal, changes(new_project(), move(1, "e1")), tmp_path))
+    assert (result["np1"]["outcome"], result["np1"]["code"]) == ("refused", code)
+    assert (result["e1"]["outcome"], result["e1"]["code"]) == ("refused", "NO_PROJECT")
+    assert portal.writes() == []
+
+
+def test_an_answer_by_someone_else_or_with_no_proposal_asked_is_no_approval(tmp_path):
+    portal = proposed("approve", author="sam@elsewhere.test")
+    assert by_id(run(portal, changes(new_project()), tmp_path))["np1"]["code"] == "UNAPPROVED"
+    bare = FakePortal([task(1, "Send the storefront item 1", project_id=P_BUCKET)])
+    bare.comments[uid(1)].append({"id": uid(4002), "author_email": "dana@northwind.test", "body": "approve"})
+    assert by_id(run(bare, changes(new_project()), tmp_path))["np1"]["code"] == "UNAPPROVED"
+
+
+def test_a_rename_approves_the_name_the_owner_gave(tmp_path):
+    portal = proposed("rename: Storefront go-live")
+    assert by_id(run(portal, changes(new_project()), tmp_path))["np1"]["code"] == "UNAPPROVED"
+    r = by_id(run(portal, changes(new_project("Storefront go-live")), tmp_path))["np1"]
+    assert r["outcome"] == "applied"
+
+
+def test_an_answer_relayed_by_a_runner_counts_as_the_owners(tmp_path, no_owner_settings):
+    no_owner_settings.write_text('[task-stack-workstream]\nrelayed_answer_head = "Relayed for the owner:"\n')
+    relayed = ("Relayed for the owner:\n\n1. Open project \"Launch the storefront\"?\nAnswer: rename\n\n"
+               "Storefront go-live\n(posted by runner, an agent)")
+    portal = proposed(relayed)
+    # The echoed question names the proposed name; only the pick and the typed words count.
+    assert by_id(run(portal, changes(new_project()), tmp_path))["np1"]["code"] == "UNAPPROVED"
+    assert by_id(run(portal, changes(new_project("Storefront go-live")), tmp_path))["np1"]["outcome"] == "applied"
+    no = proposed("Relayed for the owner:\n\n1. Open project?\nAnswer: no\n(posted by runner, an agent)")
+    assert by_id(run(no, changes(new_project()), tmp_path))["np1"]["code"] == "DECLINED"
+
+
+def test_a_project_already_open_by_that_name_is_found_not_made(tmp_path):
+    portal = proposed()   # not even answered: the owner opened it by hand
+    portal.projects[uid(703)] = {"id": uid(703), "name": "Launch the Storefront", "domain_id": D_SALES,
+                                 "status": "IN_PROGRESS", "created_at": ago(1), "updated_at": ago(1)}
+    result = by_id(run(portal, changes(new_project(), move(1, "e1")), tmp_path))
+    assert result["np1"]["outcome"] == "unchanged" and result["np1"]["project"].endswith(uid(703))
+    assert portal.tasks[uid(1)]["project_id"] == uid(703)
+    assert not any(x[0] == "create_project" for x in portal.calls)
+
+
+def test_create_project_shape_goal_dry_run_and_undo(tmp_path):
+    problems = ap.shape_problems({"id": "x", "op": "create_project", "reason": "r", "name": ""})
+    assert any("name" in p for p in problems) and any("domain_id" in p for p in problems)
+    # No approval is needed any more (2026-10-17); one that is given must be well formed.
+    assert not any("approval" in p for p in problems)
+    bad = ap.shape_problems({"id": "x", "op": "create_project", "reason": "r", "name": "n", "domain_id": D_SALES,
+                             "approval": "not-a-task"})
+    assert any("approval" in p for p in bad) and any("proposal" in p for p in bad)
+    portal = proposed("ok")
+    wrong_goal = by_id(run(portal, changes(new_project(goal_id=G_GROW)), tmp_path))["np1"]
+    assert wrong_goal["code"] == "DOMAIN_MISMATCH" and portal.writes() == []
+    dry = by_id(run(portal, changes(new_project(), move(1, "e1")), tmp_path, dry_run=True))
+    assert dry["np1"]["outcome"] == "would_apply" and dry["e1"]["outcome"] == "would_apply"
+    assert portal.writes() == []
+    result = by_id(run(portal, changes(new_project(), move(1, "e1")), tmp_path))
+    pid = result["np1"]["project"].rsplit("/", 1)[1]
+    undone = ap.undo(portal, ap.read_jsonl(tmp_path / "undo.jsonl"), False, tmp_path / "state",
+                     now=NOW + timedelta(minutes=5))
+    assert undone["status"] == "undone"
+    assert portal.tasks[uid(1)]["project_id"] == P_BUCKET and portal.projects[pid]["status"] == "CANCELLED"
+
+
+def test_a_project_is_opened_without_asking(tmp_path):
+    """The owner, 2026-10-17: no propose-and-ask; the clarify pass opens the project it groups tasks into."""
+    portal = FakePortal([task(1, "Send pack")])
+    op = {k: v for k, v in new_project().items() if k not in ("approval", "proposal")}
+    result = by_id(run(portal, changes(op), tmp_path))
+    assert result["np1"]["outcome"] == "applied"
+    assert any(x[0] == "create_project" for x in portal.calls)

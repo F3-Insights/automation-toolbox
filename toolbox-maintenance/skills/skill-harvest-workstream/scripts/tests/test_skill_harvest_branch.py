@@ -164,3 +164,11 @@ def test_a_private_name_in_the_run_folder_name_refuses_the_commit_message(setup,
 
 def test_the_default_name_check_is_this_checkouts():
     assert Path(shb.NAME_CHECK) == NAME_CHECK
+
+
+def test_skill_paths_finds_the_name_check_in_this_checkout_not_the_home_folder():
+    import _skill_paths
+
+    found = _skill_paths.skill_file("skills-extract", "scripts", "name_check.py")
+    assert found == NAME_CHECK and found.is_file()
+    assert shb.NAME_CHECK == str(NAME_CHECK)

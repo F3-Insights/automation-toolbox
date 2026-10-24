@@ -1,0 +1,5 @@
+{
+  "name": "toolbox-maintenance",
+  "description": "Toolbox maintenance: the weekly audit of the toolbox itself (its design, check, lints and the automation's activity) and the monthly skill harvest from past sessions, with the skills and commands they use.",
+  "version": "0.1.0"
+}
