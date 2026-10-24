@@ -26,9 +26,9 @@ skills:
   # report-tieout, whose command it runs.
   review-facts: [reporting, projects]
   review-numbers: [reporting, projects]
-  review-red-team: [reporting, projects]
+  review-red-team: [reporting, projects, strategy]
   review-completeness: [process-engineering]
   evidence-check: [compliance]
   # The goal audit's findings, closed action list and standalone walk of the Portal (migration
   # plan, strategy): strategy's goal alignment judges by it, projects' project-landscape runs it.
-  goal-audit: [projects]
+  goal-audit: [strategy, projects]
