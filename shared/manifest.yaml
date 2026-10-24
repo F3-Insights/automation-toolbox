@@ -11,7 +11,7 @@
 skills:
   orchestration-workstream: [software, accounting, compliance, decision-playbooks, finance, learning, marketing, personal, process-engineering, productivity, projects, recurring-summaries, reporting, sales, strategy, toolbox-maintenance]
   task-stack-workstream: [productivity, accounting, chief-of-staff, compliance, decision-playbooks, projects, recurring-summaries, sales, strategy, toolbox-maintenance]
-  comms-confirm: [accounting, finance, process-engineering, projects, reporting, sales]
+  comms-confirm: [accounting, finance, projects, reporting]
   office-files: [accounting, compliance, finance, reporting, sales]
   report-tieout: [accounting, chief-of-staff, process-engineering, reporting, personal, finance]
   # The ERP read (migration plan, accounting): the ledger pull, trial balance, GL detail and
@@ -22,14 +22,19 @@ skills:
   unslop: [marketing, accounting, chief-of-staff, finance, process-engineering, productivity, projects, reporting, sales, software]
   unslop-deliverable: [marketing, finance, process-engineering, projects, reporting]
   unslop-editorial: [marketing, projects]
-  unslop-email: [marketing, accounting, productivity, projects]
+  unslop-email: [marketing, accounting, productivity, projects, sales]
   unslop-proposal: [marketing, projects, sales]
   unslop-technical: [marketing, software]
   # The reviewer checklists (migration plan D4). Each lists only its source department until
   # the departments that use it convert; a department taking review-numbers also takes
   # report-tieout, whose command it runs.
-  review-facts: [reporting, personal, compliance]
-  review-numbers: [reporting, personal, finance, accounting]
-  review-red-team: [reporting, finance]
+  review-facts: [reporting, personal, compliance, process-engineering, sales]
+  review-numbers: [reporting, personal, finance, accounting, process-engineering]
+  review-red-team: [reporting, finance, process-engineering, sales]
   review-completeness: [process-engineering, personal, compliance]
   evidence-check: [compliance, accounting]
+  # Transcript cleanup and the one-transcript claim inventory (migration plan, process-engineering).
+  transcript-tools: [process-engineering]
+  # The automation backlog's file contract between process-engineering's scoping and sales'
+  # proposal (migration plan D8): CSV columns, business-case headings, the issue-note standard.
+  automation-backlog-format: [process-engineering, sales]

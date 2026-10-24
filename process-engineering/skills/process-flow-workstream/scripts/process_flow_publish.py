@@ -1,3 +1,6 @@
+# /// script
+# dependencies = ["openpyxl", "pyyaml"]
+# ///
 """Write a session's staged process folder back to the engagement, and its drafts to the
 delivery folder, never overwriting anyone's file.
 

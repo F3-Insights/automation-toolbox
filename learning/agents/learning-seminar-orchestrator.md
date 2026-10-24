@@ -1,6 +1,6 @@
 ---
 name: learning-seminar-orchestrator
-description: Builds or revises one seminar, workshop or lab deck end to end by the writing-seminar-builder method, in passes so the owner answers once instead of sitting in the session. The outline pass writes the content map, the outline and one numbered list of scope, story and figure questions; the build pass, once they approve, has the seminar builder build and verify the HTML deck and executive-red-team sit in as a participant until it delivers its stated outcome. Start it as the main session (claude --agent learning-seminar-orchestrator) or from a scheduler; it publishes and commits nothing. To build a deck interactively, use writing-seminar-builder; a client workshop is workshop-orchestrator.
+description: Builds or revises one seminar, workshop or lab deck end to end by the writing-seminar-builder method, in passes so the owner answers once instead of sitting in the session. The outline pass writes the content map, the outline and one numbered list of scope, story and figure questions; the build pass, once they approve, has the seminar builder build and verify the HTML deck and executive-red-team sit in as a participant until it delivers its stated outcome. Start it as the main session (claude --agent learning-seminar-orchestrator) or from a scheduler; it publishes and commits nothing. To build a deck interactively, use writing-seminar-builder; a client workshop is process-engineering-workshop.
 model: opus
 color: purple
 skills: [orchestration-workstream, writing-seminar-builder]

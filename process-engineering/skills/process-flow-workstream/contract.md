@@ -1,10 +1,10 @@
 # Process flow: the Run contract
 
-What a process-flow Run holds and what each agent in it writes or returns: the staged folder, the ids, the map file, the commands and the reviewers' json blocks. `SKILL.md` in this skill is the method and the conduct; this file is the reference it points to.
+What a process-flow Run holds and what each part of it writes or returns: the staged folder, the ids, the map file, the commands and the json blocks the workers and the reviewer return. `SKILL.md` in this skill is the method and the conduct; this file is the reference it points to.
 
 ## The staged folder
 
-`process-flow-prepare` stages one engagement process into the Run's work folder. Everything happens there; `process-flow-publish` writes it back after the session.
+`process-engineering-process-flow-prepare` stages one engagement process into the Run's work folder. Everything happens there; `process-engineering-process-flow-publish` writes it back after the session.
 
 | Path | Holds | Written by |
 |---|---|---|
@@ -12,14 +12,14 @@ What a process-flow Run holds and what each agent in it writes or returns: the s
 | `BACKGROUND.md` | The client, its systems, the roles by title | the owner |
 | `REFERENCE-MODEL.md` | The standard process the completeness audit compares against | prepare |
 | `sources.json`, `sources/<id>.*` | The source register and each source as readable text (`T01` a transcript, `B01` background; `half` A or B; `duplicate_of`) | prepare, claim-ledger |
-| `inventories/<id>.md` | One transcript reader's return per transcript | the orchestrator |
+| `inventories/<id>.md` | One worker's return per transcript (`transcript-tools`, section Read one transcript) | the main agent |
 | `CLAIM-LEDGER.csv` | Every claim, pain, wish, number and contradiction with its id, quote and `quote_found` | claim-ledger build |
-| `maps/map v<N>.json` | The map, one file per version, never edited once written | the mapper |
-| `renders/` | `<process> v<N> as-is.html`, `... as-is and to-be.html`, `... narrative.md`, `... as-is.png` | process-flow-render |
+| `maps/map v<N>.json` | The map, one file per version, never edited once written | the main agent (section Draw a map version) |
+| `renders/` | `<process> v<N> as-is.html`, `... as-is and to-be.html`, `... narrative.md`, `... as-is.png` | `process-engineering-process-flow-render` |
 | `reviews/` | The assertions and each recorded review of a map version | claim-ledger |
 | `VERIFICATION v<N>.md` | The verification memo and open questions | claim-ledger memo |
-| `STATUS.md`, `LOG.md` | Where it stands; the session log | the orchestrator |
-| `returns/` | Agents' returns saved for recording; stays in the Run | the orchestrator |
+| `STATUS.md`, `LOG.md` | Where it stands; the session log | the main agent |
+| `returns/` | The worker's and reviewer's returns saved for recording; stays in the Run | the main agent |
 
 Ids never change: a source keeps its id across sessions, and a claim is `<source>-<letter><n>` (`T03-C12` claim 12 of T03; `P` pain, `W` wish, `N` number, `X` contradiction; claims added by hand from a background document are `B02-C101` upward).
 
@@ -66,19 +66,19 @@ One command per call. Every one takes `--format json`.
 
 | Command | Does |
 |---|---|
-| `python3 ~/.claude/skills/process-flow-workstream/scripts/claim_ledger.py build WORK` | Inventories to `CLAIM-LEDGER.csv`; checks each quote against its source |
-| `python3 ~/.claude/skills/process-flow-workstream/scripts/claim_ledger.py add WORK --source B02 --text ... --quote ... --location ...` | Adds a claim from a background document (the quote must be in it); then `build` |
-| `python3 ~/.claude/skills/process-flow-workstream/scripts/process_flow_check.py WORK --format json` | The six tests of done, with every map error by step |
-| `python3 ~/.claude/skills/process-flow-workstream/scripts/process_flow_render.py WORK` | Draws the current map version; refuses a map with errors or a version already drawn |
-| `python3 ~/.claude/skills/process-flow-workstream/scripts/claim_ledger.py brief WORK` | The current map's assertions, and the files each fact-check half reads |
-| `python3 ~/.claude/skills/process-flow-workstream/scripts/claim_ledger.py record WORK --kind K --from FILE` | Checks and keeps a review of the current version (`factcheck-A`, `factcheck-B`, `completeness`, `redteam`) |
-| `python3 ~/.claude/skills/process-flow-workstream/scripts/claim_ledger.py memo WORK` | `VERIFICATION v<N>.md` once both halves and the completeness audit are recorded |
+| `process-engineering-claim-ledger build WORK` | Inventories to `CLAIM-LEDGER.csv`; checks each quote against its source |
+| `process-engineering-claim-ledger add WORK --source B02 --text ... --quote ... --location ...` | Adds a claim from a background document (the quote must be in it); then `build` |
+| `process-engineering-process-flow-check WORK --format json` | The six tests of done, with every map error by step |
+| `process-engineering-process-flow-render WORK` | Draws the current map version; refuses a map with errors or a version already drawn |
+| `process-engineering-claim-ledger brief WORK` | The current map's assertions, and the files each fact-check half reads |
+| `process-engineering-claim-ledger record WORK --kind K --from FILE` | Checks and keeps a review of the current version (`factcheck-A`, `factcheck-B`, `completeness`, `redteam`) |
+| `process-engineering-claim-ledger memo WORK` | `VERIFICATION v<N>.md` once both halves and the completeness audit are recorded |
 
-## The json blocks the reviewers return
+## The json blocks the worker and the reviewer return
 
-The orchestrator puts the matching block in each brief and asks for it as the last thing in the return; it saves the return under `returns/` and records it with `claim-ledger`.
+The main agent puts the matching block in each brief and asks for it as the last thing in the return; it saves the return under `returns/` and records it with `process-engineering-claim-ledger`. These shapes override the return a checklist skill gives: `process-engineering-claim-ledger record` reads nothing else.
 
-**transcript-reader** (one per transcript, given the staged source file, the topic tags and `Source id: T03`), after its usual inventory:
+**Read one transcript** (`process-engineering-worker` on `transcript-tools`, one per transcript, given the staged source file, the topic tags and `Source id: T03`), after its text inventory:
 
 ```json
 {"source": "T03",
@@ -89,7 +89,7 @@ The orchestrator puts the matching block in each brief and asks for it as the la
  "contradictions": [{"n": 1, "text": "...", "a_quote": "...", "a_location": "...", "b_quote": "...", "b_location": "..."}]}
 ```
 
-**fact-check** (two, one per half, each given only its half's files from `python3 ~/.claude/skills/process-flow-workstream/scripts/claim_ledger.py brief` and the assertions file): one verdict per assertion key, `VERIFIED` or `CONTRADICTED` with the source id, quote and location from its half, else `NOT IN MY SOURCES`; then the facts its sources hold that the map omits.
+**Facts** (`process-engineering-reviewer` on `review-facts`, recorded as `factcheck-A` and `factcheck-B`; two, one per half, each given only its half's files from `process-engineering-claim-ledger brief` and the assertions file): one verdict per assertion key, `VERIFIED` or `CONTRADICTED` with the source id, quote and location from its half, else `NOT IN MY SOURCES`; then the facts its sources hold that the map omits.
 
 ```json
 {"half": "A",
@@ -97,7 +97,7 @@ The orchestrator puts the matching block in each brief and asks for it as the la
  "omissions": [{"fact": "...", "source": "B02", "location": "...", "quote": "..."}]}
 ```
 
-**completeness-audit** (given the as-is render, the map file and `REFERENCE-MODEL.md`): about fifteen questions, highest priority first; a question a source already answers carries the answer instead of being asked.
+**Completeness** (`process-engineering-reviewer` on `review-completeness`, recorded as `completeness`; given the as-is render, the map file and `REFERENCE-MODEL.md`): about fifteen questions, highest priority first; a question a source already answers carries the answer instead of being asked.
 
 ```json
 {"model": "order-to-cash",
@@ -107,7 +107,7 @@ The orchestrator puts the matching block in each brief and asks for it as the la
 
 `answered_by` is `{"source": "T02", "location": "...", "quote": "..."}` when the sources answer it.
 
-**executive-red-team** (given only the rendered page or its screenshot, the audience and a one-line purpose): a letter grade per section, every criticism with a concrete fix.
+**Red team** (`process-engineering-reviewer` on `review-red-team`, recorded as `redteam`; given only the rendered page or its screenshot, the audience and a one-line purpose): a letter grade per section, every criticism with a concrete fix.
 
 ```json
 {"overall": "B", "one_change": "...",

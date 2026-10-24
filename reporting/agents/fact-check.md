@@ -1,6 +1,6 @@
 ---
 name: fact-check
-description: Verifies a claim inventory against an assigned subset of primary sources, returning each claim as VERIFIED, NOT IN MY SOURCES or CONTRADICTED with a quote and location, plus facts the sources hold that the artifact omits. Call it before a diagram, memo, readout or report goes to a client. Run two instances over disjoint source halves and cross-reference their NOT IN MY SOURCES lists; for a late source, ask for a diff against the ledger, not a new summary. Not for re-deriving figures (numbers-reviewer) or missing standard elements (completeness-audit).
+description: Verifies a claim inventory against an assigned subset of primary sources, returning each claim as VERIFIED, NOT IN MY SOURCES or CONTRADICTED with a quote and location, plus facts the sources hold that the artifact omits. Call it before a diagram, memo, readout or report goes to a client. Run two instances over disjoint source halves and cross-reference their NOT IN MY SOURCES lists; for a late source, ask for a diff against the ledger, not a new summary. Not for re-deriving figures (numbers-reviewer) or missing standard elements (review-completeness).
 model: opus
 tools: ["Read", "Glob", "Grep"]
 ---

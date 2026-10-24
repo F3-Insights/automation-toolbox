@@ -1,6 +1,6 @@
 # Claim ledger and open questions
 
-The document that travels with any diagram, memo or readout that makes factual claims about a client. Every number and mechanic traces to a first-person source or it comes off the artifact. Produced by the `fact-check` agent and the `process-flow-workstream` skill, consumed before every client review. In a process-flow Run, `python3 ~/.claude/skills/process-flow-workstream/scripts/claim_ledger.py memo` writes this shape as `VERIFICATION v<N>.md`.
+The document that travels with any diagram, memo or readout that makes factual claims about a client. Every number and mechanic traces to a first-person source or it comes off the artifact. Produced by the facts check (`review-facts`) and the `process-flow-workstream` skill, consumed before every client review. In a process-flow Run, `process-engineering-claim-ledger memo` writes this shape as `VERIFICATION v<N>.md`.
 
 ```
 # <Artifact name>: Verification and Open Questions, v<N>

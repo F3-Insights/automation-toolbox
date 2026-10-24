@@ -9,7 +9,7 @@ Copy this file to the engagement's rules folder (the Context's `rules` Source, e
 - Audience: <who reads the map, e.g. the client's leadership team, for validation>
 - Client: <the client's name as it appears on the map>
 - Prepared by: <the firm's name for the footer, or leave the line out>
-- Lanes: <the functional lanes the map may use, comma-separated; leave out to let the mapper choose>
+- Lanes: <the functional lanes the map may use, comma-separated; leave out to let the map choose>
 - Transcript files: <patterns of first-person sources in the transcripts folder: *transcript*, *.srt, *survey*>
 - Exclude: <patterns never read: *invoice*, *.zip>
 - Reference model: <order-to-cash | procure-to-pay | proposal-to-contract | record-to-report | a file beside this one>
@@ -18,9 +18,9 @@ Copy this file to the engagement's rules folder (the Context's `rules` Source, e
 
 ## The four stakeholder decisions
 
-The method asks these of the stakeholder; record the answers here. Until one is answered the orchestrator asks it through comms-confirm and maps with the default in brackets.
+The method asks these of the stakeholder; record the answers here. Until one is answered the process-flow Run lists it as a question for the owner and maps with the default in brackets.
 
-- Sections: <the process sections, matched to the proposal's capability areas> [the mapper proposes]
+- Sections: <the process sections, matched to the proposal's capability areas> [the Run proposes]
 - Swim lanes: <functional roles, external actors as lanes> [the Lanes line above]
 - Audience: <internal design input, client validation, or presentation> [client validation]
 - Pain policy: <neutral, subtle markers, or full overlay> [subtle markers with the footer]
