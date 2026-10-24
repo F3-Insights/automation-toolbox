@@ -20,8 +20,10 @@ productivity-outbound-check --to ADDRESS --thread EMAIL_REF --json
 productivity-email-context-pack EMAIL_REF --contact CONTACT_ID --out RUN/pack.json
 productivity-email-draft-show DRAFT_ID                         # the checker's view, with the content hash
 productivity-email-deliver --draft DRAFT_ID --check RUN/check.json --contact CONTACT_ID --email EMAIL_REF --allow-recent-contact
-productivity-notify-owner --title "..." --link URL --record-ref portal://draft/DRAFT_ID
+productivity-notify-owner --title "..." --link URL --record-ref portal://draft/DRAFT_ID [--channel teams|email|both]
 ```
+
+Two more commands here serve the unattended jobs, never this skill's own steps. `productivity-drafts-deliver --run RUN --dry-run-if=false` is the one path every scheduled job takes into Outlook Drafts: a finish step after the session, it reads `RUN/deliveries.json` (`tool: drafts-deliveries`, one entry per reviewer-passed draft with its `kind` `reply`, `delivery`, `holding` or `nudge`, `contact_id`, `email_ref` and `content_hash`) and runs `productivity-email-deliver` once per draft with every guard; a `reply`, `delivery` or `holding` passes the cooldown (`--allow-recent-contact`), a `delivery`, `holding` or `nudge` may follow the owner's own later message (`--follow-up`), and a `nudge` keeps every other hold. Refusals stay in the Portal and are listed in `RUN/deliver.json`. `--channel` picks how `productivity-notify-owner` reaches the owner: Teams with email as the fallback (the default), email only, or both.
 
 `rules.md` beside this file holds the owner's current settings (the revision rounds, what counts as their decision, the cooldown, an email that needs no reply) and the mechanics (the run folder, exit codes, the worker models). The three hand-offs are the sections Research the email, Draft the reply and Check a reply below, each with its brief in `briefs/` and a fixed return format; the check record is validated by `email-deliver` against `briefs/checker.schema.json`. If the owner keeps standing rules on outbound mail elsewhere (setting `owner_profile`), read them, never quote them into a draft, a brief or a message.
 
