@@ -1,3 +1,6 @@
+# /// script
+# dependencies = ["pyyaml"]
+# ///
 """Record what one task-capture Run did with each source item, in the capture ledger.
 
 Runs after task-stack-apply in the task-capture finish step. It reads only what the
