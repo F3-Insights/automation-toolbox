@@ -801,12 +801,9 @@ def shape_problems(op):
 
 SKILL = "goal-alignment-workstream"
 HOME_NAME = "goal-alignment"
-# The agent that runs this job, as its change sets and approval tasks name it, then the name
-# the department migration gives it. task-stack-apply treats the two as one agent (same
-# checks, same markers). When strategy converts, ORCHESTRATOR becomes the second name; remove
-# the first a month after that.
-ORCHESTRATOR_NAMES = ("goal-alignment-orchestrator", "strategy-goal-alignment")
-ORCHESTRATOR = ORCHESTRATOR_NAMES[0]
+# The agent that runs this job, as its change sets and approval tasks name it. task-stack-apply
+# maps it to the job's earlier name, so markers made under either stay the same.
+ORCHESTRATOR = "strategy-goal-alignment"
 REVIEW_SCHEMA = "goal-alignment/review@1"
 PASS_SCHEMA = "goal-alignment/pass@1"
 ANSWERS_SCHEMA = "goal-alignment/answers@1"

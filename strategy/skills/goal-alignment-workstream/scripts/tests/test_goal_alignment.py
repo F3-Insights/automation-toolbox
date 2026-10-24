@@ -152,13 +152,14 @@ def test_check_precheck_without_a_published_note(home):
     assert chk.precheck_line(result, "approve") == "NOTHING: no published goal alignment for 2030-02 to approve"
 
 
-def test_the_agent_name_and_its_planned_new_name():
-    """Change sets carry the current name until strategy converts; the new one is named beside it."""
-    assert c.ORCHESTRATOR_NAMES == ("goal-alignment-orchestrator", "strategy-goal-alignment")
-    assert c.ORCHESTRATOR == c.ORCHESTRATOR_NAMES[0]
+def test_the_agent_name():
+    """Change sets and the approval task carry the job's main agent's name."""
+    assert c.ORCHESTRATOR == "strategy-goal-alignment"
 
 
 def test_other_skills_scripts_come_from_this_checkout():
+    """_skill_paths finds task-stack-check and task-stack-apply in strategy's own copy."""
     toolbox = c.SKILL_DIR.parents[2]
     for path in (c.TASK_STACK_CHECK, c.TASK_STACK_APPLY):
         assert path.is_file() and toolbox in path.parents, path
+        assert path.parents[3] == toolbox / "strategy", path

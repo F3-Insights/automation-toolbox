@@ -404,3 +404,14 @@ def test_other_skills_scripts_come_from_this_checkout():
     toolbox = Path(__file__).resolve().parents[5]
     for path in (pk.REPORT_COLLECT, ap.TASK_STACK_APPLY):
         assert path.is_file() and toolbox in path.parents, path
+
+
+def test_skill_paths_finds_the_plugin_copy_and_the_collector():
+    """_skill_paths resolves inside this checkout: task-stack-apply from this department's own
+    copy, and report-collect (reporting's report-weekly, the delivery pack's file contract for
+    the window's Portal evidence) from its department, never from ~/.claude/skills."""
+    import _skill_paths as sp
+    root = sp.toolbox_root()
+    assert ap.TASK_STACK_APPLY.is_file()
+    assert ap.TASK_STACK_APPLY.parents[3] == root / "projects"
+    assert pk.REPORT_COLLECT.is_file() and root in pk.REPORT_COLLECT.parents

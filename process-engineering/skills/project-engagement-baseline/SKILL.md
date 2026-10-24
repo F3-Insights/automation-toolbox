@@ -11,7 +11,7 @@ Three documents, written in order, each built only from the one before it. Outpu
 
 ## 1. Research reports, one per source group
 
-Run `transcript-hygiene` on the transcript folders first so duplicates are not read twice, and `srt-transcript-collapse` on any raw exports. Then split the sources into groups (a discovery-conversation set, a workshop set, one per workstream, the client documents, each existing system or codebase) and dispatch one reader agent per group with the same brief:
+With process engineering's transcript tools on, run `transcript-hygiene` on the transcript folders first so duplicates are not read twice, and `srt-transcript-collapse` on any raw exports. Then split the sources into groups (a discovery-conversation set, a workshop set, one per workstream, the client documents, each existing system or codebase) and dispatch one reader agent per group with the same brief:
 
 > Read `<sources>` fully. Return a structured report with these sections. Preserve verbatim
 > numbers, names and system names. Your final message is the deliverable; the parent will

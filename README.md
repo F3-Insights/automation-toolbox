@@ -98,11 +98,11 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 | Every night | `nightly-sweep-orchestrator` | The day's email turned into tasks and notes, and a Daily Note with what needs you |
 | Every weekday | `daily-plan-orchestrator` | The morning's three priorities and an evening close |
 | Every week | `finance-cash-forecast` | The 13-week cash forecast rolled forward, with the low point called out |
-| Every week | `client-delivery-orchestrator` | One engagement's plan, risks and status, ready for the sponsor |
+| Every week | `projects-client-delivery` | One engagement's plan, risks and status, ready for the sponsor |
 | Every week | `reporting-weekly-report` | The leadership weekly, drafted from the week's record |
 | Month end | `accounting-month-end-close` | The close worked like a close team: reconciliations, accruals, flux, a review trail |
 | Month end | `reporting-board-package` | The board package drafted from the finished close, tied out and red-teamed |
-| Monthly | `goal-alignment-orchestrator` | Goals set against projects and where the time went, as one approval list |
+| Monthly | `strategy-goal-alignment` | Goals set against projects and where the time went, as one approval list |
 | On demand | `software-developer` | A repository's issues worked into verified pull requests, builds in parallel worktrees (draft) |
 
 ## Quick start
@@ -134,7 +134,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 |---|---|:---:|
 | [Accounting](accounting/) | Month-end close, reconciliations, journal entries, accruals, collections, intercompany, cost accounting, audit support, 1099s; a Claude Code plugin | 11 / 19 |
 | [Finance](finance/) | Forecasts, budgets, 13-week cash, one-off analysis, investor obligations; a Claude Code plugin | 7 / 13 |
-| [Strategy](strategy/) | Goals checked against projects and where the time went, and pre-mortems on strategic plans | 5 / 4 |
+| [Strategy](strategy/) | Goals checked against projects and where the time went, and pre-mortems on strategic plans; a Claude Code plugin | 3 / 2 |
 | [Executive Reporting](reporting/) | Board packages, leadership weeklies and client updates, each independently checked before a person sends it | 9 / 15 |
 
 <details>
@@ -157,7 +157,7 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `finance-analysis`: drafts a one-off analysis, scenario model or what-if
   - `finance-investor-posting`: keeps contractual investor data-room postings on time
 - **Strategy**
-  - `goal-alignment-orchestrator`: prepares the monthly check of goals against projects and time spent
+  - `strategy-goal-alignment`: prepares the monthly check of goals against projects and time spent
 - **Reporting**
   - `reporting-board-package`: drafts one company's monthly board package from its finished close
   - `reporting-weekly-report`: prepares the weekly report to the leadership team
@@ -171,7 +171,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
-| [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews, pre-mortems | 13 / 11 |
+| [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews; a Claude Code plugin | 7 / 13 |
 | [Process Engineering](process-engineering/) | Assessments, interview synthesis, process maps, workshops, automation scoping, surveys | 8 / 11 |
 | [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 5 / 9 |
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
@@ -183,11 +183,11 @@ Each folder at the root is a department. Open its README for what is inside and 
 <summary><b>Orchestrators in delivery</b> (25)</summary>
 
 - **Projects**
-  - `project-engagement-kickoff-orchestrator`: sets up a newly signed engagement as drafts to adopt
-  - `client-delivery-orchestrator`: project-manages one engagement like a delivery lead, twice a week
-  - `project-health-orchestrator`: the weekly project-health pass over active projects
-  - `tech-portfolio-orchestrator`: prepares a client's technology portfolio status before its steering meeting
-  - `project-engagement-closeout-orchestrator`: closes a finished engagement with acceptance evidence and a final invoice check
+  - `projects-engagement-kickoff`: sets up a newly signed engagement as drafts to adopt
+  - `projects-client-delivery`: project-manages one engagement like a delivery lead, twice a week
+  - `projects-health-review`: the weekly project-health pass over active projects
+  - `projects-tech-portfolio`: prepares a client's technology portfolio status before its steering meeting
+  - `projects-engagement-closeout`: closes a finished engagement with acceptance evidence and a final invoice check
 - **Process Engineering**
   - `process-engineering-assessment-intake`: turns a pre-engagement assessment into an anonymized summary
   - `process-engineering-discovery-synthesis`: turns discovery interviews and documents into a read-out and feedback by topic

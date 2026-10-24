@@ -1,6 +1,6 @@
 ---
 name: time-study
-description: "Runs the owner's time study for a period (the last full month by default) or one window, unattended, by the report-time-study skill: productivity-worker segments each recording and assembles and classifies each day in ten-minute slots, productivity-reviewer re-derives a sample of slots, and it batches the questions only the owner can answer into each window's report, applies the owner's answers when a launch carries them, and rebuilds the tables, dashboard, report and the said-but-not-seen JSON other jobs read. Start it as the main session or from its scheduled Automation. Sends and publishes nothing. Use for \"where did my time go\". Goals against time spent is goal-alignment-orchestrator."
+description: "Runs the owner's time study for a period (the last full month by default) or one window, unattended, by the report-time-study skill: productivity-worker segments each recording and assembles and classifies each day in ten-minute slots, productivity-reviewer re-derives a sample of slots, and it batches the questions only the owner can answer into each window's report, applies the owner's answers when a launch carries them, and rebuilds the tables, dashboard, report and the said-but-not-seen JSON other jobs read. Start it as the main session or from its scheduled Automation. Sends and publishes nothing. Use for \"where did my time go\". Goals against time spent is strategy-goal-alignment."
 model: opus
 color: green
 skills: [report-time-study]

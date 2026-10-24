@@ -12,7 +12,7 @@
   delivery_record.py ENGAGEMENT show [--format text|json]
 
 Every subcommand also takes --working DIR (the working folder; a dry run's copy), --by NAME
-(default client-delivery-orchestrator), --as-of DATE and --contexts-dir DIR.
+(default projects-client-delivery), --as-of DATE and --contexts-dir DIR.
 
 The rows and their rules:
 - milestone:<id>  planned, in-progress, at-risk, delivered, accepted. Delivered and accepted
@@ -48,7 +48,7 @@ from pathlib import Path
 
 import _common as dc
 
-BY = "client-delivery-orchestrator"
+BY = "projects-client-delivery"
 RAID_PREFIX = {"risk": "R", "assumption": "A", "issue": "I", "dependency": "D"}
 RAID_ID = re.compile(r"^[RAID]\d{1,4}$")
 

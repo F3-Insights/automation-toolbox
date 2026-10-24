@@ -11,9 +11,9 @@
 skills:
   orchestration-workstream: [software, accounting, compliance, decision-playbooks, finance, learning, marketing, personal, process-engineering, productivity, projects, recurring-summaries, reporting, sales, strategy, toolbox-maintenance]
   task-stack-workstream: [productivity, accounting, chief-of-staff, compliance, decision-playbooks, projects, recurring-summaries, sales, strategy, toolbox-maintenance]
-  comms-confirm: [accounting, finance, projects, reporting]
+  comms-confirm: [accounting, finance, reporting]
   office-files: [accounting, compliance, finance, reporting, sales]
-  report-tieout: [accounting, chief-of-staff, process-engineering, reporting, personal, finance]
+  report-tieout: [accounting, chief-of-staff, process-engineering, reporting, personal, finance, projects]
   # The ERP read (migration plan, accounting): the ledger pull, trial balance, GL detail and
   # normalizer, the AR/AP hygiene and budget-detail checks, and the Sage Intacct reference.
   # Finance holds a copy since it converted.
@@ -28,9 +28,9 @@ skills:
   # The reviewer checklists (migration plan D4). Each lists only its source department until
   # the departments that use it convert; a department taking review-numbers also takes
   # report-tieout, whose command it runs.
-  review-facts: [reporting, personal, compliance, process-engineering, sales]
-  review-numbers: [reporting, personal, finance, accounting, process-engineering]
-  review-red-team: [reporting, finance, process-engineering, sales]
+  review-facts: [reporting, personal, compliance, process-engineering, sales, projects]
+  review-numbers: [reporting, personal, finance, accounting, process-engineering, projects]
+  review-red-team: [reporting, finance, process-engineering, sales, projects, strategy]
   review-completeness: [process-engineering, personal, compliance]
   evidence-check: [compliance, accounting]
   # Transcript cleanup and the one-transcript claim inventory (migration plan, process-engineering).
@@ -38,3 +38,6 @@ skills:
   # The automation backlog's file contract between process-engineering's scoping and sales'
   # proposal (migration plan D8): CSV columns, business-case headings, the issue-note standard.
   automation-backlog-format: [process-engineering, sales]
+  # The goal audit's findings, closed action list and standalone walk of the Portal (migration
+  # plan, strategy): strategy's goal alignment judges by it, projects' project-landscape runs it.
+  goal-audit: [strategy, projects]

@@ -243,7 +243,7 @@
 # repo_prefix = "f3i"
 
 [project-health-diagnose]
-# The folder of the project-health Runs, searched for the last one (required, when project-health-check runs with --last-run).
+# The folder of the project-health Runs, searched for the last one (required, when projects-health-check runs with --last-run).
 # runs_dir = "~/path/to/project-health-runs"
 
 [recording-harvest]

@@ -1,6 +1,6 @@
 ---
 name: software-portfolio-review
-description: "Reviews every software project that has a repository, or should have one: finds the project-to-repository mapping, dispatches one software-worker per repository in parallel to steward it (section Steward one repository), and returns one numbered list of proposed next steps per repository. On approval it files the chosen steps as Portal tasks and gives the owner the exact pipeline invocation for each. It starts no pipeline and writes no code. Use for \"where do my repos stand\"; the weekly Run is software-weekly-review. For a client's project portfolio, use tech-portfolio-orchestrator."
+description: "Reviews every software project that has a repository, or should have one: finds the project-to-repository mapping, dispatches one software-worker per repository in parallel to steward it (section Steward one repository), and returns one numbered list of proposed next steps per repository. On approval it files the chosen steps as Portal tasks and gives the owner the exact pipeline invocation for each. It starts no pipeline and writes no code. Use for \"where do my repos stand\"; the weekly Run is software-weekly-review. For a client's project portfolio, use projects-tech-portfolio."
 argument-hint: "[domain or project, or blank for every software project] [--repos <owner/name>,...]"
 allowed-tools: Agent, Bash, Read, mcp__insights-portal__whoami, mcp__insights-portal__list_entities,
   mcp__insights-portal__hierarchy, mcp__insights-portal__get, mcp__insights-portal__search,

@@ -1,75 +1,112 @@
 ---
 name: pre-mortem
-description: Run a structured pre-mortem on a strategic initiative before capital or time is committed. Dispatches pre-mortem-investigator to surface the plan's assumptions and pre-mortem-researcher for sourced external evidence, then writes the kill-shot risks and the decision brief itself, with two gates where the executive decides. Use for "pre-mortem this plan" or "what could kill this" when a draft strategic plan deserves disciplined pre-commit critique. Not for critiquing a finished document; use the executive-red-team agent.
+description: "Run a structured pre-mortem on a strategic plan before capital or time is committed: strategy-worker surfaces the plan's stated, implied and missing assumptions and gathers sourced external evidence, the session writes the kill-shot risks and the decision brief itself, strategy-reviewer red-teams the brief, and the executive decides at two gates. Resumable from the files it has written. Use for \"pre-mortem this plan\" or \"what could kill this\" when a draft strategic plan deserves disciplined critique before commitment. Not for critiquing a finished document; use a red-team review."
 ---
 
-# Pre-Mortem Orchestrator
+# Pre-mortem
 
-This orchestrator does the analytical work (the diagnostic framing and the brief) in its own main context and delegates only two jobs to sub-agents. The "Why this architecture" section at the bottom gives the reasoning.
+The session that loads this skill does the analytical work (the diagnostic framing and the brief) in its own context and delegates two jobs to `strategy-worker` (`strategy:strategy-worker` when the strategy plugin is loaded by `--plugin-dir`), each told the section to follow, and one check to `strategy-reviewer`. It runs in the owner's session, never unattended: both gates are the executive's.
 
 ## When to invoke
 
-When the user has a strategic plan in `initiatives/<slug>/plan.md` (with `quant-inputs.yaml` alongside it) and wants disciplined critique before committing capital or time.
+When the user has a strategic plan in `initiatives/<slug>/plan.md` (with `quant-inputs.yaml` alongside it) and wants disciplined critique before committing capital or time. Not for a quick sanity check (a plain chat), decisions below about $500k or shorter than 6 months, decisions where the analysis is done and the executive just needs to review, or decisions outside the categories in `context/taxonomy.md`.
 
 ## What lives where
 
 All of it lives in the target repository (the company's), never in this skill:
 
-- **Knowledge base**: `context/*.md`. Company overview, voice, taxonomy, constraints, strategic history, lessons-learned. Read by the investigator at Step 2 and by this skill itself at Step 6. On first run, create it from this skill's `context-examples/*.example.md` (a fictional manufacturer, Meridian, kept as a worked example) and blank the content for the real company.
-- **Initiative folder**: `initiatives/<slug>/`. One folder per pre-mortem run. Holds the input `plan.md`, `quant-inputs.yaml`, and the generated artifacts (`gate-1-pending.md`, `research.md`, `brief.md`).
-- **Template**: `templates/pre-mortem-brief.md` in this skill (copy it into the target repo as `templates/pre-mortem-brief.md` on first run). The output shape filled by this skill at Step 7.
-- **Sub-agents**: `pre-mortem-investigator` and `pre-mortem-researcher`. Diagnostic and synthesis work happens in this skill's main context, not in a sub-agent.
+- **Knowledge base**: `context/*.md`. Company overview, voice, taxonomy, constraints, strategic history, lessons-learned. On first run, create it from this skill's `context-examples/*.example.md` (a fictional manufacturer, Meridian, kept as a worked example) and blank the content for the real company.
+- **Initiative folder**: `initiatives/<slug>/`. One folder per pre-mortem. Holds the input `plan.md`, `quant-inputs.yaml`, and the generated `gate-1-pending.md` (renamed `gate-1-approved.md` at Gate 1), `research.md` and `brief.md`.
+- **Template**: `templates/pre-mortem-brief.md` in this skill (copy it into the target repo as `templates/pre-mortem-brief.md` on first run), the brief's shape.
 
-## The workflow
+## Steps
 
-Work through these steps in order. The skill is **resumable**: at each gate the user may exit Claude Code and re-invoke later; the workflow detects state from the file system and resumes accordingly.
+The workflow is resumable: at each gate the user may leave and invoke the skill again later, and step 1 finds where it stands from the files.
 
-### Step 1: Confirm the initiative and detect workflow state
+1. [judgment] Confirm the initiative (ask for the slug if not given) and that `initiatives/<slug>/plan.md` and `quant-inputs.yaml` exist. Then detect the state from the initiative folder.
+   → plan.md or quant-inputs.yaml missing: ask
+   → gate-1-pending.md exists: step 3
+   → gate-1-approved.md exists and research.md does not: step 4
+   → research.md exists and brief.md does not: step 5
+   → brief.md exists with its Decision field empty: step 8
+   → brief.md exists with its Decision filled: step 9
+2. [hand-off: strategy-worker] Section Surface the assumptions, with the plan path, the quant inputs path, the knowledge base `context/` and the output path `initiatives/<slug>/gate-1-pending.md`. It does the heavy context reading, so this session does not carry the whole knowledge base.
+3. [ask] Gate 1. Tell the user: "The plan's assumptions are in `initiatives/<slug>/gate-1-pending.md`. Review them. To approve and continue, rename the file to `gate-1-approved.md`. To revise the plan first, edit `plan.md`, delete the pending file, and invoke the pre-mortem again." Then stop.
+   → waiting on the executive: stop
+4. [hand-off: strategy-worker] Section Gather external evidence, at sonnet, with the plan path, the decision category from `context/taxonomy.md` and the output path `initiatives/<slug>/research.md`. It is the only part that needs WebSearch and WebFetch.
+5. [judgment] The diagnostic framing, in this session, by section Find the kill-shot risks.
+   → a quality signal fails: step 5 (max 2)
+6. [judgment] Assemble `initiatives/<slug>/brief.md`, by section Write the brief, with its Decision field empty.
+7. [hand-off: strategy-reviewer] `review-red-team` on `brief.md`, the executive team as reader and the purpose "should we commit, reshape or kill this", with `plan.md`, `research.md` and the knowledge base as the sources only. Make the concrete fixes it asks for in the brief once.
+   → FAIL: step 6 (max 1)
+8. [ask] Gate 2. Tell the user: "The brief is ready at `initiatives/<slug>/brief.md`, with revised commitment criteria. When you have decided, set its `Decision:` field (commit / reshape / kill, and one sentence of rationale) and invoke the pre-mortem again." Then stop.
+   → waiting on the executive: stop
+9. [judgment] Capture the lesson, by section Capture lessons learned, and tell the user the entry is logged and to come back at 90, 180 and 365 days for the outcomes.
+   → logged: done
 
-Ask the user for the initiative slug if not given. Confirm `initiatives/<slug>/plan.md` and `initiatives/<slug>/quant-inputs.yaml` both exist. If `quant-inputs.yaml` is missing, ask the user to provide it before continuing.
+## Surface the assumptions
 
-Then detect where in the workflow we are by looking at which files exist in the initiative folder:
+For a `strategy-worker` (at opus). Brief: the plan path, the quant inputs path, the knowledge base `context/`, the output path. You surface what the plan assumes; you do not analyze risks and do not make recommendations.
 
-- If `gate-1-pending.md` exists, the workflow is paused at Gate 1. Tell the user to review and approve; skip to Step 3.
-- If `research.md` exists but `brief.md` does not, the workflow was interrupted after the researcher; skip to Step 6.
-- If `brief.md` exists and its `Decision:` field is unfilled, the workflow is paused at Gate 2; skip to Step 8.
-- If `brief.md` exists and `Decision:` is filled, the workflow is at lessons capture; skip to Step 9.
-- Otherwise it is a fresh run; proceed to Step 2.
+The goal: the executive reads the gate-1 file in 5 to 15 minutes, and at least one item makes them say "huh, I had not thought about that explicitly". If everything surfaced was already obvious, the job is not done; if there are 30 items to chase, the load-bearing ones are buried in noise.
 
-### Step 2: Dispatch the investigator sub-agent
+1. **Read everything.** The plan in full, the quant inputs, every file in `context/`. The quality of the surfacing depends on knowing the company.
+2. **Identify assumptions** and tag each STATED (explicitly in the plan), IMPLIED (present but not made explicit) or MISSING (the plan depends on it but does not name it), across five categories: market (competitors, customers, demand, pricing, geography); operational (execution capability, team capacity, process scaling, technology readiness); capital and timing (money flow, payback timing, capital availability, the rate environment); cultural and organizational (how people will respond, how culture scales, who drives what, change capacity); counterfactual (alternative paths implicitly rejected without being named).
+3. **Push back on vagueness.** If the plan says "scale the team", ask which team, by how much, on what timeline. Quote the plan's exact phrase when flagging a stated or implied assumption; never paraphrase. Cross-reference `context/strategic-history.md`: a prior decision that contradicts a stated assumption is flagged.
+4. **Write the gate-1 file** at the output path, under one page, in the voice of `context/voice.md` (plain, technical, numbers first, no marketing language). Cut to the load-bearing assumptions.
 
-Dispatch `pre-mortem-investigator` with the Agent tool. Pass it:
+```markdown
+# Gate 1: Plan Assumptions for Review
 
-- The plan path: `initiatives/<slug>/plan.md`
-- The quant inputs path: `initiatives/<slug>/quant-inputs.yaml`
-- The knowledge base directory: `context/`
-- The output path: `initiatives/<slug>/gate-1-pending.md`
+## Stated assumptions (in the plan)
+- <item> (*<which section of the plan it appears in>*)
 
-The investigator reads everything and writes the gate-1 file. **This sub-agent exists because it does heavy context reading**, sparing this skill's main context from carrying the whole knowledge base.
+## Implied assumptions (present but not made explicit)
+- <item> (*<which section implies this>*)
 
-### Step 3: Gate 1 (the executive reviews the assumptions)
+## Missing assumptions (the plan depends on these but doesn't name them)
+- <item>
 
-When the investigator returns, tell the user:
+## Clarifying questions for you
 
-> The investigator has surfaced the plan's assumptions in `initiatives/<slug>/gate-1-pending.md`. Review it. To approve and continue: delete the file (or rename it to `gate-1-approved.md`). To revise the plan first: edit `plan.md`, then delete the pending file, then re-invoke this skill.
+Three to five questions where the plan is ambiguous or where a clarification
+would meaningfully change the pre-mortem.
 
-Then stop. The state detection in Step 1 will resume correctly when the user comes back.
+1. <question>
 
-### Step 4: Dispatch the researcher sub-agent
+---
 
-When the pending file is gone (the user has approved), dispatch `pre-mortem-researcher` with the Agent tool. Pass it:
+[ ] I have reviewed these assumptions. The plan should proceed to pre-mortem analysis.
+```
 
-- The plan path: `initiatives/<slug>/plan.md`
-- The decision category from `context/taxonomy.md`
-- The output path: `initiatives/<slug>/research.md`
+Return the `orchestration-workstream` block with `workstream: "surface-the-assumptions"`, the gate-1 file in `files`, and in `notes` how many assumptions you flagged in each category and how many clarifying questions you wrote.
 
-The researcher does web searches and writes 5 to 8 sourced findings to `research.md`. **This sub-agent exists because it uses specialized tools** (`WebSearch`, `WebFetch`) that this skill does not need to have.
+## Gather external evidence
 
-### Step 5: (Reserved for the state machine; no action)
+For a `strategy-worker` (at sonnet). Brief: the plan path, the decision category, the output path. You provide the sourced ground; you offer no opinion on the plan and do not synthesize across findings.
 
-### Step 6: Run the diagnostic framing in this skill's main context
+The goal: a reader of `research.md` can verify every claim by clicking through, and at least one finding contradicts an assumption in the plan specifically (not "expansion is hard" but "the plan's operator wage is $3.20/hr below the latest data for the target metro"). If every finding supports the plan, the searches were not hard enough.
 
-No sub-agent. This skill does the work itself.
+1. **Read the plan** and confirm the category. Note the geography, time horizon, capital scale and any named external entities (competitors, customers, suppliers, regulators).
+2. **Write four to six queries specific to this plan**, for example comparable companies that opened a second facility in the target state in the last five years, regulatory differences between the origin and target state for the industry, labor market data for the target metro. Never generic ("is expansion risky").
+3. **Search and fetch.** Run each query through `WebSearch`; fetch the substantive sources with `WebFetch`. Prefer primary sources (regulatory filings, company releases, industry reports), recent data (the last three years, ideally twelve months) and comparable cases. Skip generic business blogs, thought-leadership posts and vendor-sponsored content.
+4. **Write `research.md`**: five to eight findings, fewer when the searches turn up little. Every claim has a URL; drop what you cannot verify. Date-stamp every fetch. Flag a contradiction with the plan neutrally ("the plan's success metric assumes X; recent comparable Y shows Z"). Plain, technical, numbers first, per `context/voice.md`.
+
+```markdown
+# External Research: <Initiative slug>
+
+*Each finding has a sourced URL.*
+
+## Finding 1: <Plain-language summary in one sentence>
+**Source:** <URL>
+**Accessed:** <YYYY-MM-DD>
+**Relevance to plan:** <one sentence linking to a specific section of the plan>
+**Detail:** <2 to 4 sentences of substance from the source. Direct quotes where useful.>
+```
+
+Return the `orchestration-workstream` block with `workstream: "gather-external-evidence"`, `research.md` in `files`, and in `notes` how many findings you produced and from which sources.
+
+## Find the kill-shot risks
 
 Read the following files yourself using the Read tool:
 
@@ -84,7 +121,7 @@ Now construct the post-mortem state **internally**. From the plan, identify: the
 
 > *"Imagine the [initiative name] was committed in [approximate commit timing]. By [commit + 18 months] the board has called it a failure. The [$X capital] is spent and the company is [specific failure outcome]. I am the analyst writing the post-mortem document explaining what happened."*
 
-Operate from that constructed state for the rest of this step. You are no longer asking "what might go wrong?" You are asking "what DID go wrong?" with the failure already real.
+Operate from that constructed state for the rest of this section. You are no longer asking "what might go wrong?" You are asking "what DID go wrong?" with the failure already real.
 
 Identify **3 to 5 kill-shot risks**. Each risk:
 
@@ -93,7 +130,7 @@ Identify **3 to 5 kill-shot risks**. Each risk:
 - **Evidence**: citation from `research.md`, `strategic-history.md`, `constraints.md`, or `lessons-learned.md`
 - **Precondition**: what has to be true for this risk to become the killing failure
 
-Before moving to Step 7, **self-check against three quality signals**:
+Before writing the brief, **self-check against three quality signals**:
 
 - **Specific**: every risk cites an actual line in the plan
 - **Contestable**: each risk could be argued with
@@ -101,12 +138,12 @@ Before moving to Step 7, **self-check against three quality signals**:
 
 **If any quality signal fails, redo the diagnostic in this context.** Re-construct the state more vividly. Push harder against the plan. Don't produce generic risks.
 
-### Step 7: Assemble the brief in this skill's main context
+## Write the brief
 
 Read `templates/pre-mortem-brief.md`. Reproduce its section structure exactly. Fill the sections:
 
 - **Executive summary**: one paragraph, 3 to 5 sentences. The decision in front of the executive team in plain language. Name the recommendation if the kill-shot risks point clearly to one. Name the most important risk by short label.
-- **Kill-shot risks**: verbatim from your work in Step 6. Don't soften. 3 to 5 risks, each with name, description, "in the plan" citation, evidence citation, precondition.
+- **Kill-shot risks**: verbatim from section Find the kill-shot risks. Don't soften. 3 to 5 risks, each with name, description, "in the plan" citation, evidence citation, precondition.
 - **Sourced evidence**: table mapping each risk to its source. URLs and access dates from `research.md`; internal citations from `strategic-history.md`, `constraints.md`, or `lessons-learned.md`.
 - **Revised commitment criteria**: derived from the kill-shot risk preconditions. Conditions for COMMIT, RESHAPE, KILL.
 - **Mitigation owners**: name or role from `context/company-overview.md`. If no clear owner, write `OWNER NEEDED`.
@@ -116,15 +153,7 @@ Use the voice from `context/voice.md`: plain, technical, numbers first, no marke
 
 Write `initiatives/<slug>/brief.md`.
 
-### Step 8: Gate 2 (the executive decides)
-
-Tell the user:
-
-> The brief is ready at `initiatives/<slug>/brief.md`. Review it. The brief includes revised commitment criteria. When you've decided, set the `Decision:` field at the bottom of the brief (commit / reshape / kill + one-sentence rationale) and re-invoke this skill.
-
-Then stop.
-
-### Step 9: Capture lessons learned
+## Capture lessons learned
 
 Read the `Decision log entry` section from `initiatives/<slug>/brief.md`. Format a new entry for `context/lessons-learned.md` with today's date in `YYYY-MM-DD` format:
 
@@ -148,24 +177,6 @@ Append this entry to `context/lessons-learned.md` (do not overwrite; append at t
 
 Tell the user the entry has been logged and the workflow is complete. Remind them to come back at 90, 180, and 365 days to fill in the outcome and surprises fields.
 
-## Why this architecture
+## Why this shape
 
-The design follows three principles for when a sub-agent earns its place, and shows where none of them applies:
-
-| Class of work | Who does it | Principle |
-|---|---|---|
-| Heavy context reading (6 knowledge files + plan + quant) | Investigator sub-agent | **(1) Heavy context reading**: keeps main context lean |
-| External web research | Researcher sub-agent | **(2) Specialized tool use**: the only agent with `WebSearch`/`WebFetch` |
-| Pre-mortem diagnostic framing | **This skill, main context** | None of the principles apply: general reasoning |
-| Brief synthesis from upstream outputs | **This skill, main context** | None apply: template fill |
-
-**The lesson:** sub-agents are not free. Each one is overhead. Build them only when one of the principles applies. When in doubt, do the work in the orchestrator's main context.
-
-**When this breaks down:** if the orchestrator's main context starts exceeding about 60% of its window during diagnostic and synthesis, or if briefs come back generic, the principles now apply where they didn't before. At that point move the diagnostic and the synthesis into their own sub-agents.
-
-## When NOT to use this skill
-
-- Quick sanity checks on a decision: use a plain chat; the overhead exceeds the value
-- Decisions below about $500k or shorter than 6 months
-- Decisions where analysis is already done and the executive just needs to review
-- Decisions outside the categories in `context/taxonomy.md`
+Sub-agents are not free; each is overhead. The worker earns its place twice: heavy context reading (the six knowledge files, the plan and the quant inputs) kept out of this session, and specialized tools (WebSearch and WebFetch) only the research needs. The reviewer earns its place as an independent cold read before the executive sees the brief. The diagnostic framing and the brief are general reasoning and a template fill, so this session does them. If this session's context passes about 60% of its window during the diagnostic, or the briefs come back generic, move the diagnostic and the synthesis into worker sections too.

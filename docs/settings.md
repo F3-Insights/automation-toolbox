@@ -217,7 +217,7 @@ Every key here except `state` is read from this table first and from the top lev
 
 | Key | Required | Default | What it is for |
 |---|---|---|---|
-| `runs_dir` | Yes, when project-health-check runs with `--last-run` | none | The folder of the project-health Runs, searched for the last one. |
+| `runs_dir` | Yes, when projects-health-check runs with `--last-run` | none | The folder of the project-health Runs, searched for the last one. |
 
 ### [recording-harvest]
 

@@ -1,8 +1,8 @@
 ---
 name: project-engagement-onboarding
-description: "Write the two-page brief that lets a teammate join an engagement mid-stream and be useful in their first meeting: a linked outline of who, what, where things stand and what is next, with appendices for the org chart, the history and the outcomes sought. Use when someone new joins, when a subcontractor is brought in for one workstream, or when the consultant has been away long enough to need it. Not for a newly signed engagement; start project-engagement-kickoff-orchestrator."
+description: "Write the two-page brief that lets a teammate join an engagement mid-stream and be useful in their first meeting: a linked outline of who, what, where things stand and what is next, with appendices for the org chart, the history and the outcomes sought. Use when someone new joins, when a subcontractor is brought in for one workstream, or when the consultant has been away long enough to need it. Not for a newly signed engagement; start projects-engagement-kickoff."
 argument-hint: "[client] [for whom] [engagement repo]"
-allowed-tools: Read, Glob, Grep, Write, Bash(python3 ~/.claude/skills/review-register/scripts/register.py:*), mcp__insights-portal__get, mcp__insights-portal__search, mcp__insights-portal__list_entities
+allowed-tools: Read, Glob, Grep, Write, Bash(projects-register:*), mcp__insights-portal__get, mcp__insights-portal__search, mcp__insights-portal__list_entities
 ---
 
 # Engagement onboarding brief
@@ -12,7 +12,7 @@ Two pages, linked, plus appendices. The test: after reading it, could the newcom
 ## Sources, in order
 
 1. The engagement repo: `docs/RUNBOOK.md` (which steps are ticked), `docs/BASELINE_*`, `docs/CONCEPT_*`, the decisions log.
-2. The register (`python3 ~/.claude/skills/review-register/scripts/register.py --dir <workspace> summary` and `list open_items`).
+2. The register (`projects-register --dir <workspace> summary` and `list open_items`).
 3. The Portal: the client company, its contacts, the project and its open tasks.
 4. The last two client status updates.
 5. The research reports, only for the roster and the glossary.

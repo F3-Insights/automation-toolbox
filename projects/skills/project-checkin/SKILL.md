@@ -1,9 +1,9 @@
 ---
 name: project-checkin
-description: Interactive project check-in with the owner, the owner's half of the weekly project-health loop. Presents the Insights Portal projects that most need them, from the last project-health Run (its diagnoses, decisions first) and the live project state, asks for status one project at a time, and captures every answer as tasks and notes in real time. Use after a project-health Run or for "let's go through my projects". Not for restructuring the portfolio (project-landscape) or the unattended diagnosis (project-health-orchestrator).
+description: Interactive project check-in with the owner, the owner's half of the weekly project-health loop. Presents the Insights Portal projects that most need them, from the last project-health Run (its diagnoses, decisions first) and the live project state, asks for status one project at a time, and captures every answer as tasks and notes in real time. Use after a project-health Run or for "let's go through my projects". Not for restructuring the portfolio (project-landscape) or the unattended diagnosis (projects-health-review).
 argument-hint: '[top N | domain focus]'
 model: opus
-allowed-tools: Bash, Read, AskUserQuestion, mcp__insights-portal__get, mcp__insights-portal__update_task,
+allowed-tools: Bash(date:*), Bash(projects-health-check:*), Read, AskUserQuestion, mcp__insights-portal__get, mcp__insights-portal__update_task,
   mcp__insights-portal__create_task, mcp__insights-portal__create_note, mcp__insights-portal__update_project
 ---
 
@@ -13,7 +13,7 @@ You are the owner's strategic project advisor. This is a **live check-in convers
 
 Think of this as a 10 to 15 minute standup between a CEO and their chief of staff.
 
-The unattended half is `project-health-orchestrator`, the weekly project-health pass: it gives every stalled or incomplete project one diagnosis word and its smallest unblocking step, makes the fixes the record supports, and leaves the decisions only the owner can make. This skill is where the owner makes them, and fills in what the record cannot show. It does not re-diagnose: it starts from the last Run and the live state.
+The unattended half is `projects-health-review`, the weekly project-health pass: it gives every stalled or incomplete project one diagnosis word and its smallest unblocking step, makes the fixes the record supports, and leaves the decisions only the owner can make. This skill is where the owner makes them, and fills in what the record cannot show. It does not re-diagnose: it starts from the last Run and the live state.
 
 ---
 
@@ -26,7 +26,7 @@ date "+Today is %A, %B %d, %Y at %I:%M%p."
 ## Step 1: Load the last project-health Run and the live state
 
 ```bash
-python3 ~/.claude/skills/project-health-diagnose/scripts/project_health_check.py --last-run
+projects-health-check --last-run
 ```
 
 It looks in the folder the `runs_dir` setting under `[project-health-diagnose]` names, where the project-health Automation keeps its Runs, and stops with a message when that setting is missing. It prints the newest project-health Run folder and the paths of its `diagnoses.json` (one row per diagnosed project: diagnosis, reason, smallest step, who, whether it needs the owner, the ops proposed, the question), `changes.json` (its `questions` are the decisions it left for the owner) and `REPORT.md` (what was written and refused). Read the ones that exist.
@@ -34,7 +34,7 @@ It looks in the folder the `runs_dir` setting under `[project-health-diagnose]` 
 Then the live state, which is fresher than any Run:
 
 ```bash
-python3 ~/.claude/skills/project-health-diagnose/scripts/project_health_check.py --format json
+projects-health-check --format json
 ```
 
 Every active project with its state (`stalled`, `dead`, `gaps`, `healthy`), gaps, idle days, open and waiting counts, plus `close_candidates` (idle 90 days or more) and the buckets. If the last Run is older than 10 days or missing, say so and work from the live state alone.
