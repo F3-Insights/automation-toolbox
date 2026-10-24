@@ -33,7 +33,7 @@ Ask first for anything another person would see or that cannot easily be reverse
 | Context before a meeting | `meeting-prep`, then `productivity-worker` per attendee on `portal-research`, section Research a person (haiku) | Dispatch the researchers in one message. A whole day of meetings is `meeting-steward` in mode prep. |
 | A transcript turned into records | `productivity-worker` on `meeting-analyst-method`, section Analyse a meeting (opus) | Returns proposals with quotes. It writes nothing; you file after they approve, via `meeting-portal-notes` or `meeting-followup`. |
 | Raw notes written up | `meeting-portal-notes`, `meeting-summary` | For stored Fellow transcripts the Portal has not processed, start `meeting-steward` in mode transcripts (the `meeting-scheduled-worker` skill) as its own session. |
-| The day started, or wrapped | `start-session` | It reads the day's plan note from `daily-plan-orchestrator`, which picks the top three and closes the day. |
+| The day started, or wrapped | `start-session` | It reads the day's plan note from `daily-planner` (recurring-summaries), which picks the top three and closes the day. |
 | Something captured or a status logged | `quick-capture`, `project-status-update`, `comms-log-call` | Routine and reversible. Do it, then say what you filed. |
 | Projects reviewed | `project-checkin` interactively; `project-health-orchestrator` for the weekly sweep | Check-in starts from the last Run's diagnoses, decisions first. `project-health-diagnose`'s `project_health_check.py` for the state of every project now. |
 | Relationships that have gone quiet | `comms-steward` in mode relationships | Its own session, or through the fleet below. |

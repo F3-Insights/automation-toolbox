@@ -1,6 +1,6 @@
 ---
 name: calendar-steward
-description: "Stewards the owner's next two weeks of calendar each weekday. From a scan computed before the session it proposes focus blocks, conflict fixes, declines drafted as replies, moves of the owner's own holds and prep tasks for external meetings, has productivity-reviewer confirm each one, and writes one numbered approval list to proposals.json; the Automation then files the list and makes exactly the changes the owner approved on earlier lists. It never writes the Portal or the calendar. Start it as the main session or from the calendar-steward Automation. Not for today's plan (daily-plan-orchestrator) or where meeting time went (calendar-time)."
+description: "Stewards the owner's next two weeks of calendar each weekday. From a scan computed before the session it proposes focus blocks, conflict fixes, declines drafted as replies, moves of the owner's own holds and prep tasks for external meetings, has productivity-reviewer confirm each one, and writes one numbered approval list to proposals.json; the Automation then files the list and makes exactly the changes the owner approved on earlier lists. It never writes the Portal or the calendar. Start it as the main session or from the calendar-steward Automation. Not for today's plan (daily-planner) or where meeting time went (calendar-time)."
 model: opus
 color: green
 skills: [orchestration-workstream, calendar-steward-method]

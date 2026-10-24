@@ -95,7 +95,7 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 
 | When | Workflow | What you get back |
 |---|---|---|
-| Every weekday | `daily-plan-orchestrator` | The morning's three priorities and an evening close |
+| Every weekday | `daily-planner` | The morning's three priorities and an evening close |
 | Every week | `cash-forecast-orchestrator` | The 13-week cash forecast rolled forward, with the low point called out |
 | Every week | `client-delivery-orchestrator` | One engagement's plan, risks and status, ready for the sponsor |
 | Every week | `weekly-report-orchestrator` | The leadership weekly, drafted from the week's record |
@@ -223,7 +223,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
 | [Personal Productivity](productivity/) | Email, meetings, tasks, calendar, CRM upkeep, weekly planning | 10 / 39 |
-| [Recurring Summaries](recurring-summaries/) | The daily plan: the morning's three, the evening close | 5 / 4 |
+| [Recurring Summaries](recurring-summaries/) | The daily plan: the morning's three, the evening close | 3 / 3 |
 | [Chief of Staff](chief-of-staff/) | Routes requests to the right piece and runs an unattended daily cycle over the owner's agents, with start-of-day, quick capture, status and work-survey tools | 8 / 6 |
 | [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 5 |
 | [Obsidian](obsidian/) | Video notes into the vault inbox, a vault gardener that only proposes, and an outside-creator scout | 1 / 4 |
@@ -243,7 +243,7 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `crm-hygiene`: keeps the CRM clean
   - `time-study`: measures where a month's time went
 - **Recurring Summaries**
-  - `daily-plan-orchestrator`: plans and closes the workday, twice a weekday
+  - `daily-planner`: plans and closes the workday, twice a weekday
 - **Chief of Staff**
   - `chief-of-staff-cycle-orchestrator`: runs one unattended chief-of-staff cycle
 - **Decision Playbooks**

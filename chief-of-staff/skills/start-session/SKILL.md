@@ -1,12 +1,12 @@
 ---
 name: start-session
-description: Starts the owner's working day, or reorients a session, with current priorities, the next meeting and one useful next action. Reads today's daily plan (the daily-plan orchestrator's private Insights Portal note) and works from it; with no plan yet, plans the morning by hand with daily-plan-pull and the daily-plan-method rubric. Writes nothing. Use when the owner says "start my day", "where were we" or "what's next". Not for producing the plan itself (daily-plan-orchestrator) or the evening close.
+description: Starts the owner's working day, or reorients a session, with current priorities, the next meeting and one useful next action. Reads today's daily plan (the daily planner's private Insights Portal note) and works from it; with no plan yet, plans the morning by hand with daily-plan-pull and the daily-plan-method rubric. Writes nothing. Use when the owner says "start my day", "where were we" or "what's next". Not for producing the plan itself (daily-planner) or the evening close.
 allowed-tools: mcp__insights-portal__whoami, mcp__insights-portal__search, mcp__insights-portal__get, mcp__insights-portal__briefing, Read, Bash(python3 ~/.claude/skills/daily-plan-method/scripts/daily_plan_pull.py:*)
 ---
 
 # Start session
 
-The interactive way into the day. The daily plan (`daily-plan-orchestrator`, a morning and an evening pass on weekdays) already chose the top three, fitted them to the calendar and named the conflicts; this skill puts that in front of the owner and turns it into the next action. It writes nothing.
+The interactive way into the day. The daily plan (`daily-planner` in recurring-summaries, a morning and an evening pass on weekdays) already chose the top three, fitted them to the calendar and named the conflicts; this skill puts that in front of the owner and turns it into the next action. It writes nothing.
 
 ## Read the plan
 
