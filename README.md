@@ -229,7 +229,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 5 |
 | [Obsidian](obsidian/) | Video notes into the vault inbox, a vault gardener that only proposes, and an outside-creator scout | 1 / 4 |
 | [Toolbox Maintenance](toolbox-maintenance/) | A weekly audit of this toolbox with lint fixes on a review branch, an automation activity audit, and a monthly skill harvest from past sessions | 8 / 3 |
-| [Personal](personal/) | Household, health check-ins, home infrastructure, personal finance review, tax season | 11 / 6 |
+| [Personal](personal/) | Household, health check-ins, home infrastructure, personal finance review, tax season | 6 / 11 |
 
 <details>
 <summary><b>Orchestrators for the operator</b> (19)</summary>
@@ -254,7 +254,7 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `toolbox-audit-orchestrator`: the weekly audit of the toolbox itself
   - `skill-harvest-orchestrator`: the monthly harvest of new skills from past sessions
 - **Personal**
-  - `household-orchestrator`, `health-routine-orchestrator`, `home-infrastructure-orchestrator`, `personal-finance-review-orchestrator`, `personal-tax-season-orchestrator`
+  - `personal-household-keeper`, `personal-health-check-in`, `personal-home-infrastructure-check`, `personal-finance-review-prep`, `personal-tax-season-checklist`
 
 </details>
 

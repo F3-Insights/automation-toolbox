@@ -13,7 +13,7 @@ skills:
   task-stack-workstream: [productivity, accounting, chief-of-staff, compliance, decision-playbooks, projects, recurring-summaries, sales, strategy]
   comms-confirm: [accounting, finance, process-engineering, projects, reporting, sales]
   office-files: [accounting, compliance, finance, reporting, sales]
-  report-tieout: [accounting, chief-of-staff, process-engineering, reporting]
+  report-tieout: [accounting, chief-of-staff, process-engineering, reporting, personal]
   brand-guide: [marketing, learning, process-engineering, reporting]
   unslop: [marketing, accounting, chief-of-staff, finance, process-engineering, productivity, projects, reporting, sales, software]
   unslop-deliverable: [marketing, finance, process-engineering, projects, reporting]
@@ -24,8 +24,8 @@ skills:
   # The reviewer checklists (migration plan D4). Each lists only its source department until
   # the departments that use it convert; a department taking review-numbers also takes
   # report-tieout, whose command it runs.
-  review-facts: [reporting]
-  review-numbers: [reporting]
+  review-facts: [reporting, personal]
+  review-numbers: [reporting, personal]
   review-red-team: [reporting]
-  review-completeness: [process-engineering]
+  review-completeness: [process-engineering, personal]
   evidence-check: [compliance]

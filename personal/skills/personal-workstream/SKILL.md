@@ -1,16 +1,16 @@
 ---
 name: personal-workstream
-description: What is specific to work in the owner's personal domains (household finance review, tax season, home infrastructure, the household, health check-ins), on top of orchestration-workstream. Local processing only, outputs only in the private domain folder the Run's Context names, never a Portal note, task or draft, never a message to anyone, other people's records out of reach, the domain folder's shape, and the return's item tests. Loaded by every personal orchestrator and its workers before their method skill; not for a user request on its own. Not for the owner's work domains; use the department's own workstream skill.
+description: "What is specific to work in the owner's personal domains (household finance, tax season, home infrastructure, the household, health), on top of orchestration-workstream: local processing only, outputs only in the private domain folder the Run's Context names, never a Portal note, task or draft, never a message to anyone, other people's records out of reach, the domain folder's shape, who writes what, how the reviewer is briefed, and the return's item tests. Loaded by every personal main agent and personal-reviewer; not for a user request on its own. Not for the owner's work domains."
 user-invocable: false
 ---
 
 # Working in the personal domains
 
-This skill extends `orchestration-workstream`: keep its conduct and return its block. Read it at `~/.claude/skills/orchestration-workstream/SKILL.md` if it is not loaded. Each personal orchestrator adds a method skill (`personal-finance-review-method`, `personal-tax-season-method`, `home-infrastructure-method`, `household-method`, `health-routine-method`) with its rules, its DONE checklist and its return fields.
+This skill extends `orchestration-workstream`: keep its conduct and its return block. Load it with the Skill tool if it is not loaded. Each personal job adds a method skill (`personal-finance-review-method`, `personal-tax-season-method`, `home-infrastructure-method`, `household-method`, `health-routine-method`) with its `## Steps`, its sections, its check sections for `personal-reviewer` and its DONE checklist.
 
 ## Why these are different
 
-The personal domains hold the owner's sensitive data and other people's: other household members' records, medical and tax documents, account numbers and balances. Shared systems such as the Insights Portal are visible to people other than the owner, so nothing from this work goes there. These orchestrators run only for the owner: the owner or a schedule the owner set launches them, never another orchestrator.
+The personal domains hold the owner's sensitive data and other people's: other household members' records, medical and tax documents, account numbers and balances. Shared systems such as the Insights Portal are visible to people other than the owner, so nothing from this work goes there. These jobs run only for the owner: the owner or a schedule the owner set launches them, never another agent or job.
 
 ## Conduct here
 
@@ -31,14 +31,22 @@ Each personal Automation binds one private Context naming one domain folder:
 ```
 <domain folder>/
   <DOMAIN>-RULES.md        the owner's rules (the method skill lists what it holds)
-  STATUS.md                where the domain stands, the next action; the orchestrator only
+  STATUS.md                where the domain stands, the next action
   MEMORY.md                durable facts the owner confirmed, each dated with its source
   REMINDERS.md             date, what, why, source, state (open, done, dropped)
   QUESTIONS.md             every question to the owner, its answer and the date answered
-  runs/<yyyy-mm-dd>/       one folder per Run: the outputs, LOG.md, the checker's note
+  runs/<yyyy-mm-dd>/       one folder per Run: the outputs, LOG.md, the reviewer's returns
 ```
 
-Only the orchestrator writes `STATUS.md`, `MEMORY.md`, `REMINDERS.md`, `QUESTIONS.md` and `LOG.md`. A worker returns; the orchestrator records. A file the owner wrote is never edited: a correction is a new file beside it. Nothing is deleted.
+## Who writes what
+
+- **The main agent records.** It alone writes `STATUS.md`, `MEMORY.md`, `REMINDERS.md`, `QUESTIONS.md`, the Run folder and `LOG.md` (a line before each dispatch, the return recorded after it), and it saves the reviewer's return as a file in the Run folder.
+- **The reviewer never writes.** `personal-reviewer` reads the sources the brief names and returns its verdict; it is read-only.
+- A file the owner wrote is never edited: a correction is a new file beside it. Nothing is deleted.
+
+## Briefing the reviewer
+
+Every brief to `personal-reviewer` names the method skill and its check section, the sources by path and nothing else (never the draft's reasoning), and the rules file's fenced list in full, so the reviewer can refuse a fenced path a claim cites rather than open it. A cited source inside a fenced folder is a FAIL that says so, never a reason to read it.
 
 ## The return here
 
