@@ -21,20 +21,27 @@ route = "produce"
 purpose = "One private, review-ready draft"
 
 [[doer]]
-name = "meeting-prep"
-route = "skill"
-skill = "meeting-prep"
-worker = "chief-of-staff-meeting-prep-doer"
-args = "FOCUS"
-
-[[doer]]
 name = "person-brief"
 route = "skill"
 skill = "portal-research"
 section = "Research a person"
-worker = "productivity-worker"
 args = "FOCUS"
 default_args = "next meeting"
+
+[[doer]]
+name = "domain-brief"
+route = "skill"
+skill = "portal-research"
+section = "Research a domain"
+worker = "chief-of-staff-worker"
+args = "FOCUS"
+
+[[doer]]
+name = "meeting-prep"
+route = "skill"
+skill = "meeting-prep"
+worker = "productivity-worker"
+args = "FOCUS"
 
 [[doer]]
 name = "bad-one"
@@ -53,7 +60,7 @@ def owner(tmp_path, monkeypatch):
     docs.mkdir()
     (docs / "registry.toml").write_text(REGISTRY)
     (docs / "roster.md").write_text("# Doers\n\n## Active doers\n\n| Doer | Trust | Health |\n|---|---|---|\n"
-                                    "| meeting-prep | PROPOSE | not yet run |\n| produce-work | TRUSTED | fine |\n\n## Retired\n")
+                                    "| person-brief | PROPOSE | not yet run |\n| produce-work | TRUSTED | fine |\n\n## Retired\n")
     (docs / "ledger.md").write_text("# Ledger\n- 2030-03-01 | Chief of Staff | cycle launched (note)\n")
     (docs / "inbox").mkdir()
     (docs / "principles.md").write_text("Prefer finished drafts over plans.\n")

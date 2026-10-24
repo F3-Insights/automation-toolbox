@@ -49,7 +49,7 @@ Departments not yet converted (sales, reporting, learning, projects, recurring-s
 | `meeting-prep-workstream` | meeting-steward (prep) | Steps; checklist Check a pack |
 | `meeting-scheduled-worker` | meeting-steward (transcripts) | Steps; sections Analyse a recording, Check a meeting plan |
 | `meeting-analyst-method` | worker | Reading one transcript into a proposed record |
-| `portal-research` | worker | Research a person, Research email history, Research a domain |
+| `portal-research` | worker (shared copy; the source is in `shared/skills/`, also copied to chief-of-staff) | Research a person, Research email history, Research a domain |
 | `weekly-review-workstream` | gtd-weekly-review | Steps, the item contract; section Triage a batch |
 | `calendar-steward-method` | calendar-steward | Steps; sections Propose the changes, Check the proposals |
 | `calendar-time` | projects, strategy, weekly review | Where meeting time went over a period, and how much to one scope |
@@ -58,7 +58,8 @@ Departments not yet converted (sales, reporting, learning, projects, recurring-s
 | `comms-follow-ups`, `comms-inbox-replies`, `comms-draft-email`, `comms-log-call` | the owner | Interactive: chase follow-ups, triage and reply, draft a new email, log a call |
 | `meeting-prep`, `meeting-followup`, `meeting-log`, `meeting-summary`, `meeting-portal-notes` | the owner | Interactive: prep one meeting, file its follow-up, log it, summarize it, source-check its notes |
 | `crm-contact-update`, `crm-data-review`, `crm-context-enrichment` | the owner | Interactive: update a contact, fill data gaps, enrich a thin record |
-| `portal-write-safety`, `portal-note-types`, `meeting-summary-style-guide` | reference | Portal write rules, note types, summary house style |
+| `quick-capture` | the owner | Interactive: classify anything captured, link it and file it; tasks go through `task-stack-apply`. Moved here from chief-of-staff on 2026-10-24 |
+| `portal-write-safety` (shared copy), `portal-note-types`, `meeting-summary-style-guide` | reference | Portal write rules, note types, summary house style |
 | `orchestration-workstream`, `unslop`, `unslop-email` | shared copies | Worker conduct and return block; plain writing |
 
 ## Commands

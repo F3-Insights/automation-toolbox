@@ -84,12 +84,12 @@ def test_the_registry_is_the_execution_boundary():
         {"doer": "produce-work", "args": f"task:{TASK}"},
         {"doer": "relationship-check", "args": ""},
         {"doer": "made-up", "args": ""},
-        {"doer": "meeting-prep", "args": "Fabrikam (review)"}]}))
+        {"doer": "domain-brief", "args": "Fabrikam (review)"}]}))
     assert [a["doer"] for a in out["accepted"]] == ["produce-work"]
     reasons = {s["name"]: s["reason"] for s in out["skipped"]}
     assert reasons["relationship-check"].startswith("replaced")
     assert reasons["made-up"] == "not in the doer registry"
-    assert "rejected by registry pattern" in reasons["meeting-prep"]
+    assert "rejected by registry pattern" in reasons["domain-brief"]
 
 
 def test_no_registry_means_no_doer(tmp_path, owner):
@@ -99,11 +99,11 @@ def test_no_registry_means_no_doer(tmp_path, owner):
 
 
 def test_the_cap_can_be_lowered_never_raised_and_defaults_fill_in():
-    many = {"dispatches": [{"doer": "person-brief", "args": ""}, {"doer": "meeting-prep", "args": "Fabrikam"},
+    many = {"dispatches": [{"doer": "person-brief", "args": ""}, {"doer": "domain-brief", "args": "Fabrikam"},
                            {"doer": "produce-work", "args": f"task:{TASK}"}]}
     out = decide(json.dumps(many), max_dispatches=9)
     assert len(out["accepted"]) == 2 and out["accepted"][0]["args"] == "next meeting"
-    assert out["accepted"][0]["worker"] == "productivity-worker" and out["accepted"][0]["route"] == "skill"
+    assert out["accepted"][0]["worker"] == "chief-of-staff-worker" and out["accepted"][0]["route"] == "skill"
     assert out["accepted"][0]["skill"] == "portal-research" and out["accepted"][0]["section"] == "Research a person"
     assert len(decide(json.dumps(many), max_dispatches=1)["accepted"]) == 1
 
@@ -125,9 +125,10 @@ def test_the_improvement_surface_is_the_registry_skills_only():
     out = decide(json.dumps({"improvements": [
         {"target": "chief-of-staff-cycle/SKILL.md", "change": "x"},
         {"target": "sales/skills/bd-workstream/SKILL.md", "change": "x"},
-        {"target": "productivity/skills/meeting-prep/SKILL.md", "change": "Add a line", "rationale": "it missed"}]}))
-    assert out["improvement"] == {"target": "meeting-prep", "change": "Add a line", "rationale": "it missed"}
-    assert len([s for s in out["skipped"] if "surface" in s["reason"]]) == 2
+        {"target": "productivity/skills/portal-research/SKILL.md", "change": "x"},
+        {"target": "chief-of-staff/skills/task-stack-produce/SKILL.md", "change": "Add a line", "rationale": "it missed"}]}))
+    assert out["improvement"] == {"target": "task-stack-produce", "change": "Add a line", "rationale": "it missed"}
+    assert len([s for s in out["skipped"] if "surface" in s["reason"]]) == 3
 
 
 # --------------------------------------------------------------------------- the snapshot
@@ -189,7 +190,7 @@ def test_a_launch_runs_fleet_launch_at_propose_and_is_recorded(cycle, fakes, own
     assert code == 0 and out["status"] == "launched"
     argv = fakes.calls[-1]
     assert argv[2:] == ["acme-tasks-orchestrator", "--authority", "propose", "--cap", "12", "--by",
-                        "chief-of-staff-cycle-orchestrator", "--format", "json", "--params", "window=3d"]
+                        "chief-of-staff-cycle-runner", "--format", "json", "--params", "window=3d"]
     row = c.read_json(cycle / "execution.json")[-1]
     assert row["doer"] == "launch:acme-tasks-orchestrator" and row["status"] == "launched"
     assert fl.launch(cycle, "acme-tasks-orchestrator")[0]["status"] == "refused"

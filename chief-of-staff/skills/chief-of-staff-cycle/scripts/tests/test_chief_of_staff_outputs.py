@@ -9,6 +9,7 @@ import pytest
 import _common as c
 import chief_of_staff_cycle as cy
 import chief_of_staff_improve as im
+import chief_of_staff_notify as nt
 import chief_of_staff_produce_work as pw
 import chief_of_staff_receipt as rc
 import chief_of_staff_records as rd
@@ -63,6 +64,19 @@ def test_save_refuses_unknown_sources_and_short_work_and_holds_a_block(portal, r
     assert pw.pack(portal, root, f"task:{TASK}", cycle)["status"] == "held"
 
 
+def test_pack_adds_related_records_the_draft_may_cite(portal, root, cycle):
+    mail = "00000200-1111-4111-8111-111111111111"
+    portal.records[mail] = {"email": {"id": mail, "subject": "Revised quote, please"}}
+    out = pw.pack(portal, root, f"task:{TASK}", cycle, related=[f"portal://email/{mail}", f"email:{mail}"])
+    assert out["status"] == "ok" and out["sources"][:2] == [f"portal://task/{TASK}", f"portal://email/{mail}"]
+    cited = dict(GOOD, source_refs=[f"portal://task/{TASK}", f"portal://email/{mail}"])
+    assert pw.save(root, f"task:{TASK}", out["fingerprint"], json.dumps(cited), cycle)["status"] == "prepared"
+    with pytest.raises(c.Bad):
+        pw.pack(portal, root, f"task:{TASK}", cycle, related=["the quote thread"])
+    with pytest.raises(c.Bad):
+        pw.pack(portal, root, f"task:{TASK}", cycle, related=["email:00000999-1111-4111-8111-111111111111"])
+
+
 def test_a_dry_run_cycle_packs_and_saves_nothing(portal, root, dry_cycle):
     out = pw.pack(portal, root, f"task:{TASK}", dry_cycle)
     assert out["status"] == "would_pack" and not (root / "artifacts").exists()
@@ -78,8 +92,8 @@ def git(*args, cwd):
 @pytest.fixture
 def repo(tmp_path, owner):
     r = tmp_path / "toolbox"
-    (r / "productivity" / "skills" / "meeting-prep").mkdir(parents=True)
-    (r / "productivity" / "skills" / "meeting-prep" / "SKILL.md").write_text(
+    (r / "chief-of-staff" / "skills" / "task-stack-produce").mkdir(parents=True)
+    (r / "chief-of-staff" / "skills" / "task-stack-produce" / "SKILL.md").write_text(
         "# Meeting prep\n\nGather the attendees.\nWrite one note.\n")
     git("init", "-q", "-b", "main", cwd=r)
     git("-c", "user.name=Dana", "-c", "user.email=dana@example.test", "add", ".", cwd=r)
@@ -92,7 +106,7 @@ def repo(tmp_path, owner):
     return r
 
 
-def propose(cycle, target="meeting-prep"):
+def propose(cycle, target="task-stack-produce"):
     c.atomic_json(cycle / "decision.json", {"improvement": {"target": target, "change": "Name the agenda",
                                                             "rationale": "two notes had none"}})
 
@@ -107,7 +121,7 @@ def test_the_default_is_propose_and_nothing_is_edited(cycle, portal):
     assert out["status"] == "proposed"
     (cycle / "receipt.json").write_text(json.dumps({"content": "Ran: nothing."}))
     published = rc.publish(portal, cycle)
-    assert any(t["title"].startswith("[Chief of Staff] Improve meeting-prep") for t in published["tasks"])
+    assert any(t["title"].startswith("[Chief of Staff] Improve task-stack-produce") for t in published["tasks"])
 
 
 def test_commit_lands_on_the_branch_and_never_in_the_checkout(cycle, repo):
@@ -116,7 +130,7 @@ def test_commit_lands_on_the_branch_and_never_in_the_checkout(cycle, repo):
     assert out["status"] == "ok" and out["branch"] == "chief-of-staff/improvements"
     done = im.apply(cycle, reply())
     assert done["status"] == "committed"
-    assert "agenda first" not in (repo / "productivity/skills/meeting-prep/SKILL.md").read_text()
+    assert "agenda first" not in (repo / "chief-of-staff/skills/task-stack-produce/SKILL.md").read_text()
     assert git("rev-parse", "--abbrev-ref", "HEAD", cwd=repo).strip() == "main"
     log = git("log", "-1", "--format=%B", "chief-of-staff/improvements", cwd=repo)
     assert log.startswith("chief-of-staff: the note names the agenda") and "Chief-of-Staff-Cycle:" in log
@@ -138,7 +152,7 @@ def test_the_live_checkout_is_never_the_worktree_and_nothing_is_pushed(cycle, re
     propose(cycle)
     out = im.check(cycle, c.root_of(cycle))
     assert out["status"] == "refused" and "own checkout" in out["reason"]
-    assert "agenda first" not in (repo / "productivity/skills/meeting-prep/SKILL.md").read_text()
+    assert "agenda first" not in (repo / "chief-of-staff/skills/task-stack-produce/SKILL.md").read_text()
 
 
 def test_apply_refuses_a_worktree_swapped_for_the_checkout(cycle, repo):
@@ -149,7 +163,7 @@ def test_apply_refuses_a_worktree_swapped_for_the_checkout(cycle, repo):
     c.atomic_json(cycle / "improve.json", state)
     out = im.apply(cycle, reply())
     assert out["status"] == "refused" and out["code"] == "NOT_A_WORKTREE"
-    assert "agenda first" not in (repo / "productivity/skills/meeting-prep/SKILL.md").read_text()
+    assert "agenda first" not in (repo / "chief-of-staff/skills/task-stack-produce/SKILL.md").read_text()
 
 
 def test_skipped_unchanged_and_wrong_text_commit_nothing(cycle, repo):
@@ -208,6 +222,22 @@ def test_the_receipt_refuses_local_paths_and_em_dashes(portal, cycle):
     assert out["status"] == "refused" and set(out["codes"]) == {"EM_DASH", "LOCAL_PATH"} and not portal.notes
 
 
+def test_the_receipt_refuses_text_copied_from_a_private_document(portal, root, owner):
+    (owner / "principles.md").write_text("# Principles\n\nNever let a client renewal reach its final week "
+                                         "without a written recommendation on price.\n")
+    folder = c.Path(cy.start(root, c.local_now().date().isoformat(), paths=cy.resolve_paths())["folder"])
+    write_receipt(folder, "**Focus**: never let a client renewal reach its final week without a written plan.")
+    out = rc.publish(portal, folder)
+    assert out["status"] == "refused" and out["codes"] == ["PRIVATE_TEXT"] and not portal.notes
+    assert "principles" in out["problems"][0] and "renewal" not in out["problems"][0]
+    write_receipt(folder, decisions=[{"title": "Decide the renewal price before its final week",
+                                      "description": "A client renewal must not reach its final week without "
+                                                     "a written recommendation on price."}])
+    assert rc.publish(portal, folder)["status"] == "refused"
+    write_receipt(folder, "**Focus**: the Fabrikam renewal needs a price recommendation this week.")
+    assert rc.publish(portal, folder)["status"] == "published"
+
+
 def test_decisions_are_capped_at_three_a_day_and_reused(portal, cycle):
     decisions = [{"title": f"Choose option {n}", "domain": "Sales"} for n in range(4)]
     decisions.append({"title": "[Chief of Staff] Choose option 0"})
@@ -245,12 +275,12 @@ def receipt_with(cycle, **kw):
 
 
 def test_roster_health_only_for_dispatched_doers(cycle, owner):
-    cy.record(cycle, "meeting-prep", "Fabrikam", "dispatched", "one note")
-    receipt_with(cycle, team_updates=[{"doer": "meeting-prep", "health": "Ran clean.", "trust": "TRUSTED"},
+    cy.record(cycle, "person-brief", "Fabrikam", "dispatched", "one brief")
+    receipt_with(cycle, team_updates=[{"doer": "person-brief", "health": "Ran clean.", "trust": "TRUSTED"},
                                       {"doer": "produce-work", "health": "x"}])
     out = rd.apply(cycle)
     assert [r["action"] for r in out["roster"]] == ["updated", "skipped"]
-    assert "| meeting-prep | TRUSTED | Ran clean. |" in (owner / "roster.md").read_text()
+    assert "| person-brief | TRUSTED | Ran clean. |" in (owner / "roster.md").read_text()
 
 
 def test_ledger_one_line_once_in_format_and_a_principle_once(cycle, owner):
@@ -299,3 +329,11 @@ def test_a_refused_send_is_not_counted_and_off_sends_nothing(cycle, monkeypatch)
     assert c.notify(cycle, "decision", c.root_of(cycle))["status"] == "not_sent"
     monkeypatch.setenv("NOTIFY_OWNER_MODE", "off")
     assert c.notify(cycle, "decision", c.root_of(cycle))["status"] == "skipped"
+
+
+def test_the_notify_command_never_fails_the_cycle(cycle, monkeypatch, capsys):
+    monkeypatch.setattr(c, "run_script", Sender(sent=False))
+    c.atomic_json(cycle / "verify.json", {"status": "found", "note_id": "n1", "this_cycle_written": True})
+    with pytest.raises(SystemExit) as done:
+        nt.main([str(cycle), "--kind", "receipt"])
+    assert done.value.code == 0 and json.loads(capsys.readouterr().out)["status"] == "not_sent"

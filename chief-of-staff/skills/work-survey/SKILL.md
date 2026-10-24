@@ -1,6 +1,6 @@
 ---
 name: work-survey
-description: A full survey of one person's working life from their own email, calendar and meetings, measured against what they owe (contracts, scopes, recurring obligations) and what they say they want (goals). Fast-model gatherers read in parallel, strong-model analysts reason across them, a reviewer challenges the draft. Produces an operating plan with an hours ledger, a deliverables ledger, an attention audit, joinable CSVs and build specs for the automations that survive. Works cold from five intake questions, or warm from existing goals, profile and contract documents; runs as a pasted prompt too. Use when someone asks "where does my time go and what would get hours back". Not for a recurring time study (report-time-study) or a single week's plan.
+description: A full survey of one person's working life from their own email, calendar and meetings, against what they owe (contracts, scopes, recurring obligations) and what they want (goals). Fast-model gatherers read in parallel, strong-model analysts reason across them, a reviewer challenges the draft; in the chief-of-staff plugin they are chief-of-staff-worker and chief-of-staff-reviewer. Produces an operating plan with hours and deliverables ledgers, an attention audit, joinable CSVs and build specs. Use for "where does my time go and what would get hours back". Not for a recurring time study (report-time-study) or a week's plan.
 argument-hint: "[subject name] [output folder] [data source: m365 | portal]"
 disable-model-invocation: true
 ---
@@ -16,6 +16,7 @@ It is an evaluation tool first and a build backlog second. The build specs at th
 ## How to run it
 
 - As a skill: `/work-survey <subject> <output folder> <m365|portal>`.
+- In the chief-of-staff plugin (the front door's session), every subagent below is a `chief-of-staff-worker` dispatch with the `model` the phase names, told to follow this skill's phase and slice; the reviewer in phase 6 is `chief-of-staff-reviewer`, given the draft and the raw files. The workers read the Portal; a mailbox read through Microsoft 365 needs that connector's read tools added to `chief-of-staff-worker` on the owner's machine.
 - As a pasted prompt: paste this whole file into Claude Code, then fill in the parameters block below. Everything the run needs is in this file. It creates no agent files; the orchestrator starts general-purpose subagents with a `model` override.
 
 ## PARAMETERS (fill in, or ask for anything missing in one message)
@@ -107,7 +108,7 @@ The intake is binding on everything after it. Every gatherer and analyst gets `i
 
 ## PHASE 4: GATHER (Sonnet subagents, in parallel)
 
-Launch each as a general-purpose subagent with `model: sonnet`. Each gets: its slice, the absolute output paths, `intake.md`, `context.md` if any, `workstreams.md`, the hard rules and the output schema. Keep the total at six to eight gatherers; group small workstreams.
+Launch each as a `chief-of-staff-worker` (or, pasted, a general-purpose subagent) with `model: sonnet`. Each gets: its slice, the absolute output paths, `intake.md`, `context.md` if any, `workstreams.md`, the hard rules and the output schema. Keep the total at six to eight gatherers; group small workstreams.
 
 **G1. Calendar and meetings.** The full calendar window:
 - meeting hours per week, focus hours per week, and days with no 90-minute free block
@@ -152,7 +153,7 @@ Be exhaustive in the CSVs; the Markdown summarizes. Gatherers stay in their slic
 
 ## PHASE 5: ANALYZE (Opus subagents)
 
-Launch as general-purpose subagents with `model: opus`, each reading all of `01_raw/`.
+Launch as `chief-of-staff-worker` dispatches (or, pasted, general-purpose subagents) with `model: opus`, each reading all of `01_raw/`.
 
 **A1. Time, deliverables and responsibilities** → `02_analysis/time_and_scope.md`
 - Hours per week by workstream against where `ROLE_FOCUS` says they should go; client-facing time as its own line; the biggest mismatches.
@@ -169,7 +170,7 @@ Launch as general-purpose subagents with `model: opus`, each reading all of `01_
 ## PHASE 6: SYNTHESIZE AND REVIEW
 
 1. Merge and de-duplicate into `03_final/data/`, then draft `03_final/operating_plan.md`.
-2. Launch one reviewer (general-purpose, `model: opus`) on the draft with the raw files. It challenges: whether the hours total is real or double-counted; whether delegation targets have capacity; whether anything client-facing is automated too aggressively; whether any recommendation is generic rather than grounded in this person's data; and whether the plan recommends more building where the attention audit shows build time already displacing owed work.
+2. Launch one reviewer (`chief-of-staff-reviewer`, or pasted a general-purpose subagent, `model: opus`) on the draft with the raw files. It challenges: whether the hours total is real or double-counted; whether delegation targets have capacity; whether anything client-facing is automated too aggressively; whether any recommendation is generic rather than grounded in this person's data; and whether the plan recommends more building where the attention audit shows build time already displacing owed work.
 3. Revise. Keep unresolved disagreements in the plan, marked as such.
 
 ## DELIVERABLES

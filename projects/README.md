@@ -43,7 +43,8 @@ The two client-delivery Automations (one per engagement) share `projects-client-
 | `review-register` | the owner, onboarding | The review register's YAML tables, read and written by `projects-register` |
 | `project-checkin` | the owner | Interactive check-in from the last project-health Run's diagnoses |
 | `project-landscape` | the owner | Interactive weekly portfolio review against goals, email and engagements, with the goal audit; holds the project playbook template |
-| `orchestration-workstream`, `task-stack-workstream`, `goal-audit`, `review-facts`, `review-numbers`, `review-red-team`, `report-tieout`, `unslop`, `unslop-deliverable`, `unslop-editorial`, `unslop-email`, `unslop-proposal` | shared copies | Worker conduct; the change set and Check task-stack ops; the goal audit; the reviewer checklists; plain writing |
+| `project-status-update` | the owner | Interactive: one status line in, the project's status note updated and the task changes it states made (new tasks through `task-stack-apply`). Moved here from chief-of-staff on 2026-10-24 |
+| `orchestration-workstream`, `task-stack-workstream`, `portal-write-safety`, `goal-audit`, `review-facts`, `review-numbers`, `review-red-team`, `report-tieout`, `unslop`, `unslop-deliverable`, `unslop-editorial`, `unslop-email`, `unslop-proposal` | shared copies | Worker conduct; the change set and Check task-stack ops; the goal audit; the reviewer checklists; plain writing |
 
 ## Commands
 

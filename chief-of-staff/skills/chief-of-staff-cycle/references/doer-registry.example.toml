@@ -1,6 +1,8 @@
 # An example doer registry for chief-of-staff-cycle. Copy it outside the toolbox, edit it,
 # and name the copy in the owner settings: [chief-of-staff-cycle] doer_registry = "<path>".
-# Only the doers listed here can ever be dispatched by a cycle.
+# Only the doers listed here can ever be dispatched by a cycle. A doer runs a skill the
+# chief-of-staff plugin holds, by chief-of-staff-worker; a job another department runs is
+# launched through the fleet, never dispatched.
 
 [[doer]]
 name = "produce-work"
@@ -9,20 +11,10 @@ purpose = "One private, review-ready draft (a reply, meeting material, a worked 
 when = "A concrete draft would take work off the owner's plate."
 
 [[doer]]
-name = "meeting-prep"
-route = "skill"
-skill = "meeting-prep"
-worker = "chief-of-staff-meeting-prep-doer"
-args = "FOCUS"
-purpose = "A prep note for one meeting: a meeting title, attendee or company."
-when = "A meeting today or tomorrow has real stakes and thin prep."
-
-[[doer]]
 name = "person-brief"
 route = "skill"
 skill = "portal-research"
 section = "Research a person"
-worker = "productivity-worker"
 args = "FOCUS"
 purpose = "A read-only brief on one person, returned to the receipt."
 when = "Someone the owner meets soon needs context nobody has gathered."
@@ -32,12 +24,13 @@ name = "domain-brief"
 route = "skill"
 skill = "portal-research"
 section = "Research a domain"
-worker = "productivity-worker"
 args = "FOCUS"
 purpose = "A read-only status picture of one domain, returned to the receipt."
 when = "One area is visibly drifting and nothing has surfaced why."
 
-# A doer that became an orchestrator is retired here and launched instead.
+# A doer that became an orchestrator, or that runs another department's work, is retired
+# here and launched instead.
 [retired]
+meeting-prep = "replaced by a launch of the meeting-prep Automation (meeting-steward) with instructions naming the meeting"
 relationship-check = "replaced by comms-steward (mode relationships); propose a launch of it"
 task-reconcile = "replaced by task-steward (mode reconcile); propose a launch of it"

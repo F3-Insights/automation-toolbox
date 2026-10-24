@@ -36,10 +36,14 @@ DECISION_PREFIX = "[{name}]"
 CYCLE_MARK = "<!-- chief-of-staff:cycle:{cycle_id} -->"
 DECISION_MARKER = "chief-of-staff:decision:{date}:{key}"
 OWN_SKILLS = ("chief-of-staff-cycle",)
-# The cycle's own agent, by its current name and the one the department migration gives it
-# (remove the old name a month after chief-of-staff converts).
-OWN_AGENTS = ("chief-of-staff-cycle-orchestrator", "chief-of-staff-cycle")
+# The cycle's own agent: its name since the plugin conversion (an agent may not share its
+# skill's name), then the name it had before, kept so a registry or a runner's records naming
+# the old one are still recognised.
+OWN_AGENTS = ("chief-of-staff-cycle-runner", "chief-of-staff-cycle-orchestrator")
 CYCLE_AGENT = OWN_AGENTS[0]
+# The one agent a cycle dispatches: the department's worker (ADR 0004). A doer runs a section
+# of a skill this plugin holds; the produce-work doer is the main agent's own section.
+WORKER = "chief-of-staff-worker"
 # A main agent is launched, never dispatched as a doer. Today most end in -orchestrator; the
 # department migration gives them these names (software's already have them; daily-planner
 # covers a recurring-summaries plugin renamed daily). Drop the -orchestrator test a month
@@ -256,6 +260,52 @@ def local_path_in(text):
     return m.group(0) if m else None
 
 
+# --------------------------------------------------------------------------- the owner's private documents
+
+# The documents in cycle.json `paths` whose text never reaches the Portal: the receipt, a
+# decision task and a proposed improvement are refused when they repeat a run of words from one.
+PRIVATE_DOCUMENTS = ("charter", "profile", "goals", "principles", "roster", "ledger", "autonomy")
+PRIVATE_RUN = 8          # words in a row that count as copying
+PRIVATE_MIN_CHARS = 40   # a run shorter than this (common words) is not counted
+PRIVATE_MAX_BYTES = 4_000_000
+
+
+def _words(text):
+    return re.findall(r"[a-z0-9]+(?:'[a-z]+)?", str(text or "").lower())
+
+
+def _runs(words):
+    for i in range(len(words) - PRIVATE_RUN + 1):
+        run = words[i:i + PRIVATE_RUN]
+        if sum(len(w) for w in run) + PRIVATE_RUN - 1 >= PRIVATE_MIN_CHARS:
+            yield " ".join(run)
+
+
+def private_runs(paths):
+    """{document key: set of word runs} from the owner's private documents named in `paths`
+    (cycle.json). A file that is missing or unreadable adds nothing."""
+    out = {}
+    for key in PRIVATE_DOCUMENTS:
+        value = (paths or {}).get(key)
+        if not value:
+            continue
+        try:
+            path = Path(value).expanduser()
+            if not path.is_file() or path.stat().st_size > PRIVATE_MAX_BYTES:
+                continue
+            out[key] = set(_runs(_words(path.read_text(encoding="utf-8", errors="replace"))))
+        except OSError:
+            continue
+    return out
+
+
+def private_copied(text, runs):
+    """The document keys whose text `text` repeats (a run of PRIVATE_RUN words), never the
+    words themselves, so the refusal leaks nothing."""
+    found = set(_runs(_words(text)))
+    return sorted(key for key, held in (runs or {}).items() if found & held)
+
+
 # --------------------------------------------------------------------------- the name the owner sees
 
 def _clean_name(value):
@@ -306,10 +356,26 @@ def _pattern(text):
     return text.replace("PRODUCE_TARGET", PRODUCE_TARGET).replace("UUID", UUID).replace("FOCUS", FOCUS)
 
 
+def own_skill(skill):
+    """This department's folder for SKILL: (folder, is a shared copy), or (None, False) when the
+    plugin does not hold it. A doer runs only a skill this plugin holds, because a sealed
+    session loads one department's plugin."""
+    folder = SKILL_DIR.parent / skill
+    if not (folder / "SKILL.md").is_file():
+        return None, False
+    return folder, (folder / ".shared-copy").is_file()
+
+
 def load_doers(path=None):
     """The owner's doer registry ({"doers": {name: spec}, "retired": {name: why}, "problems": [...],
     "path": ...}). The file the setting doer_registry names is the only source: with none,
-    no doer may run. A malformed entry is left out and named in problems."""
+    no doer may run. A malformed entry is left out and named in problems.
+
+    Routes since the plugin conversion: `produce` is the main agent's own section (worker
+    empty); `skill` is a skill this plugin holds, run by chief-of-staff-worker (a `section`
+    names the part, a `worker` other than chief-of-staff-worker is refused); `agent` is
+    refused, because a cycle dispatches no other department's agent: a job another
+    department runs is launched through the fleet instead."""
     path = path or setting("doer_registry")
     out = {"doers": {}, "retired": {}, "problems": [], "path": str(path or "")}
     if not path:
@@ -330,23 +396,37 @@ def load_doers(path=None):
                 "default_args": flat(raw.get("default_args"), 200), "purpose": flat(raw.get("purpose"), 300),
                 "when": flat(raw.get("when"), 300)}
         if route == "produce":
-            spec.update(skill="task-stack-produce", worker="chief-of-staff-producer")
+            spec.update(skill="task-stack-produce", worker="", section="Produce one draft")
             spec["args"] = spec["args"] or PRODUCE_TARGET
         elif route == "skill":
-            spec.update(skill=flat(raw.get("skill"), 80), worker=flat(raw.get("worker"), 80) or "chief-of-staff-readonly-doer",
+            spec.update(skill=flat(raw.get("skill"), 80), worker=flat(raw.get("worker"), 80) or WORKER,
                         section=flat(raw.get("section"), 80))
         elif route == "agent":
-            spec.update(skill="", worker=flat(raw.get("agent"), 80))
+            agent = flat(raw.get("agent"), 80)
+            if (agent in OWN_AGENTS or agent.endswith("-orchestrator") or agent in RENAMED_MAIN_AGENTS):
+                out["problems"].append(f"{name}: an orchestrator is launched, never dispatched as a doer")
+            else:
+                out["problems"].append(f"{name}: route agent ({agent or 'none'}) is retired: a cycle dispatches only "
+                                       f"{WORKER}; give it route skill with a skill and section this plugin holds, "
+                                       "or launch the job's Automation through the fleet")
+            continue
         else:
-            out["problems"].append(f"{name}: route must be produce, skill or agent")
+            out["problems"].append(f"{name}: route must be produce or skill")
             continue
         bad = [v for v in (spec.get("skill"), spec["worker"]) if v and not re.fullmatch(r"[a-z0-9][a-z0-9-]*", v)]
-        if (route == "skill" and not spec["skill"]) or not spec["worker"] or bad:
-            out["problems"].append(f"{name}: needs a valid skill or agent name")
+        if (route == "skill" and (not spec["skill"] or not spec["worker"])) or bad:
+            out["problems"].append(f"{name}: needs a valid skill name")
             continue
         if (spec["skill"] in OWN_SKILLS or spec["worker"] in OWN_AGENTS or spec["worker"].endswith("-orchestrator")
                 or spec["worker"] in RENAMED_MAIN_AGENTS):
             out["problems"].append(f"{name}: an orchestrator is launched, never dispatched as a doer")
+            continue
+        if route == "skill" and spec["worker"] != WORKER:
+            out["problems"].append(f"{name}: worker {spec['worker']} is not this department's; a cycle dispatches only {WORKER}")
+            continue
+        if route == "skill" and own_skill(spec["skill"])[0] is None:
+            out["problems"].append(f"{name}: {spec['skill']} is not a skill of the chief-of-staff plugin; launch the "
+                                   "Automation that runs it through the fleet instead")
             continue
         try:
             re.compile(spec["args"] or "")
@@ -361,8 +441,11 @@ def load_doers(path=None):
 
 
 def doer_skills(doers):
-    """The skills whose SKILL.md is inside the improvement surface: those the registry runs."""
-    return sorted({s["skill"] for s in doers.values() if s.get("skill") and s["skill"] not in OWN_SKILLS})
+    """The skills whose SKILL.md is inside the improvement surface: those the registry runs that
+    this department owns. A copy of a shared skill is left out: its source is edited in
+    shared/skills/ and rebuilt into every copy, which is a change for the owner, not the cycle."""
+    return sorted({s["skill"] for s in doers.values()
+                   if s.get("skill") and s["skill"] not in OWN_SKILLS and not own_skill(s["skill"])[1]})
 
 
 def check_params(raw, inputs):

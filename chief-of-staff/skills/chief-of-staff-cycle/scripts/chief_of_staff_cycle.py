@@ -15,7 +15,7 @@ the receipt's usage line, the doers the owner's registry allows, and the paths o
 own documents the decider reads (each a setting; a missing one is named in `notes`).
 
 `--trigger-items` carries why a runtime's Monitor started this cycle: the JSON list of
-{"key", "summary"} the Monitor's check (cos_watch.py) reported, given inline, on stdin
+{"key", "summary"} the Monitor's check (chief-of-staff-watch) reported, given inline, on stdin
 with `-`, or from a file with `@<path>` (a runtime session that may not redirect writes the
 list to its run folder and passes the path). It is kept in cycle.json as `trigger_items` ([] when the cycle was not woken by a
 change). A list that cannot be read is left out and named in `notes`; the cycle still runs.

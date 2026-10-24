@@ -41,4 +41,4 @@ Exactly one JSON object and nothing else: no code fence, no prose before or afte
 
 Or `{"status": "blocked", "reason": "the specific missing evidence"}`.
 
-The caller should check the shape, that every `source_refs` entry is in the packet, and that a real artifact was saved; the chief-of-staff cycle's `chief_of_staff_produce_work.py save` does exactly that, and saves the result privately. That structural check does not certify the facts: the result stays a draft for the owner.
+The caller should check the shape, that every `source_refs` entry is in the packet, and that a real artifact was saved; the chief-of-staff cycle's `chief-of-staff-produce-work save` does exactly that, and saves the result privately. That structural check does not certify the facts: the result stays a draft for the owner.

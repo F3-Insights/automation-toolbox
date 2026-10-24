@@ -1,0 +1,5 @@
+{
+  "name": "chief-of-staff",
+  "description": "The owner's chief of staff: an interactive front door that finds where any request is served in the live catalogue of every department, launches recurring jobs through the orchestrator fleet or hands over the start line, and does research, review and a work survey itself; and an unattended cycle that decides the day's priorities, launches and dispatches within caps, and files one verified receipt in the Insights Portal.",
+  "version": "0.1.0"
+}

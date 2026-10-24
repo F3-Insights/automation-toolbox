@@ -9,7 +9,7 @@
 # Edit this file or a source, then run: python3 scripts/build_shared.py
 
 skills:
-  orchestration-workstream: [software, accounting, compliance, decision-playbooks, finance, learning, marketing, personal, process-engineering, productivity, projects, recurring-summaries, reporting, sales, strategy, toolbox-maintenance]
+  orchestration-workstream: [software, chief-of-staff, accounting, compliance, decision-playbooks, finance, learning, marketing, personal, process-engineering, productivity, projects, recurring-summaries, reporting, sales, strategy, toolbox-maintenance]
   task-stack-workstream: [productivity, accounting, chief-of-staff, compliance, decision-playbooks, projects, recurring-summaries, sales, strategy, toolbox-maintenance]
   comms-confirm: [accounting, finance, reporting]
   office-files: [accounting, compliance, finance, reporting, sales]
@@ -29,10 +29,10 @@ skills:
   # The reviewer checklists (migration plan D4). Each lists only its source department until
   # the departments that use it convert; a department taking review-numbers also takes
   # report-tieout, whose command it runs.
-  review-facts: [reporting, personal, compliance, process-engineering, sales, projects, decision-playbooks, learning, marketing]
-  review-numbers: [reporting, personal, finance, accounting, process-engineering, projects]
-  review-red-team: [reporting, finance, process-engineering, sales, projects, strategy, learning, marketing]
-  review-completeness: [process-engineering, personal, compliance]
+  review-facts: [reporting, chief-of-staff, personal, compliance, process-engineering, sales, projects, decision-playbooks, learning, marketing]
+  review-numbers: [reporting, chief-of-staff, personal, finance, accounting, process-engineering, projects]
+  review-red-team: [reporting, chief-of-staff, finance, process-engineering, sales, projects, strategy, learning, marketing]
+  review-completeness: [process-engineering, chief-of-staff, personal, compliance]
   evidence-check: [compliance, accounting]
   # Transcript cleanup and the one-transcript claim inventory (migration plan, process-engineering).
   transcript-tools: [process-engineering]
@@ -42,3 +42,8 @@ skills:
   # The goal audit's findings, closed action list and standalone walk of the Portal (migration
   # plan, strategy): strategy's goal alignment judges by it, projects' project-landscape runs it.
   goal-audit: [strategy, projects]
+  # The read-only Portal research passes (a person, an email history, a domain), run by a
+  # department's worker: productivity's jobs and the chief of staff's front door and cycle doers.
+  portal-research: [productivity, chief-of-staff]
+  # The rules every Portal write follows, loaded by the interactive skills that write.
+  portal-write-safety: [productivity, projects, toolbox-maintenance]

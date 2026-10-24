@@ -33,6 +33,7 @@ The two jobs stay separate: they share a repository and both stage work on a rev
 | `pressure-test-method` | Red-teams one of the owner's systems per run from a rotation ledger: steelman, goal fit, external practice, ranked verdict | Insights Portal; settings `goals_doc`, `playbooks_dir`, `owner_profile`, `rotation_ledger` under `[pressure-test-method]` |
 | `orchestration-workstream` | Copied from `shared/skills/`: how a worker behaves and returns | none |
 | `task-stack-workstream` | Copied from `shared/skills/`: the change-set contract and `task-stack-apply`, which files the audit's owner tasks after the Run | Insights Portal |
+| `portal-write-safety` | Copied from `shared/skills/`: the rules every Portal write follows, loaded by `pressure-test-method` before its note | none |
 
 A one-off "is the automation over-contacting people or wasting runs" is the auditor run with instructions to that effect, or the section Audit the automation's activity followed in any session.
 

@@ -64,7 +64,7 @@ Every key here except `state` is read from this table first and from the top lev
 | `health_probe` | No | none | An estate health probe's latest output; `--health` overrides it. |
 | `autonomy_policy` | No | none | The standing autonomy policy; `--autonomy` overrides it. |
 | `principles_inbox` | No | none (no draft principle is written) | The folder where one draft principle per cycle may be written for the owner to ratify. |
-| `doer_registry` | Yes, for any doer to run | none (no doer may run; only launches remain) | A TOML file of `[[doer]]` entries, the only doers a cycle may dispatch; `references/doer-registry.example.toml` in the skill is a start. |
+| `doer_registry` | Yes, for any doer to run | none (no doer may run; only launches remain) | A TOML file of `[[doer]]` entries, the only doers a cycle may dispatch: route `produce`, or route `skill` with a skill the chief-of-staff plugin holds and its `section`, run by `chief-of-staff-worker` (route `agent` is refused); `references/doer-registry.example.toml` in the skill is a start. |
 | `voice_guide` | No | the top-level `voice_guide` | The voice guide produce-work packs as guidance with the source. |
 | `display_name` | No | `"Chief of Staff"` | The name on the receipt title, the decision-task prefix and the messages; a value with brackets, a newline or over 40 characters falls back to the default. |
 | `former_names` | No | none | A list of earlier display names, so a rename never duplicates today's receipt or an open decision. |
@@ -158,7 +158,7 @@ Every key here except `state` is read from this table first and from the top lev
 |---|---|---|---|
 | `registry` | Yes, unless `--registry` is given | none | The owner's orchestrator registry (YAML) with its `orchestrators:` list. |
 | `agents_dir` | No | `~/.claude/agents` | Where `validate` looks for each orchestrator's agent file; `--agents-dir` overrides it. |
-| `automations_dir` | No | the registry's own `automations_dir` | The folder of Automation definitions; `--automations-dir` overrides it, and it is needed when `launch_command` uses `{automation_path}`. |
+| `automations_dir` | No | the registry's own `automations_dir` | The folder of Automation definitions; `--automations-dir` overrides it, and it is needed when `launch_command` uses `{automation_path}`. `chief-of-staff-catalogue` reads each folder's `sentinel.yaml` here to list the Automations that launch each main agent. |
 | `runs_command` | Yes, for Run columns in the status and for a capped launch | none | The runner's command that prints its recent Runs as JSON, as a list of words or one string; run without a shell. |
 | `launch_command` | Yes, to launch | none | The runner's command that queues one Run, with `{automation}`, `{automation_path}` and `{by}` filled in. |
 | `param_args` | No | `["--param", "{key}={value}"]` | The words appended to `launch_command` for each launch param. |

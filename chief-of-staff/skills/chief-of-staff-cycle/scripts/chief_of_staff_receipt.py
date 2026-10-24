@@ -15,7 +15,10 @@ The rules, enforced here rather than asked for:
   is written, so a re-run writes nothing twice. The update carries the note's updated_at, so
   an edit made in between is not overwritten.
 - The Portal is a shared surface: content holding an absolute local path or an em dash is
-  refused, so the writer is asked again.
+  refused, and so is content that repeats a run of eight words from one of the owner's
+  private documents (the charter, profile, goals, principles, roster, ledger and autonomy
+  policy cycle.json names), so the writer is asked again. The refusal names the document,
+  never the words. A proposed improvement whose text repeats one is filed without it.
 - Decision tasks only for genuine decisions, titled "[<name>] ...", owned by the token's own
   contact (from whoami), due the cycle's date. An open task with the same title, or with this
   decision's marker (chief-of-staff:decision:<date>:<key>), is reused. At most three a day
@@ -74,13 +77,17 @@ def load_receipt(folder):
     return value
 
 
-def content_problems(text):
+def content_problems(text, private=None):
     problems = []
     if EM_DASH in text:
         problems.append("EM_DASH: the receipt holds an em dash")
     path = c.local_path_in(text)
     if path:
         problems.append(f"LOCAL_PATH: the receipt names a local path ({path[:60]}); private paths stay in local files")
+    copied = c.private_copied(text, private)
+    if copied:
+        problems.append(f"PRIVATE_TEXT: the receipt repeats the owner's private {', '.join(copied)} word for word; "
+                        "reason from those documents, never copy them to the Portal")
     return problems
 
 
@@ -204,7 +211,7 @@ def _publish_decisions(client, cycle, decisions, who, dry):
     return results
 
 
-def proposed_improvement(folder):
+def proposed_improvement(folder, private=None):
     """The cycle's improvement as a decision, when it was proposed rather than applied."""
     imp = c.read_json(Path(folder) / "improve.json") or {}
     if imp.get("status") != "proposed" or not imp.get("target"):
@@ -213,9 +220,12 @@ def proposed_improvement(folder):
     why = c.flat(str(imp.get("rationale") or "").replace(EM_DASH, "-"), 300)
     desc = (f"Proposed change to the {imp['target']} skill's SKILL.md: {change}\nWhy: {why}\n"
             "Apply it, or mark this task done to drop it.")
-    if c.local_path_in(desc):
+    title = f"Improve {imp['target']}: {change[:80]}"
+    if c.local_path_in(desc) or c.private_copied(title + "\n" + desc, private):
         desc = f"Proposed change to the {imp['target']} skill's SKILL.md; the details are in the cycle's improve.json."
-    return {"title": f"Improve {imp['target']}: {change[:80]}", "description": desc, "priority": 3}
+        if c.private_copied(title, private):
+            title = f"Improve {imp['target']}: see the cycle's improve.json"
+    return {"title": title, "description": desc, "priority": 3}
 
 
 def publish(client, folder, dry_run=False):
@@ -226,7 +236,8 @@ def publish(client, folder, dry_run=False):
         return {"status": "refused", "reason": forced, "dry_run": True}
     receipt = load_receipt(folder)
     content = str(receipt["content"])
-    problems = content_problems(content + "\n" + json.dumps(receipt.get("decisions") or [], ensure_ascii=False))
+    private = c.private_runs(cycle.get("paths"))
+    problems = content_problems(content + "\n" + json.dumps(receipt.get("decisions") or [], ensure_ascii=False), private)
     if problems:
         out = {"status": "refused", "codes": [p.split(":", 1)[0] for p in problems], "problems": problems}
         c.atomic_json(Path(folder) / "publish.json", out)
@@ -234,7 +245,7 @@ def publish(client, folder, dry_run=False):
     who = _who(client)
     note = _publish_note(client, cycle, content, who, dry)
     decisions = list(receipt.get("decisions")) if isinstance(receipt.get("decisions"), list) else []
-    proposal = proposed_improvement(folder)
+    proposal = proposed_improvement(folder, private)
     if proposal:
         decisions.append(proposal)
     tasks = _publish_decisions(client, cycle, decisions, who, dry)

@@ -134,7 +134,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Accounting](accounting/) | Month-end close, reconciliations, journal entries, accruals, collections, intercompany, cost accounting, audit support, 1099s; a Claude Code plugin | 11 / 19 |
 | [Finance](finance/) | Forecasts, budgets, 13-week cash, one-off analysis, investor obligations; a Claude Code plugin | 7 / 13 |
 | [Strategy](strategy/) | Goals checked against projects and where the time went, and pre-mortems on strategic plans; a Claude Code plugin | 3 / 2 |
-| [Executive Reporting](reporting/) | Board packages, leadership weeklies and client updates, each independently checked before a person sends it | 9 / 15 |
+| [Executive Reporting](reporting/) | Board packages, leadership weeklies and client updates, each independently checked before a person sends it | 6 / 15 |
 
 <details>
 <summary><b>Orchestrators in the finance core</b> (18)</summary>
@@ -170,7 +170,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
-| [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews; a Claude Code plugin | 7 / 13 |
+| [Project Management](projects/) | Engagement kickoff and closeout, delivery planning, risk logs, portfolio reviews; a Claude Code plugin | 7 / 26 |
 | [Process Engineering](process-engineering/) | Assessments, interview synthesis, process maps, workshops, automation scoping, surveys | 8 / 11 |
 | [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 5 / 9 |
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
@@ -222,12 +222,12 @@ Each folder at the root is a department. Open its README for what is inside and 
 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
-| [Personal Productivity](productivity/) | Email, meetings, tasks, calendar, CRM upkeep, weekly planning | 10 / 39 |
-| [Recurring Summaries](recurring-summaries/) | The daily plan: the morning's three, the evening close | 3 / 3 |
-| [Chief of Staff](chief-of-staff/) | Routes requests to the right piece and runs an unattended daily cycle over the owner's agents, with start-of-day, quick capture, status and work-survey tools | 8 / 6 |
+| [Personal Productivity](productivity/) | Email, meetings, tasks, calendar, CRM upkeep, weekly planning, quick capture | 10 / 40 |
+| [Recurring Summaries](recurring-summaries/) | The daily plan: the morning's three, the evening close, and start-session | 3 / 4 |
+| [Chief of Staff](chief-of-staff/) | A front door that finds where any request is served and launches or hands it over, and an unattended cycle that decides the day, launches and dispatches within caps and files a verified receipt; a Claude Code plugin | 4 / 14 |
 | [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 8 |
 | [Obsidian](obsidian/) | Video notes into the vault inbox and a vault gardener that only proposes (skills only) | 0 / 4 |
-| [Toolbox Maintenance](toolbox-maintenance/) | A weekly audit of this toolbox with lint fixes on a review branch, an automation activity audit, and a monthly skill harvest from past sessions | 8 / 3 |
+| [Toolbox Maintenance](toolbox-maintenance/) | A weekly audit of this toolbox with lint fixes on a review branch, an automation activity audit, and a monthly skill harvest from past sessions | 4 / 7 |
 | [Personal](personal/) | Household, health check-ins, home infrastructure, personal finance review, tax season | 6 / 11 |
 
 <details>
@@ -245,7 +245,8 @@ Each folder at the root is a department. Open its README for what is inside and 
 - **Recurring Summaries**
   - `daily-planner`: plans and closes the workday, twice a weekday
 - **Chief of Staff**
-  - `chief-of-staff-cycle-orchestrator`: runs one unattended chief-of-staff cycle
+  - `chief-of-staff-cycle-runner`: runs one unattended chief-of-staff cycle
+  - `chief-of-staff`: the interactive front door, started as the main session
 - **Decision Playbooks**
   - `decision-playbooks-curator`: keeps the playbook pipeline moving, weekly
 - **Toolbox Maintenance**
