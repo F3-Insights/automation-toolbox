@@ -41,7 +41,7 @@ Most agent collections give you prompts. This one gives you **the back office as
 
 ### 67 ready workflows
 
-A month-end close, a 13-week cash forecast, a board package, a client update, a process map, an issue-to-pull-request factory, a nightly email sweep. Each one is an **orchestrator** that runs the job end to end the way a lead runs a small team.
+A month-end close, a 13-week cash forecast, a board package, a client update, a process map, an issue-to-pull-request factory, a daily plan. Each one is an **orchestrator** that runs the job end to end the way a lead runs a small team.
 
 </td>
 <td width="33%" valign="top">
@@ -95,7 +95,6 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 
 | When | Workflow | What you get back |
 |---|---|---|
-| Every night | `nightly-sweep-orchestrator` | The day's email turned into tasks and notes, and a Daily Note with what needs you |
 | Every weekday | `daily-plan-orchestrator` | The morning's three priorities and an evening close |
 | Every week | `cash-forecast-orchestrator` | The 13-week cash forecast rolled forward, with the low point called out |
 | Every week | `client-delivery-orchestrator` | One engagement's plan, risks and status, ready for the sponsor |
@@ -224,7 +223,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
 | [Personal Productivity](productivity/) | Email, meetings, tasks, calendar, CRM upkeep, weekly planning | 10 / 39 |
-| [Recurring Summaries](recurring-summaries/) | The nightly sweep and the daily plan: the night's Daily Note, the morning's three, the evening close | 11 / 4 |
+| [Recurring Summaries](recurring-summaries/) | The daily plan: the morning's three, the evening close | 5 / 4 |
 | [Chief of Staff](chief-of-staff/) | Routes requests to the right piece and runs an unattended daily cycle over the owner's agents, with start-of-day, quick capture, status and work-survey tools | 8 / 6 |
 | [Decision Playbooks](decision-playbooks/) | Writes down how the owner decides: decisions mined from sent mail and recordings into cited cases, distilled into playbooks the owner ratifies | 3 / 5 |
 | [Obsidian](obsidian/) | Video notes into the vault inbox, a vault gardener that only proposes, and an outside-creator scout | 1 / 4 |
@@ -244,7 +243,6 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `crm-hygiene`: keeps the CRM clean
   - `time-study`: measures where a month's time went
 - **Recurring Summaries**
-  - `nightly-sweep-orchestrator`: sweeps each finished day into tasks, notes and a Daily Note
   - `daily-plan-orchestrator`: plans and closes the workday, twice a weekday
 - **Chief of Staff**
   - `chief-of-staff-cycle-orchestrator`: runs one unattended chief-of-staff cycle

@@ -14,9 +14,9 @@ Some skills also read settings kept beside the work, such as the Month-End folde
 
 | Key | Required | Default | What it is for | Read by |
 |---|---|---|---|---|
-| `portal_mcp_config` | Yes, when a command that reads or writes the Portal runs | none | Path to the MCP config file (JSON) whose `mcpServers` entry gives the Insights Portal URL and Authorization header. | calendar-steward-method, chief-of-staff-cycle, client-delivery-workstream, client-update-workstream, comms-confirm, comms-draft-check, comms-reply-to-email, daily-plan-method, goal-alignment-workstream, issue-harvest-workstream, meeting-portal-notes, meeting-scheduled-worker, nightly-sweep-workstream, project-health-diagnose, project-landscape, report-weekly, task-stack-capture, task-stack-workstream, weekly-review-workstream |
+| `portal_mcp_config` | Yes, when a command that reads or writes the Portal runs | none | Path to the MCP config file (JSON) whose `mcpServers` entry gives the Insights Portal URL and Authorization header. | calendar-steward-method, chief-of-staff-cycle, client-delivery-workstream, client-update-workstream, comms-confirm, comms-draft-check, comms-reply-to-email, daily-plan-method, goal-alignment-workstream, issue-harvest-workstream, meeting-portal-notes, meeting-scheduled-worker, project-health-diagnose, project-landscape, report-weekly, task-stack-capture, task-stack-workstream, weekly-review-workstream |
 | `portal_server` | No | `"insights-portal"` | The name of the Portal's entry under `mcpServers` in that config file. | the same skills as `portal_mcp_config` |
-| `state_dir` | Yes, for a command that keeps state, unless a `--state` or `--home` flag or the skill's own setting names the folder | none | The folder that holds each skill's state in a subfolder: `calendar-steward`, `chief-of-staff`, `comms-reply`, `daily-plan`, `goal-alignment`, `issue-harvest`, `meeting-processing`, `nightly-sweep`, `task-stack`, `weekly-review`. | calendar-steward-method, chief-of-staff-cycle, comms-reply-to-email, daily-plan-method, goal-alignment-workstream, issue-harvest-workstream, meeting-scheduled-worker, nightly-sweep-workstream, project-landscape, quick-capture, task-stack-capture, task-stack-workstream, weekly-review-workstream |
+| `state_dir` | Yes, for a command that keeps state, unless a `--state` or `--home` flag or the skill's own setting names the folder | none | The folder that holds each skill's state in a subfolder: `calendar-steward`, `chief-of-staff`, `comms-reply`, `daily-plan`, `goal-alignment`, `issue-harvest`, `meeting-processing`, `task-stack`, `weekly-review`. | calendar-steward-method, chief-of-staff-cycle, comms-reply-to-email, daily-plan-method, goal-alignment-workstream, issue-harvest-workstream, meeting-scheduled-worker, project-landscape, quick-capture, task-stack-capture, task-stack-workstream, weekly-review-workstream |
 | `contexts_dir` | Yes, when a Context is named rather than given by its path | none | The folder of Context YAML files, found by name (`<name>.yaml` or `.yml`). | board-package-workstream, client-delivery-workstream, client-update-workstream, process-flow-workstream |
 | `engagements_dir` | Yes, when engagement-folders runs without `--root` | none | The parent folder under which a new engagement's folders are created. | project-engagement-workstream, project-engagement-runbook, marketing-case-study-orchestrator (agent) |
 | `private_terms` | No | none | A list of private words refused in any filed issue, matched as whole words ignoring case; used only when `[issue-harvest-workstream]` has no `private_terms` of its own. | issue-harvest-workstream |
@@ -151,19 +151,6 @@ Every key here except `state` is read from this table first and from the top lev
 | `state_dir` | No | `<state_dir>/meeting-processing` | This skill's state folder; `--state` and `MEETING_PROCESSING_STATE` come before it. |
 | `enrichment_agent` | No | `"deep-researcher"` | The slug of the Portal agent that takes the enrichment tasks meeting-publish files; `--agent-slug` overrides it. crm-context-enrichment reads it to find that agent's backlog. |
 | `relayed_answer_head` | No | `""` (none) | The first line a runner puts on an answer it posts for the owner, so that comment is read as the owner's words. |
-
-### [nightly-sweep-workstream]
-
-| Key | Required | Default | What it is for |
-|---|---|---|---|
-| `timezone` | Yes, unless `--tz` is given | none | The owner's IANA zone; a date is the owner's local day, midnight to midnight. |
-| `state` | No | `<state_dir>/nightly-sweep` | The sweep's state folder (the ledger of dates swept, and its lock); `--state` overrides it. |
-| `assistant_email` | No | none | The executive assistant's address, whose mail is never noise and is read first; leave empty with no assistant. |
-| `portal_brief_email` | No | none | The sender of the Portal's own generated Brief, which is treated as noise. |
-| `owner_names` | No | none | A list of the owner's names: never distinctive words for matching, and they end a sent message's own words as a signature. |
-| `firm_names` | No | none | A list of the firm's names, never distinctive words for matching. |
-| `vip_stale_days` | No | `30` | Days after which a VIP or High contact counts as stale for the relationship phase; a value that is not a whole number from 1 to 3650 falls back to 30. |
-| `daily_note_private` | No | `false` | `true` writes the Daily Note as a private note that must read back private. |
 
 ### [orchestrator-fleet]
 
@@ -309,7 +296,7 @@ Every key here except `state` is read from this table first and from the top lev
 | `INTACCT_USER_AGENT` | No | `f3i-toolbox-intacct/1.0 (read-only)` | The User-Agent header sent to Intacct. | erp-ledger-pull |
 | `ACCRUALS_SKILLS_DIR` | No | this toolbox checkout (`_skill_paths.py`) | A skills folder in which accruals.py finds the other skills whose commands it runs, for tests. | month-end-accrual-drafts |
 | `MEETING_PROCESSING_STATE` | No | none | The meeting worker's state folder, after `--state` and before the settings. | meeting-scheduled-worker |
-| `F3I_TOOLBOX_DRY_RUN` | No | unset | Set by a runner (`1`, `true`, `yes` or `on`) to mark a dry run; any write called without `--dry-run` is then refused. | chief-of-staff-cycle, meeting-scheduled-worker, nightly-sweep-workstream |
+| `F3I_TOOLBOX_DRY_RUN` | No | unset | Set by a runner (`1`, `true`, `yes` or `on`) to mark a dry run; any write called without `--dry-run` is then refused. | chief-of-staff-cycle, meeting-scheduled-worker |
 | `NOTIFY_OWNER_MODE` | No | unset (sends) | `off` sends nothing; `dry-run` (also `dryrun` or `rehearsal`) rehearses; anything else sends. | chief-of-staff-cycle, comms-reply-to-email |
 | `CONFIRM_DELIVERY` | No | `relay` | How a confirmation request reaches the person, `relay` or `direct`, when `--delivery` is not given. | comms-confirm |
 | `CONFIRM_PORTAL_CMD` | No | python3 with confirm_portal.py beside confirm.py | A command to run in place of the Portal half of comms-confirm. | comms-confirm |
@@ -339,9 +326,6 @@ vault_dir = "~/path/to/vault"
 vault_inbox = "_inbox"
 
 [daily-plan-method]
-timezone = "UTC"
-
-[nightly-sweep-workstream]
 timezone = "UTC"
 
 [task-stack-workstream]

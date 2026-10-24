@@ -9,7 +9,7 @@
 # portal_mcp_config = "~/path/to/mcp-config.json"
 # The name of the Portal's entry under mcpServers in that config file (optional; default "insights-portal").
 # portal_server = "insights-portal"
-# The folder that holds each skill's state in a subfolder: calendar-steward, chief-of-staff, comms-reply, daily-plan, goal-alignment, issue-harvest, meeting-processing, nightly-sweep, task-stack, weekly-review (required, for a command that keeps state, unless a --state or --home flag or the skill's own setting names the folder).
+# The folder that holds each skill's state in a subfolder: calendar-steward, chief-of-staff, comms-reply, daily-plan, goal-alignment, issue-harvest, meeting-processing, task-stack, weekly-review (required, for a command that keeps state, unless a --state or --home flag or the skill's own setting names the folder).
 # state_dir = "~/path/to/state"
 # The folder of Context YAML files, found by name (<name>.yaml or .yml) (required, when a Context is named rather than given by its path).
 # contexts_dir = "~/path/to/contexts"
@@ -175,24 +175,6 @@
 # enrichment_agent = "deep-researcher"
 # The first line a runner puts on an answer it posts for the owner, so that comment is read as the owner's words (optional; default "" (none)).
 # relayed_answer_head = ""
-
-[nightly-sweep-workstream]
-# The owner's IANA zone; a date is the owner's local day, midnight to midnight (required, unless --tz is given).
-# timezone = "UTC"
-# The sweep's state folder (the ledger of dates swept, and its lock); --state overrides it (optional; default <state_dir>/nightly-sweep).
-# state = "~/path/to/state/nightly-sweep"
-# The executive assistant's address, whose mail is never noise and is read first; leave empty with no assistant (optional).
-# assistant_email = "assistant@example.com"
-# The sender of the Portal's own generated Brief, which is treated as noise (optional).
-# portal_brief_email = "brief@example.com"
-# A list of the owner's names: never distinctive words for matching, and they end a sent message's own words as a signature (optional).
-# owner_names = ["Dana"]
-# A list of the firm's names, never distinctive words for matching (optional).
-# firm_names = ["Example Firm"]
-# Days after which a VIP or High contact counts as stale for the relationship phase; a value that is not a whole number from 1 to 3650 falls back to 30 (optional; default 30).
-# vip_stale_days = 30
-# true writes the Daily Note as a private note that must read back private (optional; default false).
-# daily_note_private = false
 
 [orchestrator-fleet]
 # The owner's orchestrator registry (YAML) with its orchestrators: list (required, unless --registry is given).
