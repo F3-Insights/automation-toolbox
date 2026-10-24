@@ -2,7 +2,7 @@
 name: report-tieout
 description: "Check that a set of monthly reports (results memo, board deck, lender package, variance report, dashboard export) quote the same consolidated figures for the same months: reads each file, writes a CSV ledger of every quoted figure and runs `report-tieout`; the judgment is which figure is right. Use for \"do the reports all match\", after one report was re-run, or as the last step before a package is sent. To re-derive figures from source, use the numbers-reviewer agent."
 argument-hint: "[folder or files] [metric, e.g. Consolidated EBITDA] [tolerance]"
-allowed-tools: Read, Glob, Grep, Write, Bash(python3 ~/.claude/skills/report-tieout/scripts/report_tieout.py:*), Bash(python3:*)
+allowed-tools: Read, Glob, Grep, Write, Bash(report-tieout:*), Bash(python3:*)
 ---
 
 # Report tie-out
@@ -16,7 +16,7 @@ The usual failure: several documents each quote EBITDA by month, some were re-ru
 3. **Run the kit.**
 
    ```bash
-   python3 ~/.claude/skills/report-tieout/scripts/report_tieout.py ledger.csv --metric "Consolidated EBITDA" --tolerance 500
+   report-tieout ledger.csv --metric "Consolidated EBITDA" --tolerance 500
    ```
 
    Tolerance is the rounding the reports themselves use: $1 for a workbook, $500 when the deck rounds to the nearest thousand, $50,000 when it rounds to the nearest $0.1M. Run once per metric that matters, or with no `--metric` for all of them.
