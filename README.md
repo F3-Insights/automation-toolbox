@@ -99,9 +99,9 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 | Every weekday | `daily-plan-orchestrator` | The morning's three priorities and an evening close |
 | Every week | `cash-forecast-orchestrator` | The 13-week cash forecast rolled forward, with the low point called out |
 | Every week | `client-delivery-orchestrator` | One engagement's plan, risks and status, ready for the sponsor |
-| Every week | `weekly-report-orchestrator` | The leadership weekly, drafted from the week's record |
+| Every week | `reporting-weekly-report` | The leadership weekly, drafted from the week's record |
 | Month end | `month-end-orchestrator` | The close worked like a close team: reconciliations, accruals, flux, a review trail |
-| Month end | `board-package-orchestrator` | The board package drafted from the finished close, tied out and red-teamed |
+| Month end | `reporting-board-package` | The board package drafted from the finished close, tied out and red-teamed |
 | Monthly | `goal-alignment-orchestrator` | Goals set against projects and where the time went, as one approval list |
 | On demand | `software-developer` | A repository's issues worked into verified pull requests, builds in parallel worktrees (draft) |
 
@@ -135,7 +135,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Accounting](accounting/) | Month-end close, reconciliations, journal entries, accruals, collections, intercompany, cost accounting, audit support, 1099s | 22 / 20 |
 | [Finance](finance/) | Forecasts, budgets, 13-week cash, one-off analysis, investor obligations | 13 / 5 |
 | [Strategy](strategy/) | Goals checked against projects and where the time went, and pre-mortems on strategic plans | 5 / 4 |
-| [Executive Reporting](reporting/) | Board packages, leadership weeklies, results memos, client updates, and the reviewers every report passes | 16 / 7 |
+| [Executive Reporting](reporting/) | Board packages, leadership weeklies and client updates, each independently checked before a person sends it | 9 / 15 |
 
 <details>
 <summary><b>Orchestrators in the finance core</b> (18)</summary>
@@ -159,9 +159,9 @@ Each folder at the root is a department. Open its README for what is inside and 
 - **Strategy**
   - `goal-alignment-orchestrator`: prepares the monthly check of goals against projects and time spent
 - **Reporting**
-  - `board-package-orchestrator`: drafts one company's monthly board package from its finished close
-  - `weekly-report-orchestrator`: prepares the weekly report to the leadership team
-  - `client-update-orchestrator`: drafts one engagement's weekly client update, as a deck or a memo
+  - `reporting-board-package`: drafts one company's monthly board package from its finished close
+  - `reporting-weekly-report`: prepares the weekly report to the leadership team
+  - `reporting-client-update`: drafts one engagement's weekly client update, as a deck or a memo
 
 </details>
 

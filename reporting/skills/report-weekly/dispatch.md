@@ -1,14 +1,14 @@
 # Dispatching the workers
 
-Read by `SKILL.md` at Steps 6, 7 and 12. Every worker is briefed with the digest's whole text inlined, never a path to it, and every worker's output is saved to a file as soon as it returns.
+Read by `SKILL.md` at Stages 6, 7 and 12. Every worker is briefed with the digest's whole text inlined, never a path to it, and every worker's output is saved to a file as soon as it returns.
 
-## The continuity worker (Step 6)
+## The continuity worker (Stage 6)
 
-Dispatch one `report-continuity` with the candidates and this week's categories inlined. It returns three lists: must be answered, carry unchanged, leave out. Re-run Step 5 of `SKILL.md` with `--ledger-candidates` so the ones that must be answered arrive in the digest as carry-overs.
+Dispatch one `reporting-worker`, told to follow `workers/continuity.md`, with the candidates and this week's categories inlined. It returns three lists: must be answered, carry unchanged, leave out. Re-run Stage 5 of `SKILL.md` with `--ledger-candidates` so the ones that must be answered arrive in the digest as carry-overs.
 
-## The leadership test (Step 7)
+## The leadership test (Stage 7)
 
-Dispatch one `report-audience-editor` with the digest and the profile's **Leadership team** inlined. The reader is the rest of the leadership team, so every candidate item is tested with one question: what would a member of this leadership team think is important here?
+Dispatch one `reporting-worker`, told to follow `workers/audience-editor.md`, with the digest and the profile's **Leadership team** inlined. The reader is the rest of the leadership team, so every candidate item is tested with one question: what would a member of this leadership team think is important here?
 
 **The editor applies the bar**, which is written once in `reference/weekly-highlights-style.md` beside this file under "What earns a bullet" and "What is never a bullet" and carried in short form by the editor and the writer both. Nothing is deleted by it: an item that fails the bar goes on the Leave out list with its reason, where the executive pulls it back at Gate 1. The materiality threshold the bar refers to comes from the profile's Form rules and is printed in the digest's outline block; a profile that states none has no figure judged immaterial.
 
@@ -19,7 +19,7 @@ It returns three lists. A **Keep** list, each line with the reason a leadership 
 Save its output to a file and lift the three lists out of the prose, so Gate 1 is built from data rather than from a transcription:
 
 ```bash
-python3 ~/.claude/skills/report-weekly/scripts/report_questions.py verdicts --from <scratch>/<author>-editor.txt \
+reporting-report-questions verdicts --from <scratch>/<author>-editor.txt \
   --out <scratch>/<author>-verdicts.json
 ```
 
@@ -27,20 +27,20 @@ python3 ~/.claude/skills/report-weekly/scripts/report_questions.py verdicts --fr
 
 Where the profile carries no leadership team the editor says so in one line and falls back on the seven reasons in principle 13 of `DESIGN.md`. That is a gap to fix in the profile, not a reason to skip the step.
 
-## The writer (Step 12)
+## The writer (Stage 12)
 
 Read `<scratch>/<author>-digest.md` and **paste its whole text into the prompt**, with the gate answers, the answered questions, the continuity worker's Must be answered list and the audience editor's Keep list. The writer opens no file and makes no listing call, which is the whole reason it answers in one turn.
 
 **The Keep list is not optional context.** Each of its lines carries the reader who has to know, decide or be affected and why, which is the most valuable thing this pipeline computes, and a draft written without it loses every one of those reasons. Paste it whole, reasons included. The materiality threshold rides in the digest's outline block, so it reaches the writer with everything else; where the profile states none, the block says so.
 
-Dispatch one `report-writer` per author, **all in a single message** so they run in parallel. One author per agent is the contract.
+Dispatch one `reporting-worker`, told to follow `workers/writer.md`, per author, **all in a single message** so they run in parallel. One author per agent is the contract.
 
 ```
 Agent(
-    subagent_type="report-writer",
+    subagent_type="reporting-worker",
     description="Weekly report for <author>",
     prompt="""
-Write the weekly report for one author, in one turn. The digest below is everything: the
+Follow workers/writer.md in the report-weekly skill. Write the weekly report for one author, in one turn. The digest below is everything: the
 outline, the categories in order with their standing metrics, carry-overs and ranked
 evidence (the top items with their material beneath them), the unassigned bucket, the Gate 1
 proposals, the silent list, the goals, the calendar totals, and what could not be determined.

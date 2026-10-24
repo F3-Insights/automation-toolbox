@@ -2,11 +2,11 @@
 
 The role profile for one author's weekly report. Filled in once, in an interview, and reviewed every quarter. One document with twelve headed sections, so an executive can read and edit it and so it can live as a note wherever the organisation keeps its record.
 
-**This is the only document the executive edits.** The report outline the pipeline sorts the week into is a projection of this file, not a second list to keep in step: `python3 ~/.claude/skills/report-weekly/scripts/report_profile.py show --outline` writes it, and `report-collect`, `report-organize` and `report-pack` take this file at `--outline-file` directly. Every heading below is read by code, so a relabelled one is a section nobody sets.
+**This is the only document the executive edits.** The report outline the pipeline sorts the week into is a projection of this file, not a second list to keep in step: `reporting-report-profile show --outline` writes it, and `report-collect`, `report-organize` and `report-pack` take this file at `--outline-file` directly. Every heading below is read by code, so a relabelled one is a section nobody sets.
 
 Describe every person by role. The only place a name belongs in this file is the optional `Names to roles` map, which exists so a sentence about a problem can carry the role instead of the person.
 
-A blank form does not pass `python3 ~/.claude/skills/report-weekly/scripts/report_profile.py validate`, and should not: the tier, the seats and the review date are placeholders until somebody has answered for them.
+A blank form does not pass `reporting-report-profile validate`, and should not: the tier, the seats and the review date are placeholders until somebody has answered for them.
 
 Where the real profile lives: as a note titled `Weekly report profile` attached to the author's scope, so an assistant can edit it without touching a repository.
 

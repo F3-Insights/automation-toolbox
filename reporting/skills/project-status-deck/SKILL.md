@@ -9,7 +9,7 @@ allowed-tools: Read, Glob, Grep, Write, Edit
 
 A recurring client update presented as slides: a weekly update, a steering committee, a leadership or sponsor update. The deck keeps the sponsor and leadership confident in the direction and gives them what they need to unblock the work. It is not a sales document, not a findings report and not a log of activity.
 
-Everything specific to one client lives outside this skill, in the engagement's rules: a rules file (for the client-update orchestrator, `UPDATE-RULES.md`) that names the client's playbook, deck guides and reference deck, and says which wins where they disagree. Read all of them in full before writing a slide, every time. The newest deck the owner approved is the standard for format and patterns and wins over any written rule; its content is never a source for new facts.
+Everything specific to one client lives outside this skill, in the engagement's rules: a rules file (for reporting-client-update, `UPDATE-RULES.md`) that names the client's playbook, deck guides and reference deck, and says which wins where they disagree. Read all of them in full before writing a slide, every time. The newest deck the owner approved is the standard for format and patterns and wins over any written rule; its content is never a source for new facts.
 
 ## Modes
 
@@ -67,7 +67,7 @@ The source comment, one per claim, placed right after the element that makes it:
 <!-- Source: C4 · S012, S015 · Pilot Review 2026-09-22.md, "Decisions", 2026-09-22 -->
 ```
 
-`C4` is the claim's id in the claim inventory and `S012` the source's id in the week's `sources.json` when the client-update orchestrator drafts the deck; by hand, the file, section and date alone. A claim is any number, name, date, decision, ownership, status or cause-and-effect statement a reader could challenge, on a slide or in the notes. Opinions, recommendations and transitions are not claims.
+`C4` is the claim's id in the claim inventory and `S012` the source's id in the week's `sources.json` when reporting-client-update drafts the deck; by hand, the file, section and date alone. A claim is any number, name, date, decision, ownership, status or cause-and-effect statement a reader could challenge, on a slide or in the notes. Opinions, recommendations and transitions are not claims.
 
 ## The review note
 

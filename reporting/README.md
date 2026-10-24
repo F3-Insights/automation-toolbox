@@ -1,80 +1,87 @@
 # Executive Reporting
 
-Reports that leave the building: an executive's weekly update to the leadership team, a monthly board package, the month-end results memo, and a consulting engagement's weekly client update, plus the independent checkers (fact-check, red team, finance review) that every one of them passes before a person sends it. For department heads, finance leads and consultants who report on a cadence and want every figure traced and nothing sent without approval.
+Reports that leave the building: an executive's weekly update to the leadership team, a company's monthly board package, and a consulting engagement's weekly client update. Every one is drafted from sourced facts, checked by a reviewer that never sees the maker's reasoning, and handed to a person who sends it. For department heads, finance leads and consultants who report on a cadence and want every figure traced and nothing sent without approval.
 
-## Agents
+## The plugin
 
-| Agent | What it does | Needs |
+This folder is a standalone Claude Code plugin named `reporting` (`.claude-plugin/plugin.json`), built the way [software](../software/README.md#the-plugin) is: one short main agent per job, one `reporting-worker` and one `reporting-reviewer` for dispatched work, the know-how in the jobs' skills as `##` sections, and every script a named command in `bin/` (`python3 scripts/build_bins.py reporting`). A main agent's first instruction is to load its skills with the Skill tool.
+
+```bash
+claude --plugin-dir ~/coding-projects/automation-toolbox/reporting --agent reporting:weekly-reporter
+```
+
+From Sentinel, an Automation launches a main agent by name; the overlay's `subagents:` lists `reporting-worker` and `reporting-reviewer`.
+
+## Jobs and agents
+
+| Agent | Automation | What it does |
 |---|---|---|
-| `weekly-reporter` | Main-session admin for one executive's weekly report: runs the flow, owns the three gates, hands back Word and PDF | the `report-*` commands |
-| `weekly-report-orchestrator` | Runs the weekly report unattended: gates as one numbered list on the owner's task list, then draft, verify, render, keep | Insights Portal (for the task); the `report-*` commands; `comms-confirm` |
-| `report-continuity` | Decides which open items from earlier reports this week must answer | none |
-| `report-audience-editor` | Applies the leadership test: Keep, Leave out and Misfiled, with a reason each | none |
-| `report-writer` | Writes one weekly report in one turn from the inlined digest | none (optional Insights Portal reads) |
-| `report-intake` | Turns a direct report's prose update into evidence rows | none |
-| `report-harvester` | Builds the evidence ledger from mail and calendar when there is no work tracker | a mail and calendar connector; command `report-collect` |
-| `board-package-orchestrator` | Drafts a monthly board package from a finished close, every figure tied out | the `board-package-*` commands; `comms-confirm` |
-| `board-package-writer` | Drafts the deck, commentary script, cover email and the figure ledger | commands `board-package-render`, `board-package-figures`, `board-package-tieout`, `powerpoint-handler` |
-| `month-end-results-writer` | Writes the month's versioned HTML results memo, figures ledger and QA log | Sage Intacct (commands `trial-balance`, `intacct-gl-detail`, `budget-detail-diff`); command `report-tieout` |
-| `client-update-orchestrator` | Drafts one engagement's weekly client update (deck or memo) with a source on every claim | Insights Portal; commands `client-update-check`, `client-update-record`; `comms-confirm` |
-| `client-update-reader` | Reads a batch of the week's sources and returns dated, quoted facts | none |
-| `client-update-writer` | Writes the client update draft, claims file, review note and proposed context revision | none |
-| `fact-check` | Verifies a claim inventory against an assigned half of the sources | none |
-| `executive-red-team` | Reads a finished artifact cold as a skeptical executive and grades it with fixes | none |
-| `numbers-reviewer` | Re-derives every figure in a reporting package and ties documents to each other | command `report-tieout` |
+| `reporting-board-package` | board-package (one per company) | One company's monthly board deck, commentary script and cover email from the finished close; every figure tied to the results file or the closed trial balance, re-derived and read cold by the reviewer; one review task. Nothing is sent or uploaded |
+| `reporting-client-update` | client-weekly-update (one per engagement) | One engagement's weekly client update, a status deck or a Word memo with cover email: workers read the sources in batches, every claim sourced, two fact-checks over disjoint halves, a cold read as the client, the cover email staged and checked; the finish step puts a checked cover email in Outlook Drafts. Nothing is sent |
+| `reporting-weekly-report` | report-weekly-collect (Thursday), report-weekly-assemble (Friday) | The leadership weekly unattended, one job in two phases: collect judges the week and puts Gates 1 and 2 on the owner's task list; assemble applies the answers or defaults, writes, verifies, renders and asks for approval; an approved week is kept |
+| `weekly-reporter` | none (interactive) | The same weekly flow with the executive present, started as the main session; asks the gates live |
+| `reporting-worker` | | One slice: a batch of client-update sources, the cover email staged, or one weekly-report worker prompt (intake, harvester, continuity, audience editor, writer) |
+| `reporting-reviewer` | | Independent check against the named checklist section; edits nothing |
+| `fact-check`, `numbers-reviewer`, `executive-red-team` | | Kept only while other departments' agents still dispatch them by name; no reporting job uses them. Their checklists are `review-facts`, `review-numbers` and `review-red-team`, which `reporting-reviewer` follows |
+
+Both client updates are one job on a different engagement, so they share one main agent. The weekly report's two Automations are one job in two phases (the owner answers the gates between them), so they share one main agent with the phase as an input.
 
 ## Skills
 
-| Skill | What it does | Needs |
+| Skill | Run by | What it holds |
 |---|---|---|
-| `report-weekly` | The weekly report method: the role profile interview, then collect, organise, continuity, audience test, three gates, write, verify, render, record; holds the Weekly Highlights house style, the pasteable consolidation prompt and the profile template | its own `report-*` commands; pandoc and LibreOffice for Word and PDF; the setting `portal_mcp_config` for the Portal tier |
-| `board-package-workstream` | What a board-package worker does: rules first, the deck spec, the figure ledger | the `board-package-*` commands |
-| `month-end-results-report` | The results memo phase of a close, with its format and QA references | Sage Intacct pull; command `report-tieout` |
-| `client-update-workstream` | What a client-update worker does: standards, engagement context, source comments, claim shapes | none |
-| `comms-client-status-update` | Writing the client status memo, weekly or full length, in a matter-of-fact voice | command `srt-transcript-collapse` for caption files |
-| `project-status-deck` | Building, reviewing and revising a client status deck as self-contained HTML | none |
-| `numbers-reviewer-method` | The numbers reviewer's seven-step method: inventory, claim ledger, re-derive, arithmetic, tie-out, prior-version diff, the report against itself | command `report-tieout` |
-| `review-facts` | Shared reviewer checklist (copy of `shared/skills/review-facts`): each claim VERIFIED, NOT IN MY SOURCES or CONTRADICTED with a quote, plus omissions | none |
-| `review-numbers` | Shared reviewer checklist (copy of `shared/skills/review-numbers`): re-derive every figure, arithmetic, cross-document tie-out, prior-version diff, findings by severity | command `report-tieout` |
-| `review-red-team` | Shared reviewer checklist (copy of `shared/skills/review-red-team`): the silent-read test and ten tests as a skeptical executive, graded, a fix per criticism | none |
+| `board-package-workstream` | reporting-board-package | Steps; Done is computed; the close gate and results-file contracts; sections Draft the package, The deck spec, The figure ledger; checklists Check the numbers, Read the deck cold |
+| `client-update-workstream` | reporting-client-update | Steps; the standards, the engagement context and its proposed revision; sections Read a batch, Write the update, Stage the cover email; checklists Check the facts, Read the update cold, Check the cover email |
+| `report-weekly` | reporting-weekly-report, weekly-reporter | Steps (both phases), the Stages in detail, `unattended.md`, the gates, the five worker prompts in `workers/`, the house style; checklist Check the draft |
+| `comms-client-status-update` | the client update's memo; the owner | The client status memo, weekly or full length, in a matter-of-fact voice |
+| `project-status-deck` | the client update's deck; the owner | Building, reviewing and revising a client status deck as self-contained HTML |
+| `review-facts`, `review-numbers`, `review-red-team` | reviewer (shared copies) | The fact, numbers and cold-read checklists |
+| `orchestration-workstream`, `comms-confirm`, `office-files`, `report-tieout`, `unslop`, `unslop-deliverable`, `brand-guide` | shared copies | Worker conduct; questions to the owner as tasks; reading decks and workbooks; cross-document tie-out; plain writing; the house brand |
 
-## Settings and other departments
+## Commands
 
-- Owner settings, described in [docs/settings.md](../docs/settings.md): the weekly report's Portal tier and the client update's Portal reads need `portal_mcp_config` (and `portal_server` when the server entry is not `insights-portal`), with the bearer in `INSIGHTS_PORTAL_ASSISTANT_TOKEN` or a `${VAR}` in the MCP config. `reference_docx` under `[report-weekly]` and under `[client-update-workstream]` names each one's Word reference document (optional; `report_render.py` otherwise builds one with `build_reference_docx.py`). `contexts_dir` under `[board-package-workstream]` or `[client-update-workstream]`, else the top-level key, is where a Context named by its name is found. The weekly report store is a folder the executive names (`--store` or `REPORT_STORE_DIR`); there is no default.
-- Environment: the results memo's Sage Intacct pull needs all four of `SAGE_INTACCT_CLIENT_ID`, `SAGE_INTACCT_CLIENT_SECRET`, `SAGE_INTACCT_COMPANY_ID` and `SAGE_INTACCT_API_USER` (accounting's README). pandoc and LibreOffice make the Word and PDF files. The scripts need Python 3.11 or later, with `pyyaml`, `python-pptx`, `openpyxl` and `pypdf`, declared in each script's `# /// script` block.
-- Uses by name from other departments: `orchestration-workstream` (software), `comms-confirm` and `portal-write-safety` (productivity), `email-drafter-method`, `comms-reply-to-email` and the agents `productivity-worker` and `productivity-reviewer` (productivity), `unslop` and `unslop-deliverable` and `brand-guide` (marketing), `month-end-workstream`, `month-end-flux`, `report-tieout` and `month-end-orchestrator` (accounting or finance).
+In `bin/`, one per script, each printing `--help`:
 
-## Scripts
+- **report-weekly**: `reporting-report-profile`, `-report-workorder`, `-report-collect`, `-report-organize`, `-report-pack`, `-report-ledger`, `-report-questions`, `-report-facts`, `-report-verify`, `-report-render`, `-report-record`, `-build-reference-docx`, and for the unattended run `reporting-report-weekly-prepare`, `-report-weekly-gates`, `-report-weekly-check`. The scripts keep their `report_*.py` names (projects' delivery pack and the client update's pack call `report_collect.py` by file name), so the commands carry `report` twice.
+- **board-package-workstream**: `reporting-board-package-pack`, `-check`, `-figures`, `-render`, `-tieout`, `-record`.
+- **client-update-workstream**: `reporting-client-update-pack`, `-check`, `-record`, `-deliver`, `-draft-show`.
+- **Shared copies** keep one unprefixed name: `confirm`, `confirm-portal`, `waiting` (comms-confirm), `report-tieout`, `powerpoint-handler`, `excel-handle`, `pdf-handle`.
 
-Each script runs by path, `python3 ~/.claude/skills/<skill>/scripts/<script>.py`, and prints `--help`. A command name used elsewhere in this README, such as `trial-balance`, is a label for the script of that name with underscores (`trial_balance.py`). Nothing is installed.
+## Contracts with other departments
 
-**`report-weekly`**
-- `report_profile.py`: writes, checks and shows the role profile a weekly report is written from.
-- `report_workorder.py`: each week's report as a work order that can be resumed.
-- `report_collect.py`: reads one author's week once and writes the evidence ledger.
-- `report_organize.py`: sorts the evidence ledger into the profile's categories, in code.
-- `report_pack.py`: collects and organises one scope's week in one command.
-- `report_ledger.py`: continuity as a ledger: the open items earlier reports left.
-- `report_questions.py`: the workers' questions as one numbered list, and the audience editor's lists.
-- `report_facts.py`: the report's figures and tables, kept in one facts set.
-- `report_verify.py`: checks a drafted report against the pack it was written from.
-- `report_render.py`: renders the approved report and its facts into the Word and PDF files.
-- `build_reference_docx.py`: builds the Word reference document the report renders through.
-- `report_record.py`: keeps the week's record and proposes what later weeks should change.
-- `report_weekly_prepare.py`: collects and organises the week before an unattended session.
-- `report_weekly_gates.py`: Gates 1 and 2 as one numbered list, and the answers.
-- `report_weekly_check.py`: whether the week's leadership report is done, from its files.
+- **Accounting's close (board package).** The `month-end-check` Close gate runs accounting's command `accounting-month-end-check <close folder> --period P --format json` (on PATH, else accounting's script in this toolbox checkout) and reads `done`, `met` and the tests not met. The **results file**, the month's results memo accounting's close writes, is read by its glob in `BOARD-RULES.md` and never written here. The results memo itself (`month-end-results-report` and its writer) moved to accounting.
+- **Productivity's email delivery (client update).** The finish step `reporting-client-update-deliver` puts the checked cover email in Outlook Drafts through comms-reply-to-email's `email_deliver.py`, and the reviewer reads the staged draft's content hash through `reporting-client-update-draft-show`, which runs comms-reply-to-email's `email_draft_show.py`. Both find productivity's script in this toolbox checkout, so the hash the reviewer records is the one delivery compares.
+- **Projects** reads `report_collect.py` from `report-weekly` for its delivery pack (unchanged).
+- **Finance's investor posting** reads the board package's files; it names no reporting skill.
 
-**`board-package-workstream`**
-- `board_package_pack.py`: gathers one company's board-package period before the session, read only.
-- `board_package_figures.py`: lists every figure printed in a board-package file, with where it is.
-- `board_package_render.py`: builds a board deck as a new .pptx from a deck spec.
-- `board_package_tieout.py`: ties every figure in the package to the closed books.
-- `board_package_record.py`: records a review or an owner-approved exception in the period's evidence file.
-- `board_package_check.py`: whether the period's board package is done, test by test.
+## Settings and environment
 
-**`client-update-workstream`**
-- `client_update_record.py`: records a week's claims, verdicts, reviews and carried items, the only writer of its evidence file.
-- `client_update_check.py`: whether the week's client update is drafted and checked, test by test.
+- Owner settings, described in [docs/settings.md](../docs/settings.md): the weekly report's Portal tier, the client update's Portal reads and its cover-email commands need `portal_mcp_config` (and `portal_server` when the server entry is not `insights-portal`), with the bearer in `INSIGHTS_PORTAL_ASSISTANT_TOKEN` or a `${VAR}` in the MCP config. `reference_docx` under `[report-weekly]` and under `[client-update-workstream]` names each one's Word reference document (optional). `contexts_dir` under `[board-package-workstream]` or `[client-update-workstream]`, else the top-level key, is where a Context named by its name is found. The weekly report store is a folder the executive names (`--store` or `REPORT_STORE_DIR`); there is no default.
+- A harvester-tier author (no Portal, mail and calendar through a connector) adds that connector's read tools to `reporting-worker`'s `tools:` on their machine; the toolbox names none.
+- pandoc and LibreOffice make the Word and PDF files. The scripts need Python 3.11 or later, with `pyyaml`, `python-pptx`, `openpyxl` and `pypdf`, declared in each script's `# /// script` block.
 
-The other commands named above live in accounting (`report-tieout` in `report-tieout`; `trial-balance`, `intacct-gl-detail` in `erp-ledger-pull`; `budget-detail-diff` in `month-end-flux`; `month-end-check` in `month-end-workstream`), productivity (`powerpoint-handler` in `office-files`; `find-contact`, `find-email`, `email-draft-show`, `email-deliver` in `comms-reply-to-email`; `outbound-check` in `comms-draft-check`) and process-engineering (`srt-transcript-collapse` in `transcript-tools`).
+## What changed in the plugin conversion (2026-10-23)
+
+| Was | Now |
+|---|---|
+| board-package-orchestrator | `reporting-board-package` |
+| board-package-writer | section Draft the package of `board-package-workstream`, run by the main agent |
+| client-update-orchestrator | `reporting-client-update` |
+| client-update-reader | section Read a batch, run by `reporting-worker` |
+| client-update-writer | section Write the update, run by the main agent |
+| weekly-report-orchestrator | `reporting-weekly-report` |
+| report-continuity, report-audience-editor, report-writer, report-intake, report-harvester | `reporting-worker`, briefed with `report-weekly`'s `workers/<name>.md` |
+| fact-check, numbers-reviewer, executive-red-team (for reporting's jobs) | `reporting-reviewer` with `review-facts`, `review-numbers`, `review-red-team` |
+| numbers-reviewer-method | merged into `review-numbers` |
+| month-end-results-writer, month-end-results-report | moved to accounting |
+| productivity's worker and reviewer for the cover email | sections Stage the cover email and Check the cover email |
+| scripts run by their path in the shared skills folder | the named commands above |
+
+Decided in the conversion, by the migration plan's recommendations:
+
+- `weekly-reporter` stays its own interactive main agent (not folded into `reporting-weekly-report` as a mode): it is started by hand and must ask live.
+- The weekly report keeps its five worker prompts as files in `workers/`, which `reporting-worker` is pointed at; a runtime without sub-agents still runs them inline.
+- The weekly report stages no covering email in either mode: the writer's covering note goes to the executive, who sends the report from their own mail.
+- The engagement-context sections stay in `client-update-workstream` (no shared `engagement-context` skill yet); the memo skill reads caption files directly (no `transcript-tools` copy).
+- `reporting-reviewer` is read-only (plan D5); with `review-numbers` it runs `report-tieout` on the tie-out ledger the main agent's tie-out wrote.
+- The board package stays in reporting; its only accounting couplings are the close-gate command and the results file above.

@@ -1,6 +1,6 @@
 ---
 name: client-delivery-orchestrator
-description: Project-manages one client engagement like a delivery lead, twice a week. From the engagement packed before the session, a planner sets the plan against the SOW baseline (never inventing one), a risk analyst keeps the RAID log, a task steward reconciles the engagement's Portal tasks, a checker and an executive red team review, and the owner's decisions become one numbered list. Done is computed by delivery-check. Start it as the main session or on a schedule; it never contacts the client. Use to run one engagement's plan, RAID log and tasks. Not for the client-facing update (client-update-orchestrator) or the owner's own project list (project-health-orchestrator).
+description: Project-manages one client engagement like a delivery lead, twice a week. From the engagement packed before the session, a planner sets the plan against the SOW baseline (never inventing one), a risk analyst keeps the RAID log, a task steward reconciles the engagement's Portal tasks, a checker and an executive red team review, and the owner's decisions become one numbered list. Done is computed by delivery-check. Start it as the main session or on a schedule; it never contacts the client. Use to run one engagement's plan, RAID log and tasks. Not for the client-facing update (reporting-client-update) or the owner's own project list (project-health-orchestrator).
 model: opus
 color: green
 skills: [client-delivery-workstream]

@@ -1,13 +1,13 @@
 # The gates
 
-Read by `SKILL.md` at Steps 8, 9, 11 and 14. Everything here is put to the executive; nothing here is decided for them. Run unattended, Gates 1 and 2 become one numbered list on the owner's task list (`SKILL.md`, "When no one is present"), with the same content and wording.
+Read by `SKILL.md` at Stages 8, 9, 11 and 14. Everything here is put to the executive; nothing here is decided for them. Run unattended, Gates 1 and 2 become one numbered list on the owner's task list (`SKILL.md`, "When no one is present"), with the same content and wording.
 
-## The workers' questions (Step 8)
+## The workers' questions (Stage 8)
 
 Every worker ends with a parseable `QUESTIONS FOR THE EXECUTIVE` block and marks the item each question holds up as pending. Save each worker's output to a file, then:
 
 ```bash
-python3 ~/.claude/skills/report-weekly/scripts/report_questions.py collect --from <scratch>/<author>-continuity.txt \
+reporting-report-questions collect --from <scratch>/<author>-continuity.txt \
   --from <scratch>/<author>-editor.txt \
   --out <scratch>/<author>-questions.json
 ```
@@ -15,16 +15,16 @@ python3 ~/.claude/skills/report-weekly/scripts/report_questions.py collect --fro
 That gives one numbered list with the duplicates folded together. **Put it to the executive batched, at the next gate, never one at a time and never skipped.** Six questions in one numbered list are answered in a minute; six interruptions are answered over a day. Then record each answer:
 
 ```bash
-python3 ~/.claude/skills/report-weekly/scripts/report_questions.py answer --questions <scratch>/<author>-questions.json \
+reporting-report-questions answer --questions <scratch>/<author>-questions.json \
   --id 2 --answer "<what the executive said>"
 ```
 
 An answered question is citable as `owner://questions/<id>`, which the verifier accepts the way it accepts a gate answer. An item held up by a question nobody answered stays pending and the report says so; nothing resolves it by assumption.
 
-## Gate 1: confirm this week's categories (Step 9)
+## Gate 1: confirm this week's categories (Stage 9)
 
 ```bash
-python3 ~/.claude/skills/report-weekly/scripts/report_workorder.py wait --period <period> --gate gate1 \
+reporting-report-workorder wait --period <period> --gate gate1 \
   --questions <how many> --store <store>
 ```
 
@@ -38,7 +38,7 @@ Its weight follows what the week found, and `proposals.gate_weight` in the pack 
 4. **Catch-all candidates**, from `proposals.other_topics_candidates`, and the audience editor's **Leave out** list, so anything judged internal can be pulled back.
 5. **Misfiled items**, from `gate1_proposals` in the verdicts file, one numbered line each, in its own words: "move <ref> to <category>?", or "strike <ref>?" where the editor read it as belonging to no category in this scope. Show what it is filed under now and the editor's one line of why. Nothing has moved: the digest still has each of them where the signals put it, and this is the answer that moves it.
 6. **Carry-overs that have to be answered**, from the continuity worker's Must be answered list, each with its ledger id.
-7. **The workers' questions**, the numbered list from Step 8.
+7. **The workers' questions**, the numbered list from Stage 8.
 
 Then ask, in these words:
 
@@ -49,7 +49,7 @@ Then ask, in these words:
 
 For example: "1) ok 2) drop 3) add Vendor dispute 4) pull back 2 5) move 1". Then wait.
 
-A repeated misfiling is a profile problem rather than a weekly one. Where the same category claims the wrong item two weeks running, say so and offer to fix the signal: a keyword matching more than it means is the usual cause, and `python3 ~/.claude/skills/report-weekly/scripts/report_profile.py validate` names the ones that will.
+A repeated misfiling is a profile problem rather than a weekly one. Where the same category claims the wrong item two weeks running, say so and offer to fix the signal: a keyword matching more than it means is the usual cause, and `reporting-report-profile validate` names the ones that will.
 
 ### Writing the answers down
 
@@ -75,13 +75,13 @@ Write the answers into `<scratch>/<author>-gate1.json`. The file applies **to th
 }
 ```
 
-A pull-back with no category named goes to the catch-all, which is what "put that back in" means. `move` is the misfiled answer and it always names the category: it takes an item the signals assigned to one category and re-files it under another, and the re-organised digest in Step 10 of `SKILL.md` is where it lands. `moves` in the verdicts file is this list already written; the executive's yes is what puts it in the file. **A lasting change is a second question.** Where the executive adds, drops, renames or folds a category, ask once:
+A pull-back with no category named goes to the catch-all, which is what "put that back in" means. `move` is the misfiled answer and it always names the category: it takes an item the signals assigned to one category and re-files it under another, and the re-organised digest in Stage 10 of `SKILL.md` is where it lands. `moves` in the verdicts file is this list already written; the executive's yes is what puts it in the file. **A lasting change is a second question.** Where the executive adds, drops, renames or folds a category, ask once:
 
 > Make this permanent, or just for this week?
 
 Only on an explicit yes do you edit the author's profile, and only the categories they named. A category struck for one quiet week is not a category lost for good.
 
-## Gate 2: the silences, the figures and the table (Step 11)
+## Gate 2: the silences, the figures and the table (Stage 11)
 
 **Print the candidate list before you ask anything.** Take the audience editor's Keep list as Gate 1 left it, drop what the executive struck, add what they pulled back, and print it under the confirmed categories, one line per item with the reason a leadership reader would care. This is the whole of what the week produced and judged significant, and it has to be in front of the executive before the questions, because every question below is a question about that list rather than about the week. Asked cold, "what were your wins" is a memory test. Asked against the list, it is a gap check, which is an easier question and a better answer.
 
@@ -106,7 +106,7 @@ Then show the pack's `silent` block: the categories with no evidence, the projec
 **The table is the normal case and it is one command.** Whatever they have, a CSV, a Markdown pipe table, or a block of cells pasted out of a spreadsheet, goes in as it stands:
 
 ```bash
-python3 ~/.claude/skills/report-weekly/scripts/report_facts.py add-table --facts <scratch>/<author>-facts.json --key october \
+reporting-report-facts add-table --facts <scratch>/<author>-facts.json --key october \
   --from <the file they gave you> --title "October results" \
   --as-of <YYYY-MM-DD> [--status final] [--source "<where it came from>"]
 ```
@@ -116,29 +116,29 @@ With no `--from` it reads standard input, which is what makes pasting one in wor
 A figure that is not in a table:
 
 ```bash
-python3 ~/.claude/skills/report-weekly/scripts/report_facts.py init --facts <scratch>/<author>-facts.json --period <period> \
+reporting-report-facts init --facts <scratch>/<author>-facts.json --period <period> \
   --profile <store>/profile.md          # once, at the start of the week
-python3 ~/.claude/skills/report-weekly/scripts/report_facts.py set --facts <scratch>/<author>-facts.json --key cash_on_hand \
+reporting-report-facts set --facts <scratch>/<author>-facts.json --key cash_on_hand \
   --label "Cash on hand" --value 1840000 --unit usd --as-of <date> --status final
-python3 ~/.claude/skills/report-weekly/scripts/report_facts.py set --facts <scratch>/<author>-facts.json --key close_days \
+reporting-report-facts set --facts <scratch>/<author>-facts.json --key close_days \
   --not-available --reason "the close is not signed off" --unit days \
   --as-of <date> --status preliminary
 ```
 
-A figure the week could not produce is **not available**, never zero and never an estimate. Then check the set and re-run Step 10 of `SKILL.md` so the metrics land in the digest:
+A figure the week could not produce is **not available**, never zero and never an estimate. Then check the set and re-run Stage 10 of `SKILL.md` so the metrics land in the digest:
 
 ```bash
-python3 ~/.claude/skills/report-weekly/scripts/report_facts.py validate --facts <scratch>/<author>-facts.json
+reporting-report-facts validate --facts <scratch>/<author>-facts.json
 ```
 
-The computed month-end table, `python3 ~/.claude/skills/report-weekly/scripts/report_facts.py import-table`, exists for the weeks a close has just landed and the executive wants the variances and the footing check done in code. It is never required and you do not raise it unasked.
+The computed month-end table, `reporting-report-facts import-table`, exists for the weeks a close has just landed and the executive wants the variances and the footing check done in code. It is never required and you do not raise it unasked.
 
 Write both gates' answers verbatim to `<scratch>/<author>-owner-input.md` with `Write`, under `## Gate 1` and `## Gate 2`, and pass that file's text to the writer. It cites them as `owner://gate1` and `owner://gate2`, and `report-verify` accepts both: they are evidence the pack cannot hold, so nothing is checked against them. Where an executive's answer contradicts the data, the executive wins and the report says so.
 
-## Gate 3: the report itself (Step 14)
+## Gate 3: the report itself (Stage 14)
 
 ```bash
-python3 ~/.claude/skills/report-weekly/scripts/report_workorder.py wait --period <period> --gate gate3 --store <store>
+reporting-report-workorder wait --period <period> --gate gate3 --store <store>
 ```
 
 Show the executive the full text, the verifier's counts and the tie-out's under it, the carry-overs it answered, any item the writer held out for an unanswered question, and the delivery the profile asks for.

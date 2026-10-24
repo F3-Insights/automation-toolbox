@@ -1,9 +1,9 @@
 # Weekly report outline
 
-**Superseded as a form.** The one document an author fills in is the role profile, `weekly-report-profile.md`, written by `python3 ~/.claude/skills/report-weekly/scripts/report_profile.py init` and filled in by the setup interview in the `report-weekly` skill (`setup.md`). The outline is a projection of that profile, not a second document anybody keeps in step by hand.
+**Superseded as a form.** The one document an author fills in is the role profile, `weekly-report-profile.md`, written by `reporting-report-profile init` and filled in by the setup interview in the `report-weekly` skill (`setup.md`). The outline is a projection of that profile, not a second document anybody keeps in step by hand.
 
-- `python3 ~/.claude/skills/report-weekly/scripts/report_profile.py show --profile <profile.md> --outline` writes the outline Markdown.
-- `python3 ~/.claude/skills/report-weekly/scripts/report_pack.py --outline-file <profile.md>` and `python3 ~/.claude/skills/report-weekly/scripts/report_collect.py --outline-file <profile.md>` take the profile itself. They recognise one and project it, so no category list is retyped.
+- `reporting-report-profile show --profile <profile.md> --outline` writes the outline Markdown.
+- `reporting-report-pack --outline-file <profile.md>` and `reporting-report-collect --outline-file <profile.md>` take the profile itself. They recognise one and project it, so no category list is retyped.
 - The run looks for a note titled `Weekly report profile` first, then `Weekly report outline`. The older `Weekly report spec` title is no longer read. The ledger records which title answered, and whether the text was read as a profile or an outline.
 - An outline written by hand before the profile existed still parses. A section only the profile has, Leadership team, Never recorded or Form rules, comes back in `missing_sections` as a warning and never as an error that stops the run.
 

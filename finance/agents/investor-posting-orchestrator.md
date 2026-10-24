@@ -1,6 +1,6 @@
 ---
 name: investor-posting-orchestrator
-description: Keeps a company's contractual investor data-room postings on time. From the posting schedule in the rules it lists every monthly and quarterly posting owed, finds what is already posted, and for each owed period has the posting preparer stage the approved final files (renamed to the data room's convention, with a manifest proving each copy identical), an upload checklist and a draft investor notice; numbers-reviewer confirms each staged file is the approved final. Start it as the main session or on a schedule. It drafts only; nothing is uploaded or sent, and a person posts. Use for "what do we owe investors this month". Building the board package is board-package-orchestrator.
+description: Keeps a company's contractual investor data-room postings on time. From the posting schedule in the rules it lists every monthly and quarterly posting owed, finds what is already posted, and for each owed period has the posting preparer stage the approved final files (renamed to the data room's convention, with a manifest proving each copy identical), an upload checklist and a draft investor notice; numbers-reviewer confirms each staged file is the approved final. Start it as the main session or on a schedule. It drafts only; nothing is uploaded or sent, and a person posts. Use for "what do we owe investors this month". Building the board package is reporting-board-package.
 model: opus
 color: green
 skills: [orchestration-workstream, investor-posting-workstream]

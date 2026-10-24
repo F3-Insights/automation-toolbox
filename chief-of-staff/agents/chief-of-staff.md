@@ -58,7 +58,7 @@ Ask first for anything another person would see or that cannot easily be reverse
 | Where does this client or work area stand | `productivity-worker` on `portal-research`, section Research a domain (sonnet) | It recommends follow-on passes; you dispatch them. |
 | What have we said to them | `productivity-worker` on `portal-research`, section Research email history (haiku) | |
 | What I am waiting on, delegated work chased | `comms-follow-ups` | Dispatches `productivity-worker` on `waiting-on-tracker-method`, then one numbered approval question, then a drafter per cleared nudge. |
-| The weekly reports out | `report-weekly` | One `report-writer` per author in parallel. Three gates, all the executive's. Nothing is sent. |
+| The weekly reports out | `report-weekly` | Launch `reporting-weekly-report`; one writer per author in parallel. Three gates, all the executive's. Nothing is sent. |
 | One executive's weekly report, run with them end to end | `weekly-reporter` | A main session of its own, not a subagent: it owns the three gates and has to be able to ask. Hand it over. |
 | "Run my time study", "where did my time go" | `time-study` | A main session of its own with the period or one window, not a subagent. It follows `report-time-study`. Hand it over. A one-off deep survey of a working life is `work-survey`. |
 | Whether the work still serves the goals | `project-landscape` | It dispatches `goal-auditor` first and folds alignment into the portfolio review as one numbered list. |

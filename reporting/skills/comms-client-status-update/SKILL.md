@@ -1,8 +1,8 @@
 ---
 name: comms-client-status-update
-description: "Write the periodic status memo a client executive actually reads, matter-of-fact, from the week's transcripts, notes and register, in two lengths: the one-page weekly update, or the full status memo with analysis sections, clarifications, open actions with owner and date, and open items. Use whenever a client update, engagement status or client executive memo is due. Not for slides (project-status-deck), the unattended sourced weekly update (client-update-orchestrator) or a report to the owner's own leadership team (report-weekly)."
+description: "Write the periodic status memo a client executive actually reads, matter-of-fact, from the week's transcripts, notes and register, in two lengths: the one-page weekly update, or the full status memo with analysis sections, clarifications, open actions with owner and date, and open items. Use whenever a client update, engagement status or client executive memo is due. Not for slides (project-status-deck), the unattended sourced weekly update (reporting-client-update) or a report to the owner's own leadership team (report-weekly)."
 argument-hint: "[client] [period] [weekly | full] [sources: folder or notes]"
-allowed-tools: Read, Glob, Grep, Write, Bash(python3 ~/.claude/skills/transcript-tools/scripts/srt_transcript_collapse.py:*)
+allowed-tools: Read, Glob, Grep, Write
 ---
 
 # Client status update
@@ -65,6 +65,6 @@ Open action. Good: "Warehouse team ([Person C], coordinated by [Person D]): conf
 
 ## Sources and process
 
-Read, in this order: the previous update (so you know what is background now); the period's transcripts (run `srt-transcript-collapse` on any `.srt`/`.vtt` first); meeting notes; the register or task list for open actions. Draft. Then run the cut list above as a grep, then read once as the recipient. The `unslop-deliverable` skill is the second pass when the memo goes beyond a page.
+Read, in this order: the previous update (so you know what is background now); the period's transcripts (read an `.srt` or `.vtt` caption file for its spoken lines and skip the cue numbers and timings); meeting notes; the register or task list for open actions. Draft. Then run the cut list above as a grep, then read once as the recipient. The `unslop-deliverable` skill is the second pass when the memo goes beyond a page.
 
 Write the file as markdown next to the sources, named `<Client> Status Update YYYY-MM-DD.md` (or `Weekly Update`). Rendering to HTML or PDF is a separate step; the brand tokens live in the `brand-guide` skill. You do not send anything; the owner reviews and sends.
