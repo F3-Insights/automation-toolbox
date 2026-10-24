@@ -26,8 +26,9 @@ def test_start_writes_the_cycle_with_the_registry(root):
     out = start(root, paths=cy.resolve_paths())
     assert out["status"] == "ok" and out["display_name"] == "Chief of Staff"
     assert "kind" not in out and c.Path(out["folder"]).name.isdigit()
-    assert {d["doer"] for d in out["doers"]} == {"produce-work", "meeting-prep", "person-brief"}
+    assert {d["doer"] for d in out["doers"]} == {"produce-work", "person-brief", "domain-brief"}
     assert any("orchestrator is launched" in n for n in out["notes"])
+    assert any("meeting-prep: worker productivity-worker is not this department's" in n for n in out["notes"])
     assert out["retired_doers"]["relationship-check"].startswith("replaced")
 
 
@@ -45,8 +46,8 @@ def test_a_backfill_is_labelled_midnight_and_monday_synthesis_is_due_once(root):
 
 def test_record_keeps_one_row_per_dispatch(root):
     folder = start(root)["folder"]
-    cy.record(folder, "meeting-prep", "Fabrikam review", "dispatched", "first")
-    out = cy.record(folder, "meeting-prep", "Fabrikam review", "failed", "second")
+    cy.record(folder, "person-brief", "Fabrikam review", "dispatched", "first")
+    out = cy.record(folder, "person-brief", "Fabrikam review", "failed", "second")
     assert out["dispatches"] == 1 and out["row"]["outcome"] == "second"
     with pytest.raises(c.Bad):
         cy.record(folder, "x", "", "made-up", "y")
@@ -119,16 +120,34 @@ def test_trigger_items_can_come_from_a_file(tmp_path):
 
 
 def test_a_main_agent_by_its_new_name_is_never_a_doer(tmp_path):
-    """The department migration drops -orchestrator; the renamed main agents are still refused."""
+    """The department migration drops -orchestrator; the renamed main agents are still refused,
+    and since the plugin conversion no agent route is accepted at all."""
     registry = tmp_path / "doers.toml"
     registry.write_text('[[doer]]\nname = "reconcile"\nroute = "agent"\nagent = "task-steward"\n\n'
-                        '[[doer]]\nname = "cycle"\nroute = "agent"\nagent = "chief-of-staff-cycle"\n\n'
+                        '[[doer]]\nname = "cycle"\nroute = "agent"\nagent = "chief-of-staff-cycle-runner"\n\n'
                         '[[doer]]\nname = "brief"\nroute = "agent"\nagent = "productivity-worker"\n')
     out = c.load_doers(registry)
-    assert set(out["doers"]) == {"brief"}
+    assert out["doers"] == {}
     assert sum("orchestrator is launched" in p for p in out["problems"]) == 2
-    assert c.CYCLE_AGENT == "chief-of-staff-cycle-orchestrator" and "chief-of-staff-cycle" in c.OWN_AGENTS
+    assert any("route agent (productivity-worker) is retired" in p for p in out["problems"])
+    assert c.CYCLE_AGENT == "chief-of-staff-cycle-runner" and "chief-of-staff-cycle-orchestrator" in c.OWN_AGENTS
     assert not any(n.endswith("-orchestrator") for n in c.RENAMED_MAIN_AGENTS)
+
+
+def test_a_skill_doer_runs_only_this_plugins_skills_by_its_worker(tmp_path):
+    registry = tmp_path / "doers.toml"
+    registry.write_text('[[doer]]\nname = "prep"\nroute = "skill"\nskill = "meeting-prep"\n\n'
+                        '[[doer]]\nname = "brief"\nroute = "skill"\nskill = "portal-research"\nworker = "productivity-worker"\n\n'
+                        '[[doer]]\nname = "ok"\nroute = "skill"\nskill = "portal-research"\nsection = "Research a domain"\n')
+    out = c.load_doers(registry)
+    assert set(out["doers"]) == {"ok"} and out["doers"]["ok"]["worker"] == "chief-of-staff-worker"
+    assert any("meeting-prep is not a skill of the chief-of-staff plugin" in p for p in out["problems"])
+    assert any("worker productivity-worker is not this department's" in p for p in out["problems"])
+
+
+def test_only_the_departments_own_doer_skills_can_be_improved():
+    doers = c.load_doers()["doers"]
+    assert c.doer_skills(doers) == ["task-stack-produce"]  # portal-research is a shared copy
 
 
 def test_other_skills_scripts_come_from_this_checkout():
@@ -136,3 +155,10 @@ def test_other_skills_scripts_come_from_this_checkout():
     toolbox = SCRIPTS.parents[3]
     for path in (c.NOTIFY_SCRIPT, c.PRODUCE_INSTRUCTIONS):
         assert path.is_file() and toolbox in path.parents, path
+
+
+def test_skill_paths_finds_this_departments_skill_first():
+    import _skill_paths as sp
+    toolbox = SCRIPTS.parents[3]
+    assert sp.toolbox_root(SCRIPTS / "x.py") == toolbox
+    assert sp.skill_file("task-stack-produce", "SKILL.md") == toolbox / "chief-of-staff" / "skills" / "task-stack-produce" / "SKILL.md"

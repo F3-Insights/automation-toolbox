@@ -31,7 +31,7 @@ The rules, enforced here, again in the decide check and again at launch:
 `launch` runs one launch the decide check accepted. It refuses unless cycle.json says
 whether the cycle is a dry run, takes the mode and checks the params against the registry
 again (never trusting decision.json for either), runs fleet_launch.py NAME --authority propose
---cap BACKSTOP --by chief-of-staff-cycle-orchestrator --format json [--dry-run] --params k=v,
+--cap BACKSTOP --by chief-of-staff-cycle-runner --format json [--dry-run] --params k=v,
 and records it in execution.json as launch:NAME with its status (launched, refused, failed)
 and why. In a dry-run cycle it records dry-run, would launch, and runs nothing.
 

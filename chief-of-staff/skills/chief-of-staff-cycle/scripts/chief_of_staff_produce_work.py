@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""chief_of_staff_produce_work.py: the produce-work doer's two halves in code, around the producer.
+"""chief-of-staff-produce-work: the produce-work doer's two halves in code, around the draft the
+cycle's main agent writes (chief-of-staff-cycle-runner, by chief-of-staff-cycle's section Produce one draft).
 
-    pack TARGET --cycle CYCLE_DIR [--dry-run]
+    pack TARGET --cycle CYCLE_DIR [--add REF ...] [--dry-run]
     save TARGET --cycle CYCLE_DIR --fingerprint F --result FILE [--dry-run]
 
 TARGET is task:UUID, project:UUID, meeting:UUID, email:UUID or goal:UUID, never free text.
 
 `pack` reads the selected record with one Portal `get`, refuses a response that does not hold
-the record's own id (a not-found message echoes the id back), adds the fixed guidance (the
+the record's own id (a not-found message echoes the id back), adds each related record named
+with --add (TYPE:UUID or portal://TYPE/UUID, at most six: the thread, meeting or project the
+draft needs, read the same way and cited as portal://TYPE/UUID), adds the fixed guidance (the
 owner's principles file and voice guide, the settings principles and voice_guide, each cut to
 16,000 characters) and refuses a packet over 120,000 characters. The fingerprint covers the
 production instructions (task-stack-produce's SKILL.md) and the packet, so unchanged
@@ -16,7 +19,7 @@ evidence maps to the same folder:
 - held: a result for this evidence exists but is blocked or was edited; kept (exit 3).
 - ok: the packet is written as source.json in the artifact folder (exit 0).
 
-`save` validates the producer's JSON (prepared: a title, an artifact of at least 200
+`save` validates the draft's JSON (prepared: a title, an artifact of at least 200
 characters, source references all from the packet including a portal:// one, assumptions and
 review items as lists of strings; blocked: a reason), then writes review.json, artifact.md
 and manifest.json. The structural check is all it proves; a person still reviews the draft.
@@ -26,7 +29,7 @@ with --dry-run, or with --dry-run, nothing is written: pack answers would_pack a
 answers would_save. Exit 0 to go on, 3 for a hold or an invalid result, 2 when it could not run.
 
 Example:
-    python3 chief_of_staff_produce_work.py pack task:00000000-1111-4111-8111-111111111111 --cycle CYCLE
+    chief-of-staff-produce-work pack task:00000000-1111-4111-8111-111111111111 --cycle CYCLE
 """
 
 import argparse
@@ -39,6 +42,9 @@ from pathlib import Path
 import _common as c
 
 TARGET = re.compile(r"^(task|project|meeting|email|goal):(" + c.UUID + r")$")
+RELATED = re.compile(r"^(?:portal://)?(task|project|meeting|calendar_event|email|goal|note|contact|company)[:/]("
+                     + c.UUID + r")$")
+MAX_RELATED = 6
 GUIDANCE_CHARS = 16000
 PACKET_MAX = 120000
 MIN_ARTIFACT = 200
@@ -69,19 +75,44 @@ def guidance_files():
     return out
 
 
-def build_packet(client, target):
-    kind, uid = parse_target(target)
+def _read(client, kind, uid, what):
     data = client.call("get", {"entity_type": kind, "id_or_query": uid})
     if not isinstance(data, dict) or data.get("error") or set(data) <= {"text"}:
-        raise c.Bad("the source could not be resolved")
+        raise c.Bad(f"the {what} could not be resolved")
     if not _contains_id(data, uid):
-        raise c.Bad("the selected record was not present in the response")
+        raise c.Bad(f"the {what} was not present in the response")
+    return data
+
+
+def parse_related(refs):
+    """[(kind, uuid)] for --add, in order, without repeats; at most MAX_RELATED."""
+    out = []
+    for ref in refs or []:
+        m = RELATED.match(str(ref).strip())
+        if not m:
+            raise c.Bad(f"--add takes TYPE:UUID or portal://TYPE/UUID, got {c.flat(ref, 80)!r}")
+        pair = (m.group(1), m.group(2).lower())
+        if pair not in out:
+            out.append(pair)
+    if len(out) > MAX_RELATED:
+        raise c.Bad(f"--add takes at most {MAX_RELATED} related records")
+    return out
+
+
+def build_packet(client, target, related=None):
+    kind, uid = parse_target(target)
+    data = _read(client, kind, uid, "source")
     sources = [{"ref": f"portal://{kind}/{uid}", "content": data}]
+    for rkind, ruid in parse_related(related):
+        if (rkind, ruid) == (kind, uid.lower()):
+            continue
+        sources.append({"ref": f"portal://{rkind}/{ruid}", "content": _read(client, rkind, ruid, f"related {rkind}")})
+    related_count = len(sources) - 1
     for ref, path in guidance_files():
         sources.append({"ref": ref, "content": path.read_text(encoding="utf-8")[:GUIDANCE_CHARS]})
     packet = {"target": target, "sources": sources,
-              "limitations": "Hydrated selected entity only. Do not assume complete inbox, attachment or "
-                             "current-draft coverage."}
+              "limitations": ("Hydrated selected entity" + (" and the related records added" if related_count else "")
+                              + " only. Do not assume complete inbox, attachment or current-draft coverage.")}
     if len(json.dumps(packet)) > PACKET_MAX:
         raise c.Bad("the source packet is too large; select a narrower task")
     return packet
@@ -111,13 +142,13 @@ def existing_prepared(folder):
 
 def validate_result(value, refs):
     if not isinstance(value, dict):
-        raise c.Bad("the worker result is not an object")
+        raise c.Bad("the draft is not a JSON object")
     if value.get("status") == "blocked":
         if not isinstance(value.get("reason"), str) or not value["reason"].strip():
             raise c.Bad("a blocked result needs a reason")
         return value
     if value.get("status") != "prepared":
-        raise c.Bad("the worker did not prepare an artifact")
+        raise c.Bad("the draft is neither prepared nor blocked")
     for field in ("title", "artifact"):
         if not isinstance(value.get(field), str) or not value[field].strip():
             raise c.Bad("missing deliverable content")
@@ -140,9 +171,9 @@ def cycle_is_dry(cycle):
     return bool(data.get("dry_run"))
 
 
-def pack(client, root, target, cycle, dry_run=False):
+def pack(client, root, target, cycle, dry_run=False, related=None):
     dry_run = dry_run or cycle_is_dry(cycle)
-    packet = build_packet(client, target)
+    packet = build_packet(client, target, related)
     fp = fingerprint(packet)
     folder = artifact_dir(root, target, fp)
     if existing_prepared(folder):
@@ -175,7 +206,7 @@ def save(root, target, fp, result_text, cycle, dry_run=False):
         value = validate_result(c.load_object(result_text), {s.get("ref") for s in packet.get("sources") or []})
     except c.Bad as exc:
         return {"status": "invalid", "target": target, "reason": str(exc),
-                "outcome": "failed: the worker's result did not pass the structural check; nothing claimed"}
+                "outcome": "failed: the draft did not pass the structural check; nothing claimed"}
     if dry_run:
         return {"status": "would_save", "target": target, "result_status": value["status"], "dry_run": True}
     os.umask(0o077)
@@ -206,15 +237,17 @@ def main(argv=None):
         if name == "pack":
             s.add_argument("--config", default=None, help="MCP config holding the Portal (default: setting portal_mcp_config)")
             s.add_argument("--server", default=None)
+            s.add_argument("--add", dest="related", action="append", default=[],
+                           help="A related record the draft needs, TYPE:UUID or portal://TYPE/UUID (repeat, at most 6)")
         else:
             s.add_argument("--fingerprint", dest="fp", required=True)
-            s.add_argument("--result", dest="result_path", required=True, help="The producer's reply, saved verbatim")
+            s.add_argument("--result", dest="result_path", required=True, help="The draft's JSON, saved verbatim")
     args = p.parse_args(argv)
     try:
         cycle = c.cycle_dir(args.cycle_dir)
         root = c.state_root(args.state)
         if args.cmd == "pack":
-            out = pack(c.Portal(args.config, args.server), root, args.target, cycle, args.dry_run)
+            out = pack(c.Portal(args.config, args.server), root, args.target, cycle, args.dry_run, args.related)
             c.emit(out, c.STOP if out["status"] == "held" else c.OK)
         text = Path(args.result_path).expanduser().read_text(encoding="utf-8", errors="replace")
         out = save(root, args.target, args.fp, text, cycle, args.dry_run)

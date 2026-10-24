@@ -22,7 +22,6 @@ From Sentinel, an Automation launches a main agent by name; the overlay's `subag
 | `weekly-reporter` | none (interactive) | The same weekly flow with the executive present, started as the main session; asks the gates live |
 | `reporting-worker` | | One slice: a batch of client-update sources, the cover email staged, or one weekly-report worker prompt (intake, harvester, continuity, audience editor, writer) |
 | `reporting-reviewer` | | Independent check against the named checklist section; edits nothing |
-| `fact-check`, `numbers-reviewer`, `executive-red-team` | | Kept only while other departments' agents still dispatch them by name; no reporting job uses them. Their checklists are `review-facts`, `review-numbers` and `review-red-team`, which `reporting-reviewer` follows |
 
 Both client updates are one job on a different engagement, so they share one main agent. The weekly report's two Automations are one job in two phases (the owner answers the gates between them), so they share one main agent with the phase as an input.
 
@@ -71,7 +70,7 @@ In `bin/`, one per script, each printing `--help`:
 | client-update-writer | section Write the update, run by the main agent |
 | weekly-report-orchestrator | `reporting-weekly-report` |
 | report-continuity, report-audience-editor, report-writer, report-intake, report-harvester | `reporting-worker`, briefed with `report-weekly`'s `workers/<name>.md` |
-| fact-check, numbers-reviewer, executive-red-team (for reporting's jobs) | `reporting-reviewer` with `review-facts`, `review-numbers`, `review-red-team` |
+| fact-check, numbers-reviewer, executive-red-team (deleted 2026-10-24, when chief-of-staff, their last user, converted; every department's reviewer now follows the checklists) | `reporting-reviewer` with `review-facts`, `review-numbers`, `review-red-team` |
 | numbers-reviewer-method | merged into `review-numbers` |
 | month-end-results-writer, month-end-results-report | moved to accounting |
 | productivity's worker and reviewer for the cover email | sections Stage the cover email and Check the cover email |

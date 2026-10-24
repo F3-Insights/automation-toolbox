@@ -27,6 +27,7 @@ The change set is signed `daily-planner`; `task-stack-apply`'s alias table maps 
 | Skill | Run by | What it holds |
 |---|---|---|
 | `daily-plan-method` | daily-planner, worker | Steps; the pick-three rubric, fitting the day, the evening close; sections Check the plan, Gather one domain, Done today; the plan file's shape |
+| `start-session` | the owner, interactively | Starts the day or reorients a session from today's plan note; with no note, plans the morning by hand with `recurring-summaries-daily-plan-pull` and the rubric. Writes nothing. Moved here from chief-of-staff on 2026-10-24 |
 | `task-stack-workstream` | daily-planner, reviewer (shared copy) | Task-stack conduct, the change-set contract, checklist Check task-stack ops |
 | `orchestration-workstream` | all (shared copy) | The conduct and return block |
 
@@ -44,12 +45,12 @@ In `bin/`: `recurring-summaries-daily-plan-pull` (the day's read-only Portal pul
 ## File contracts with other departments
 
 - The morning's focus-block proposals land in `<state_dir>/daily-plan/<date>/morning.json` when the note is published; productivity's calendar steward reads that file (its `daily_plan_state` setting) and puts each on its approval list. Neither department dispatches the other.
-- chief-of-staff's `start-session` reads the day's plan note and, with no note, runs the pull by hand.
+- `start-session` (this plugin's, since chief-of-staff converted) reads the day's plan note and, with no note, runs the pull by hand.
 
 ## Decisions taken in the conversion
 
 - The plugin keeps the folder name `recurring-summaries` (plan D9 proposed `daily`): renaming touches toolbox-wide files other departments' conversions edit at the same time, and the main agent is already called `daily-planner`, which every alias table knows. Rename at the wave-7 cleanup if the long command names grate.
-- `start-session` stays in chief-of-staff (plan D10 proposed moving it here) until that department converts; it reads the plan note and the pull, a file and a command, not an agent.
+- decided: `start-session` moved here from chief-of-staff (plan D10) when chief-of-staff converted; the front door hands "start my day" over to this plugin.
 - The done-list gather stays a worker slice on haiku (plan risk 1); with one or two packets the planner gathers them itself.
 
 ## Settings and environment

@@ -1,6 +1,6 @@
 ---
 name: portal-research
-description: "How one research pass over the Insights Portal is done and returned: a person brief, an email history on a topic, person or company, or a domain briefing. Run by productivity-worker on the section its brief names (the person and email sections at haiku, the domain at sonnet), dispatched by a main agent that needs context it should not gather in its own window. Read-only; returns findings, never raw mail. Not for the pinned email being answered (comms-reply-to-email, section Research the email) or a prep note on a calendar event (meeting-prep)."
+description: "How one research pass over the Insights Portal is done and returned: a person brief, an email history on a topic, person or company, or a domain briefing. Run by a department's worker on the section its brief names (the person and email sections at haiku, the domain at sonnet), dispatched by a main agent that needs context it should not gather in its own window. Read-only; returns findings, never raw mail. Not for the pinned email being answered (comms-reply-to-email, section Research the email) or a prep note on a calendar event (meeting-prep)."
 user-invocable: false
 ---
 
