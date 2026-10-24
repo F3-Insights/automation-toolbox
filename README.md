@@ -175,7 +175,7 @@ Each folder at the root is a department. Open its README for what is inside and 
 | [Compliance & Governance](compliance/) | Filing calendars, IT and AI governance evidence, entity wind-downs | 8 / 3 |
 | [Software Development](software/) | Issue-to-pull-request factory, review, verification, releases, and how to build orchestrators; a Claude Code plugin | 6 / 18 |
 | [Sales & Business Development](sales/) | Pipeline reviews, lead intake, proposals and statements of work, contract audits | 6 / 2 |
-| [Marketing & Writing](marketing/) | Content and case studies, brand, and the unslop editing skills | 4 / 8 |
+| [Marketing & Writing](marketing/) | Content and case studies, brand, and the unslop editing skills | 4 / 13 |
 | [Training & Community](learning/) | Seminar and workshop decks, peer learning groups | 4 / 2 |
 
 <details>
@@ -208,8 +208,8 @@ Each folder at the root is a department. Open its README for what is inside and 
   - `bd-pipeline-orchestrator`: runs the weekly pipeline pass
   - `bd-proposal-orchestrator`: drafts a proposal or SOW and audits its contract documents
 - **Marketing**
-  - `marketing-content-orchestrator`: runs the editorial pipeline
-  - `marketing-case-study-orchestrator`: finishes one case study from a closed engagement
+  - `marketing-post-writer`: runs the editorial pipeline
+  - `marketing-case-study-writer`: finishes one case study from a closed engagement
 - **Training**
   - `learning-seminar-orchestrator`: builds or revises one seminar, workshop or lab deck end to end
   - `learning-community-orchestrator`: runs one session of a peer learning group

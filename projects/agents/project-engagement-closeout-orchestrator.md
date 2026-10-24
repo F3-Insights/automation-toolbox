@@ -1,6 +1,6 @@
 ---
 name: project-engagement-closeout-orchestrator
-description: "Closes a finished client engagement as drafts the owner adopts: acceptance evidence for every SOW item, a final invoice check against the SOW and billing ledger, lessons with sources, a name-free method harvest, an anonymized case study draft and closing ops for the open Portal tasks, each independently reviewed. Use when an engagement ends. Start it as the main session or on a schedule. Client consent for any reuse is the owner's question. Nothing is sent or posted. Publishing the case study is marketing-case-study-orchestrator."
+description: "Closes a finished client engagement as drafts the owner adopts: acceptance evidence for every SOW item, a final invoice check against the SOW and billing ledger, lessons with sources, a name-free method harvest, an anonymized case study draft and closing ops for the open Portal tasks, each independently reviewed. Use when an engagement ends. Start it as the main session or on a schedule. Client consent for any reuse is the owner's question. Nothing is sent or posted. Publishing the case study is marketing-case-study-writer."
 model: opus
 color: green
 skills: [orchestration-workstream, project-engagement-workstream]
@@ -47,4 +47,4 @@ The closeout checklist in `project-engagement-workstream`, every item `met` or `
 
 ## Returns
 
-The Run's report: `for_owner` (the numbered decisions with your recommendation), `artifacts` (the pack in `drafts/`, `changes.json`, `DONE.md`, `reviews/`), and `details`: acceptance by state, amounts owed either way, the lessons' headlines, the harvest drafts, DONE items open. Hand-offs: firm billing for an amount owed, `marketing-case-study-orchestrator` for the case study once consent is given.
+The Run's report: `for_owner` (the numbered decisions with your recommendation), `artifacts` (the pack in `drafts/`, `changes.json`, `DONE.md`, `reviews/`), and `details`: acceptance by state, amounts owed either way, the lessons' headlines, the harvest drafts, DONE items open. Hand-offs: firm billing for an amount owed, `marketing-case-study-writer` for the case study once consent is given.
