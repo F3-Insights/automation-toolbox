@@ -11,7 +11,7 @@ names. Each source:
     name      lowercase kebab; the prefix of every item key from it
     kind      said-not-seen | markdown-inbox | folder-inbox | future
     path      a folder or file (not needed for `future`)
-    optional  true: a missing file is no items, not an unreadable source
+    optional  true: a missing file or folder is no items, not an unreadable source
     glob      folder-inbox only; default *.md and *.txt
     note      for `future`: why it is not read yet
 
@@ -204,6 +204,8 @@ def _item(source, item_id, **fields):
 
 def read_said_not_seen(source):
     path = Path(source["path"]).expanduser()
+    if not path.exists() and source["optional"]:
+        return []
     files = sorted(path.glob("said-not-seen-*.json")) if path.is_dir() else [path]
     items = {}
     for f in files:
