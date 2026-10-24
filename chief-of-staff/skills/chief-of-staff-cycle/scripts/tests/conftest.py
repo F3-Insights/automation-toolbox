@@ -39,7 +39,7 @@ default_args = "next meeting"
 [[doer]]
 name = "bad-one"
 route = "agent"
-agent = "month-end-orchestrator"
+agent = "accounting-month-end-close"
 
 [retired]
 relationship-check = "replaced by comms-steward (mode relationships); launch it"

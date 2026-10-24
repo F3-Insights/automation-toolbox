@@ -1,6 +1,6 @@
 # Firm billing: the contract
 
-The files, formats and commands firm billing's tools, workers and orchestrator share. The tools enforce it; the agents work to it. Everything specific to the firm and its clients is in the billing folder, never here. The billing bases a contract may combine, and the rate `kind` each maps to, are in the `firm-billing-workstream` skill.
+The files, formats and commands firm billing's tools, its main agent (`accounting-firm-billing`), the worker and the reviewer share. The tools enforce it; the agents work to it. Everything specific to the firm and its clients is in the billing folder, never here. The billing bases a contract may combine, and the rate `kind` each maps to, are in the `firm-billing-workstream` skill.
 
 ## The billing folder
 
@@ -8,20 +8,20 @@ The files, formats and commands firm billing's tools, workers and orchestrator s
 |---|---|---|
 | `BILLING-RULES.md` | Authority, thresholds, the definition of done, how questions are asked | the owner |
 | `BILLING.yaml` | Settings, the firm's invoice header, and one entry per contract with its rate basis | the owner (agents propose changes in STATUS.md) |
-| `STATUS.md` | Current period, open items, Waiting on, next action | the orchestrator |
-| `{yyyy}/{yyyy-mm}/STATUS.md`, `LOG.md` | The period's state and log | the orchestrator |
-| `{yyyy}/{yyyy-mm}/BILLING-EVIDENCE-{yyyy-mm}.csv` | One row per contract | `firm-billing-record` only |
-| `{yyyy}/{yyyy-mm}/work/source/billing-pull.json`, `pulled.md` | The period's billing pull | `firm-billing-pull` only |
-| `{yyyy}/{yyyy-mm}/work/lines/<contract>.json` | The lines a preparer proposes | the preparer |
-| `{yyyy}/{yyyy-mm}/invoices/<contract> <yyyy-mm> invoice DRAFT.{json,md,html}` | The draft invoice | `firm-billing-draft` only |
-| `{yyyy}/{yyyy-mm}/invoices/<contract> <yyyy-mm> cover email DRAFT.md` | The cover email draft | the preparer |
-| `{yyyy}/{yyyy-mm}/review/<contract> <yyyy-mm> review.md` | The reviewer's note | the reviewer |
-| `{yyyy}/{yyyy-mm}/work/delivery-<contract>.json` | A staged reply draft in the Insights Portal (`draft_id`, `check`, `contact_id`, `email_ref`) | the orchestrator |
-| `{yyyy}/{yyyy-mm}/work/delivery-result-<contract>.json` | What `firm-billing-deliver` placed | `firm-billing-deliver` only |
+| `STATUS.md` | Current period, open items, Waiting on, next action | the main agent |
+| `{yyyy}/{yyyy-mm}/STATUS.md`, `LOG.md` | The period's state and log | the main agent |
+| `{yyyy}/{yyyy-mm}/BILLING-EVIDENCE-{yyyy-mm}.csv` | One row per contract | `accounting-firm-billing-record` only |
+| `{yyyy}/{yyyy-mm}/work/source/billing-pull.json`, `pulled.md` | The period's billing pull | `accounting-firm-billing-pull` only |
+| `{yyyy}/{yyyy-mm}/work/lines/<contract>.json` | The lines the worker proposes | the worker |
+| `{yyyy}/{yyyy-mm}/invoices/<contract> <yyyy-mm> invoice DRAFT.{json,md,html}` | The draft invoice | `accounting-firm-billing-draft` only |
+| `{yyyy}/{yyyy-mm}/invoices/<contract> <yyyy-mm> cover email DRAFT.md` | The cover email draft | the worker |
+| `{yyyy}/{yyyy-mm}/review/<contract> <yyyy-mm> review.md` | The reviewer's note | the main agent, from the reviewer's return |
+| `{yyyy}/{yyyy-mm}/work/delivery-<contract>.json` | A staged reply draft in the Insights Portal (`draft_id`, `check`, `contact_id`, `email_ref`) | the main agent |
+| `{yyyy}/{yyyy-mm}/work/delivery-result-<contract>.json` | What `accounting-firm-billing-deliver` placed | `accounting-firm-billing-deliver` only |
 
 The period is the month billed (`yyyy-mm`). Blank, on every tool, means the month before `--as-of` (else today). Nothing is deleted or overwritten: a second draft of the same invoice is `... invoice DRAFT v2.*`.
 
-**Dry run.** `python3 ~/.claude/skills/firm-billing-workstream/scripts/firm_billing_pull.py --dry-run-if=true --run-dir=R` writes the period folder under `R/billing/{yyyy}/{yyyy-mm}/` instead, and every other tool takes `--period-dir DIR` to work there. Nothing in the billing folder changes on a dry run.
+**Dry run.** `accounting-firm-billing-pull --dry-run-if=true --run-dir=R` writes the period folder under `R/billing/{yyyy}/{yyyy-mm}/` instead, and every other tool takes `--period-dir DIR` to work there. Nothing in the billing folder changes on a dry run.
 
 ## BILLING.yaml
 
@@ -67,7 +67,7 @@ The default `invoice_pattern` matches `(<firm tag>) Invoice 0042 to (<client tag
 
 ## The pull: `work/source/billing-pull.json`
 
-`python3 ~/.claude/skills/firm-billing-workstream/scripts/firm_billing_pull.py FOLDER [--period P] [--as-of D] [--run-dir R] [--dry-run-if V] [--period-dir DIR] [--format text|json]`
+`accounting-firm-billing-pull FOLDER [--period P] [--as-of D] [--run-dir R] [--dry-run-if V] [--period-dir DIR] [--format text|json]`
 
 First line `FRESH: <n> contracts, <k> billable, <u> with unbilled months; period folder <path>`, or `STALE: <reason>` (still exit 0; nothing written) when BILLING.yaml cannot be read. It also sets up the period folder (STATUS.md and LOG.md stubs only when missing). Fields:
 
@@ -102,7 +102,7 @@ First line `FRESH: <n> contracts, <k> billable, <u> with unbilled months; period
  "notes": "One line for the reviewer."}
 ```
 
-`python3 ~/.claude/skills/firm-billing-workstream/scripts/firm_billing_draft.py FOLDER --period P --contract ID --lines FILE [--period-dir DIR] [--format text|json]` refuses (exit 1, `REFUSED: <reason>` per line, nothing written) when:
+`accounting-firm-billing-draft FOLDER --period P --contract ID --lines FILE [--period-dir DIR] [--format text|json]` refuses (exit 1, `REFUSED: <reason>` per line, nothing written) when:
 
 - the contract or a `rate_id` is not in BILLING.yaml, or a month is not in `months` or not in the pull's `unbilled_months` for the contract;
 - `amount` is not `quantity` times `unit_price` to the cent, or a total does not add up;
@@ -113,11 +113,11 @@ First line `FRESH: <n> contracts, <k> billable, <u> with unbilled months; period
 
 Otherwise it writes the three draft files and prints `DRAFTED: <json path> total <amount>`. The JSON holds the contract, period, months, bill_to, firm header, `proposed_number` (from the pull; the owner assigns the real number when issuing), invoice and due dates, the lines with their `rate_id` and `basis`, the total, `pull_sha256`, and `content_sha256` (over everything but itself). The Markdown and the HTML say DRAFT and "proposed number" in the header. Exit 0 drafted, 1 refused, 2 bad argument.
 
-`python3 ~/.claude/skills/firm-billing-workstream/scripts/firm_billing_draft.py --verify JSON` re-derives an existing draft against BILLING.yaml and the pull and prints `OK: ...` or `REFUSED: ...`; the reviewer and the check use the same code.
+`accounting-firm-billing-draft --verify JSON` re-derives an existing draft against BILLING.yaml and the pull and prints `OK: ...` or `REFUSED: ...`; the reviewer and the check use the same code.
 
 ## The evidence file and its states
 
-`python3 ~/.claude/skills/firm-billing-workstream/scripts/firm_billing_record.py FOLDER --period P --contract ID [--period-dir DIR] --state S [--draft JSON] [--amount A] [--rate-basis IDS] [--months M,...] [--evidence E] [--question Q] [--note N] [--review PASS|FAIL --review-file F] [--by WHO] [--format text|json]`
+`accounting-firm-billing-record FOLDER --period P --contract ID [--period-dir DIR] --state S [--draft JSON] [--amount A] [--rate-basis IDS] [--months M,...] [--evidence E] [--question Q] [--note N] [--review PASS|FAIL --review-file F] [--by WHO] [--format text|json]`
 
 Columns: `id,client,state,draft,amount,rate_basis,months,evidence,question,note,content_sha256,review,review_file,review_sha256,updated_at,by`. `id` is the contract id, or `client:<slug>` from the pull's `uncontracted` list, which takes only `not-billable` or `question`. States:
 
@@ -131,7 +131,7 @@ Columns: `id,client,state,draft,amount,rate_basis,months,evidence,question,note,
 
 A review records `review_sha256`, the draft's `content_sha256` at the time; a new draft clears the review. A drafted row on an unconfirmed contract also carries `--question` (the terms to confirm).
 
-## Done: `python3 ~/.claude/skills/firm-billing-workstream/scripts/firm_billing_check.py FOLDER [--period P] [--period-dir DIR] [--as-of D] [--format text|json] [--precheck]`
+## Done: `accounting-firm-billing-check FOLDER [--period P] [--period-dir DIR] [--as-of D] [--format text|json] [--precheck]`
 
 | Test | Met when |
 |---|---|
@@ -143,6 +143,6 @@ A review records `review_sha256`, the draft's `content_sha256` at the time; a ne
 
 `--precheck`: `NOTHING: a weekend; ...` when the as-of date is a Saturday or Sunday (the schedule runs on the first days of the month, and cron cannot also say weekdays), else `WORK: ...` while the period is not pulled or not done, `NOTHING: ...` when done.
 
-## Delivery: `python3 ~/.claude/skills/firm-billing-workstream/scripts/firm_billing_deliver.py FOLDER --period P [--period-dir DIR] [--dry-run] [--config F] [--format text|json]`
+## Delivery: `accounting-firm-billing-deliver FOLDER --period P [--period-dir DIR] [--dry-run] [--config F] [--format text|json]`
 
-The finish step, skipped on a dry run. Per drafted, reviewed contract: `FILE` (its `email_delivery` is `file`, or no `work/delivery-<contract>.json`), `ALREADY`, `HELD` (the check is not done), or `email-deliver` with the staged draft: `DELIVERED`, `WOULD DELIVER`, `REFUSED`, one line per contract (`NONE: ...` when no contract is drafted and reviewed). `email-deliver` only places a reply to a pinned email in the Drafts folder of the owner's mail client (for example Outlook); nothing is ever sent, and an invoice with no thread to answer stays a file.
+The Automation's finish step, after the session and skipped on a dry run; never run inside a session. It runs outside the plugin session, so it reaches the Insights Portal through productivity's `email_deliver.py` (the `comms-reply-to-email` skill), found in the same toolbox checkout (`_skill_paths.py`); the Automation needs both plugins installed, the session only accounting. Per drafted, reviewed contract: `FILE` (its `email_delivery` is `file`, or no `work/delivery-<contract>.json`), `ALREADY`, `HELD` (the check is not done), or `email-deliver` with the staged draft: `DELIVERED`, `WOULD DELIVER`, `REFUSED`, one line per contract (`NONE: ...` when no contract is drafted and reviewed). `email-deliver` only places a reply to a pinned email in the Drafts folder of the owner's mail client (for example Outlook); nothing is ever sent, and an invoice with no thread to answer stays a file.

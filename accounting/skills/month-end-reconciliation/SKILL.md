@@ -1,8 +1,8 @@
 ---
 name: month-end-reconciliation
-description: "Reconcile one balance-sheet account for a month-end close: the GL balance from the ledger pull, the support balance from its source document, each reconciling item explained and dated, the difference within tolerance, rolled forward from last month, saved as the final reconciliation in the month folder. Use for any account a close must prove (cash, AR, prepaids, accruals, deferred revenue, debt) or \"does account N reconcile\". For intercompany pairs, start intercompany-orchestrator."
+description: "Reconcile one balance-sheet account for a month-end close: the GL balance from the ledger pull, the support balance from its source document, each reconciling item explained and dated, the difference within tolerance, rolled forward from last month, saved as the final reconciliation in the month folder. Use for any account a close must prove (cash, AR, prepaids, accruals, deferred revenue, debt) or \"does account N reconcile\". For intercompany pairs, start accounting-intercompany-reconciliation."
 argument-hint: "[Month-End folder] [period yyyy-mm] [account]"
-allowed-tools: Read, Glob, Grep, Write, Bash(python3 ~/.claude/skills/erp-ledger-pull/scripts/trial_balance.py:*), Bash(python3 ~/.claude/skills/erp-ledger-pull/scripts/intacct_gl_detail.py:*), Bash(python3 ~/.claude/skills/office-files/scripts/excel_handle.py:*), Bash(python3 ~/.claude/skills/office-files/scripts/pdf_handle.py:*)
+allowed-tools: Read, Glob, Grep, Write, Bash(trial-balance:*), Bash(intacct-gl-detail:*), Bash(excel-handle:*), Bash(pdf-handle:*)
 ---
 
 # Reconciling a balance-sheet account

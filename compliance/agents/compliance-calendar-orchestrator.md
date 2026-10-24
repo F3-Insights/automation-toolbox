@@ -1,6 +1,6 @@
 ---
 name: compliance-calendar-orchestrator
-description: Keeps the owner's compliance calendar honest weekly. For every filing, renewal, registration and legal deadline in COMPLIANCE-CALENDAR.yaml it has trackers place the current occurrence (filed, due, upcoming, overdue) on evidence, has the checker confirm every filed claim, and writes the owner tasks for what is due inside its lead time as a task-stack change set, with proposed calendar updates and one question list. Start it as the main session or on a schedule. It files, pays and sends nothing. Use for "what filings or renewals are due". Not for 1099s (vendor-1099-orchestrator) or dissolving an entity (wind-down-orchestrator).
+description: Keeps the owner's compliance calendar honest weekly. For every filing, renewal, registration and legal deadline in COMPLIANCE-CALENDAR.yaml it has trackers place the current occurrence (filed, due, upcoming, overdue) on evidence, has the checker confirm every filed claim, and writes the owner tasks for what is due inside its lead time as a task-stack change set, with proposed calendar updates and one question list. Start it as the main session or on a schedule. It files, pays and sends nothing. Use for "what filings or renewals are due". Not for 1099s (accounting-vendor-1099) or dissolving an entity (wind-down-orchestrator).
 model: opus
 color: orange
 skills: [orchestration-workstream, compliance-calendar-workstream, task-stack-workstream]

@@ -1,6 +1,6 @@
 ---
 name: transactional-definitions
-description: Maintain and apply a client's transactional definitions, the rulebook saying which account, department, location and class a transaction takes and why. Read it before recommending any coding, cite the rule, escalate conflicts to the owner instead of guessing, write the answers back as new rules, and queue process-improvement proposals without applying them. Use for "how should this be coded", or when a close, JE draft, reclass or chart-of-accounts question needs a coding decision. For a queue of such questions, start accounting-questions-orchestrator.
+description: Maintain and apply a client's transactional definitions, the rulebook saying which account, department, location and class a transaction takes and why. Read it before recommending any coding, cite the rule, escalate conflicts to the owner instead of guessing, write the answers back as new rules, and queue process-improvement proposals without applying them. Use for "how should this be coded", or when a close, JE draft, reclass or chart-of-accounts question needs a coding decision. For a queue of such questions, start accounting-questions.
 argument-hint: "[client] [lookup <transaction> | escalate | propose | write-back]"
 allowed-tools: Read, Glob, Grep, Write
 ---

@@ -2,7 +2,7 @@
 name: month-end-journal-entry
 description: "Prepare one month-end journal entry the way a reviewer expects to receive it: check it is not already booked, calculate it from sources, write the ERP import file a person uploads (STATE Posted) with its backup beside it, lint it, and know when it counts as booked. Use whenever a close needs an accrual, reclass, correction or recurring entry drafted, or for \"is this JE booked\". For the card and post-cutoff vendor accruals, use month-end-accrual-drafts."
 argument-hint: "[Month-End folder] [period yyyy-mm] [what the entry is for]"
-allowed-tools: Read, Glob, Grep, Write, Bash(python3 ~/.claude/skills/month-end-journal-entry/scripts/je_import.py:*), Bash(python3 ~/.claude/skills/month-end-journal-entry/scripts/je_import_check.py:*), Bash(python3 ~/.claude/skills/erp-ledger-pull/scripts/intacct_gl_detail.py:*)
+allowed-tools: Read, Glob, Grep, Write, Bash(accounting-je-import:*), Bash(accounting-je-import-check:*), Bash(intacct-gl-detail:*)
 ---
 
 # A month-end journal entry
@@ -24,10 +24,10 @@ A journal entry is two files, never one: the import file a person uploads, and t
 ## The files
 
 - **Import file:**
-  - for Sage Intacct, build it with `je-import` from a proposals JSON (one object per entry with its lines; `python3 ~/.claude/skills/month-end-journal-entry/scripts/je_import.py --help` shows the shape); STATE is Posted, the default; the layout it writes is in the `sage-intacct-reference` skill's `import-format.md`;
+  - for Sage Intacct, build it with `accounting-je-import` from a proposals JSON (one object per entry with its lines; `accounting-je-import --help` shows the shape); STATE is Posted, the default; the layout it writes is in the `erp-ledger-pull` skill's `references/import-format.md`;
   - the file name follows the pattern in `METADATA_FIELDS.md`, or `{yyyy-mm} JE {short name} DRAFT.csv`;
   - for another ERP, its own import layout, with the same lint by hand: balanced, valid accounts, dates in the period.
-- **Lint:** `python3 ~/.claude/skills/month-end-journal-entry/scripts/je_import_check.py FILE` (it requires STATE Posted by default). A file that fails is never handed to a person.
+- **Lint:** `accounting-je-import-check FILE` (it requires STATE Posted by default). A file that fails is never handed to a person.
 - **Backup:** the same name with ` backup` and `.md` (or `.xlsx` when the calculation is a table). It holds:
   - the purpose;
   - the sources with their dates;

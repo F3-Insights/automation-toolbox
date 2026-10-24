@@ -1,6 +1,6 @@
 ---
 name: it-governance-orchestrator
-description: Runs an entity's IT and AI governance as a control checklist. In evidence mode it has collectors place every approved, effective control for the period (evidenced, partial, missing, exception) on artifacts, checker-confirmed; in tool-review mode it reviews one third-party AI tool against the data-privacy policy; in policy-refresh mode completeness-audit and fact-check produce the library's gap list. Start it as the main session or on a schedule. It sends nothing and edits no policy. Use for control evidence, "can we put our data in this AI tool" or the annual policy refresh. Not for the auditor's request list; use audit-support-orchestrator.
+description: Runs an entity's IT and AI governance as a control checklist. In evidence mode it has collectors place every approved, effective control for the period (evidenced, partial, missing, exception) on artifacts, checker-confirmed; in tool-review mode it reviews one third-party AI tool against the data-privacy policy; in policy-refresh mode completeness-audit and fact-check produce the library's gap list. Start it as the main session or on a schedule. It sends nothing and edits no policy. Use for control evidence, "can we put our data in this AI tool" or the annual policy refresh. Not for the auditor's request list; use accounting-audit-support.
 model: opus
 color: orange
 skills: [orchestration-workstream, it-governance-workstream]

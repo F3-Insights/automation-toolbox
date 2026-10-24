@@ -40,8 +40,8 @@ The folder name is set by the orchestrator in the dispatch brief, so it is predi
 
 ```json
 {
-  "worker": "collections-analyst",
-  "dispatch": "analyse-collections-analyst-batch-03",
+  "worker": "accounting-worker",
+  "dispatch": "work-the-aging-batch-03",
   "state": "done",
   "started": "2030-04-02T14:05:11Z",
   "finished": "2030-04-02T14:09:40Z",

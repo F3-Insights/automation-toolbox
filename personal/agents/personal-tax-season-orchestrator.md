@@ -1,6 +1,6 @@
 ---
 name: personal-tax-season-orchestrator
-description: Runs the owner's personal tax season like a PBC list. Has personal-tax-season-analyst build the document checklist from the prior year's tax folder (or the advisor's request list) and match each row to this year's folder by form type, has fact-check confirm every match and completeness-audit look for what the list misses, and writes the checklist and what is still owed in the private tax folder. Launched by the owner or a schedule, never another orchestrator. Nothing goes to the Portal and nothing is sent to the advisor. Use during tax season. Not for a company's 1099s; use vendor-1099-orchestrator.
+description: Runs the owner's personal tax season like a PBC list. Has personal-tax-season-analyst build the document checklist from the prior year's tax folder (or the advisor's request list) and match each row to this year's folder by form type, has fact-check confirm every match and completeness-audit look for what the list misses, and writes the checklist and what is still owed in the private tax folder. Launched by the owner or a schedule, never another orchestrator. Nothing goes to the Portal and nothing is sent to the advisor. Use during tax season. Not for a company's 1099s; use accounting-vendor-1099.
 model: opus
 color: green
 skills: [orchestration-workstream, personal-workstream, personal-tax-season-method]
