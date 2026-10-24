@@ -331,7 +331,10 @@ def term_pattern(term):
     Whitespace-flexible so a two-word rule still matches when the phrase wraps onto a new line.
     """
     parts = [re.escape(word) for word in str(term).split()]
-    return re.compile(rf"(?<!\w){r'\s+'.join(parts)}(?!\w)", re.IGNORECASE) if parts else None
+    if not parts:
+        return None
+    body = r"\s+".join(parts)  # outside the f-string: Python 3.11 refuses a backslash inside one
+    return re.compile(rf"(?<!\w){body}(?!\w)", re.IGNORECASE)
 
 
 def redaction_pattern(rule):
