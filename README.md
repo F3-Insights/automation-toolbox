@@ -100,7 +100,7 @@ Every agent follows **one template**, and [templates/](templates/) gives you fil
 | Every week | `finance-cash-forecast` | The 13-week cash forecast rolled forward, with the low point called out |
 | Every week | `client-delivery-orchestrator` | One engagement's plan, risks and status, ready for the sponsor |
 | Every week | `weekly-report-orchestrator` | The leadership weekly, drafted from the week's record |
-| Month end | `month-end-orchestrator` | The close worked like a close team: reconciliations, accruals, flux, a review trail |
+| Month end | `accounting-month-end-close` | The close worked like a close team: reconciliations, accruals, flux, a review trail |
 | Month end | `board-package-orchestrator` | The board package drafted from the finished close, tied out and red-teamed |
 | Monthly | `goal-alignment-orchestrator` | Goals set against projects and where the time went, as one approval list |
 | On demand | `software-developer` | A repository's issues worked into verified pull requests, builds in parallel worktrees (draft) |
@@ -132,24 +132,24 @@ Each folder at the root is a department. Open its README for what is inside and 
 
 | Department | What it covers | Agents / skills |
 |---|---|:---:|
-| [Accounting](accounting/) | Month-end close, reconciliations, journal entries, accruals, collections, intercompany, cost accounting, audit support, 1099s | 22 / 20 |
+| [Accounting](accounting/) | Month-end close, reconciliations, journal entries, accruals, collections, intercompany, cost accounting, audit support, 1099s; a Claude Code plugin | 11 / 19 |
 | [Finance](finance/) | Forecasts, budgets, 13-week cash, one-off analysis, investor obligations; a Claude Code plugin | 7 / 13 |
 | [Strategy](strategy/) | Goals checked against projects and where the time went, and pre-mortems on strategic plans | 5 / 4 |
-| [Executive Reporting](reporting/) | Board packages, leadership weeklies, results memos, client updates, and the reviewers every report passes | 16 / 7 |
+| [Executive Reporting](reporting/) | Board packages, leadership weeklies, results memos, client updates, and the reviewers every report passes | 15 / 6 |
 
 <details>
 <summary><b>Orchestrators in the finance core</b> (18)</summary>
 
 - **Accounting**
-  - `month-end-orchestrator`: runs a company's month-end close the way a controller runs a close team
-  - `accounting-questions-orchestrator`: answers routine accounting questions between closes and keeps coding consistent
-  - `audit-support-orchestrator`: works the auditor's request list (PBC) like a close checklist
-  - `collections-orchestrator`: runs order-to-cash between closes, before each AR and collections review
-  - `firm-billing-orchestrator`: runs a small professional-services firm's monthly client billing
-  - `firm-books-orchestrator`: closes a small firm's own books each month on the month-end pattern
-  - `intercompany-orchestrator`: reconciles intercompany balances to zero before consolidation
-  - `product-costing-orchestrator`: runs a manufacturer's monthly product-costing review
-  - `vendor-1099-orchestrator`: gets vendor 1099s right before year end, not in January
+  - `accounting-month-end-close`: runs a company's month-end close the way a controller runs a close team
+  - `accounting-questions`: answers routine accounting questions between closes and keeps coding consistent
+  - `accounting-audit-support`: works the auditor's request list (PBC) like a close checklist
+  - `accounting-collections-review`: runs order-to-cash between closes, before each AR and collections review
+  - `accounting-firm-billing`: runs a small professional-services firm's monthly client billing
+  - `accounting-firm-books-close`: closes a small firm's own books each month on the month-end pattern
+  - `accounting-intercompany-reconciliation`: reconciles intercompany balances to zero before consolidation
+  - `accounting-product-costing-review`: runs a manufacturer's monthly product-costing review
+  - `accounting-vendor-1099`: gets vendor 1099s right before year end, not in January
 - **Finance**
   - `finance-forecast`: bridges each forecast revision to the one before and builds the rolling vintage
   - `finance-cash-forecast`: rolls the 13-week cash forecast forward each week by the direct method

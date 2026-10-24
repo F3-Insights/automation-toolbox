@@ -38,7 +38,7 @@ Ask first for anything another person would see or that cannot easily be reverse
 | Projects reviewed | `project-checkin` interactively; `project-health-orchestrator` for the weekly sweep | Check-in starts from the last Run's diagnoses, decisions first. `project-health-diagnose`'s `project_health_check.py` for the state of every project now. |
 | Relationships that have gone quiet | `comms-steward` in mode relationships | Its own session, or through the fleet below. |
 | Tasks that look done, duplicated or dead | `task-steward` in mode reconcile | Its own session, or through the fleet below. |
-| The month-end close | `month-end-orchestrator` | Its own main session (`claude --agent month-end-orchestrator`). It dispatches its workstreams, keeper and reviewer itself; never dispatch it as a sub-agent. |
+| The month-end close | `accounting-month-end-close` | Its own main session (`claude --plugin-dir <toolbox>/accounting --agent accounting:accounting-month-end-close`), or the month-end Automation. It dispatches `accounting-worker` and `accounting-reviewer` itself; never dispatch it as a sub-agent. |
 | A reporting package checked before it goes out | `numbers-reviewer` | Give it the artifacts, their sources and a scratch folder. Never the author's reasoning. |
 | "Do the reports all match?" | `report-tieout` | The skill when you are running it; `numbers-reviewer` when you want it checked independently. |
 | A client update or status memo | `comms-client-status-update` | Then `unslop` before it leaves. |

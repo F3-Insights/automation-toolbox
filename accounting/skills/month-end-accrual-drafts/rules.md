@@ -4,7 +4,7 @@ What the accruals read from the engagement folder, how "already done?" is answer
 
 ## What is read from the engagement folder
 
-Nothing entity-specific lives in this skill. `scripts/accruals.py config FOLDER` prints what the folder says, or refuses naming the missing section or line.
+Nothing entity-specific lives in this skill. `accounting-accruals config FOLDER` prints what the folder says, or refuses naming the missing section or line.
 
 METADATA_FIELDS.md, section `## Accruals`, five subsections and three optional ones. Field lines are `- Name: value`; a list is separated by semicolons.
 
@@ -85,7 +85,7 @@ SYSTEMS.md, section `## Close inputs`, field lines; paths are relative to the pe
 
 ## Already done?
 
-`scripts/accruals.py done` answers from the data first, then the folder, and always says why:
+`accounting-accruals done` answers from the data first, then the folder, and always says why:
 
 | State | Meaning | Evidence it prints |
 |---|---|---|
@@ -98,12 +98,12 @@ The ledger pull is a snapshot: `not-done` means "not in the ledger as of the pul
 
 ## What the build does
 
-`scripts/accruals.py build` runs the done check first and stops at `already-done` unless `--ignore-done`. Then it looks for the inputs:
+`accounting-accruals build` runs the done check first and stops at `already-done` unless `--ignore-done`. Then it looks for the inputs:
 
 - credit-card accrual: one card report in the period folder;
 - post-cutoff vendor accrual: the AP bill lines of the next month's pull, and the period's and the prior months' AP bill lines for the estimates (Trailing months, default 3).
 
-A missing input ends the build with exit 4 and the question to ask. With the inputs found it runs the toolbox commands `card-export`, `cc-accrual` or `service-period-accrual`, then `je-import --state Posted` and `python3 ~/.claude/skills/month-end-journal-entry/scripts/je_import_check.py --state Posted` (a person uploads the file, and that upload is the human review; agents never upload or post), and writes the import file into the period folder (or into `--out` on a trial run). It never overwrites a file: one already there is a refusal (exit 3), and the done check normally finds it first.
+A missing input ends the build with exit 4 and the question to ask. With the inputs found it runs the toolbox commands `accounting-card-export`, `accounting-cc-accrual` or `accounting-service-period-accrual`, then `accounting-je-import --state Posted` and `accounting-je-import-check --state Posted` (a person uploads the file, and that upload is the human review; agents never upload or post), and writes the import file into the period folder (or into `--out` on a trial run). It never overwrites a file: one already there is a refusal (exit 3), and the done check normally finds it first.
 
 It also lists `possible_overlaps`: each account in the draft that another entry dated month end, crediting the liability account, already touches, with that entry's lines and any line naming a draft vendor. The other accrual of this skill is not counted (the card statement vendor is excluded from the vendor accrual). An overlap is a question, not a correction.
 
@@ -143,7 +143,7 @@ The scan never drafts a flagged vendor on its own. The arrears estimate is the e
 
 `vendor` is the flagged name (case does not matter), `accrue` true or false, `reason` required, `amount` optional (default the proposed amount). An accepted vendor is drafted into the vendor accrual's import file at that amount, allocated across the accounts, departments and locations its history hit, each line's memo saying `ESTIMATE, missing accrual`. A decision for a vendor the scan did not flag, or one without a reason, is an error (exit 2).
 
-Until every flagged vendor has a decision, the build writes no import file: it ends `waiting` (exit 4) with the question in `inputs.missing` and the findings in `missing_accrual` and `work/missing-accrual-<yyyy-mm>.json`. `accruals.py scan FOLDER --period P` runs the scan on its own and writes nothing, counting the draft as cover when the next month's bills are pulled. The scan's findings are in every vendor result (`missing_accrual`), whatever the outcome; when the next month's bills are not pulled, its `note` says the draft was not counted, so an arrears vendor shows as flagged until it is.
+Until every flagged vendor has a decision, the build writes no import file: it ends `waiting` (exit 4) with the question in `inputs.missing` and the findings in `missing_accrual` and `work/missing-accrual-<yyyy-mm>.json`. `accounting-accruals scan FOLDER --period P` runs the scan on its own and writes nothing, counting the draft as cover when the next month's bills are pulled. The scan's findings are in every vendor result (`missing_accrual`), whatever the outcome; when the next month's bills are not pulled, its `note` says the draft was not counted, so an arrears vendor shows as flagged until it is.
 
 Outcomes and exit codes:
 
@@ -160,7 +160,7 @@ Outcomes and exit codes:
 
 ## How a caller records each outcome
 
-This skill writes no status or log. The caller records each outcome. In a month-end close that is the orchestrator: an evidence row with `month-end-record` (test `entries`, item `cc-accrual` or `vendor-accrual`), and the workstream's row in the month's STATUS.md:
+This skill writes no status or log. The caller records each outcome. In a month-end close that is the main agent: an evidence row with `accounting-month-end-record` (test `entries`, item `cc-accrual` or `vendor-accrual`), and the workstream's row in the month's STATUS.md:
 
 | Outcome | Evidence state | Evidence | Note |
 |---|---|---|---|
@@ -175,11 +175,8 @@ An overlap, an estimate or a card draft that is not ready keeps the entry waitin
 
 ## Questions
 
-Run on its own, the skill asks through comms-confirm. The role comes from the folder's BACKGROUND.md (`- Controller: Name <address>`). While questions relay through the owner, the channel is `owner`, which with no one present becomes a task on the owner's list. Called by an orchestrator, it returns the questions instead. Either way, an accrual is never built on an assumption about a missing input.
+Run on its own, the skill asks through comms-confirm. The role comes from the folder's BACKGROUND.md (`- Controller: Name <address>`). While questions relay through the owner, the channel is `owner`, which with no one present becomes a task on the owner's list. Called by a main agent or a worker, it returns the questions instead. Either way, an accrual is never built on an assumption about a missing input.
 
 ## External commands
 
-The script ships inside this skill's folder; comms-confirm's script ships with the `comms-confirm` skill. Nothing is on PATH. `accruals.py` runs `card_export.py`, `cc_accrual.py` and `service_period_accrual.py` beside it, and `je_import.py` and `je_import_check.py` from the `month-end-journal-entry` skill as `python3 ~/.claude/skills/month-end-journal-entry/scripts/<name>.py` (`ACCRUALS_SKILLS_DIR` replaces `~/.claude/skills` for tests). Standard-library Python 3.8 or later for the scripts.
-
-- `python3 scripts/accruals.py`
-- the `comms-confirm` skill's `scripts/confirm.py`
+Each script is a named command of the accounting plugin: `accounting-accruals` (this skill's `accruals.py`), which runs `card_export.py`, `cc_accrual.py` and `service_period_accrual.py` beside it (also the commands `accounting-card-export`, `accounting-cc-accrual` and `accounting-service-period-accrual`), and `je_import.py` and `je_import_check.py` from the `month-end-journal-entry` skill (`accounting-je-import`, `accounting-je-import-check`), found in the same toolbox checkout (`ACCRUALS_SKILLS_DIR` names another skills folder, for tests). Questions go through the `comms-confirm` skill's `confirm` command. Standard-library Python 3.8 or later for the scripts.

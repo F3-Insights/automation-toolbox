@@ -1,6 +1,6 @@
 # Executive Reporting
 
-Reports that leave the building: an executive's weekly update to the leadership team, a monthly board package, the month-end results memo, and a consulting engagement's weekly client update, plus the independent checkers (fact-check, red team, finance review) that every one of them passes before a person sends it. For department heads, finance leads and consultants who report on a cadence and want every figure traced and nothing sent without approval.
+Reports that leave the building: an executive's weekly update to the leadership team, a monthly board package (it reads the month-end results memo that accounting's close writes), and a consulting engagement's weekly client update, plus the independent checkers (fact-check, red team, finance review) that every one of them passes before a person sends it. For department heads, finance leads and consultants who report on a cadence and want every figure traced and nothing sent without approval.
 
 ## Agents
 
@@ -15,7 +15,6 @@ Reports that leave the building: an executive's weekly update to the leadership 
 | `report-harvester` | Builds the evidence ledger from mail and calendar when there is no work tracker | a mail and calendar connector; command `report-collect` |
 | `board-package-orchestrator` | Drafts a monthly board package from a finished close, every figure tied out | the `board-package-*` commands; `comms-confirm` |
 | `board-package-writer` | Drafts the deck, commentary script, cover email and the figure ledger | commands `board-package-render`, `board-package-figures`, `board-package-tieout`, `powerpoint-handler` |
-| `month-end-results-writer` | Writes the month's versioned HTML results memo, figures ledger and QA log | Sage Intacct (commands `trial-balance`, `intacct-gl-detail`, `budget-detail-diff`); command `report-tieout` |
 | `client-update-orchestrator` | Drafts one engagement's weekly client update (deck or memo) with a source on every claim | Insights Portal; commands `client-update-check`, `client-update-record`; `comms-confirm` |
 | `client-update-reader` | Reads a batch of the week's sources and returns dated, quoted facts | none |
 | `client-update-writer` | Writes the client update draft, claims file, review note and proposed context revision | none |
@@ -29,7 +28,6 @@ Reports that leave the building: an executive's weekly update to the leadership 
 |---|---|---|
 | `report-weekly` | The weekly report method: the role profile interview, then collect, organise, continuity, audience test, three gates, write, verify, render, record; holds the Weekly Highlights house style, the pasteable consolidation prompt and the profile template | its own `report-*` commands; pandoc and LibreOffice for Word and PDF; the setting `portal_mcp_config` for the Portal tier |
 | `board-package-workstream` | What a board-package worker does: rules first, the deck spec, the figure ledger | the `board-package-*` commands |
-| `month-end-results-report` | The results memo phase of a close, with its format and QA references | Sage Intacct pull; command `report-tieout` |
 | `client-update-workstream` | What a client-update worker does: standards, engagement context, source comments, claim shapes | none |
 | `comms-client-status-update` | Writing the client status memo, weekly or full length, in a matter-of-fact voice | command `srt-transcript-collapse` for caption files |
 | `project-status-deck` | Building, reviewing and revising a client status deck as self-contained HTML | none |
@@ -42,7 +40,7 @@ Reports that leave the building: an executive's weekly update to the leadership 
 
 - Owner settings, described in [docs/settings.md](../docs/settings.md): the weekly report's Portal tier and the client update's Portal reads need `portal_mcp_config` (and `portal_server` when the server entry is not `insights-portal`), with the bearer in `INSIGHTS_PORTAL_ASSISTANT_TOKEN` or a `${VAR}` in the MCP config. `reference_docx` under `[report-weekly]` and under `[client-update-workstream]` names each one's Word reference document (optional; `report_render.py` otherwise builds one with `build_reference_docx.py`). `contexts_dir` under `[board-package-workstream]` or `[client-update-workstream]`, else the top-level key, is where a Context named by its name is found. The weekly report store is a folder the executive names (`--store` or `REPORT_STORE_DIR`); there is no default.
 - Environment: the results memo's Sage Intacct pull needs all four of `SAGE_INTACCT_CLIENT_ID`, `SAGE_INTACCT_CLIENT_SECRET`, `SAGE_INTACCT_COMPANY_ID` and `SAGE_INTACCT_API_USER` (accounting's README). pandoc and LibreOffice make the Word and PDF files. The scripts need Python 3.11 or later, with `pyyaml`, `python-pptx`, `openpyxl` and `pypdf`, declared in each script's `# /// script` block.
-- Uses by name from other departments: `orchestration-workstream` (software), `comms-confirm` and `portal-write-safety` (productivity), `email-drafter-method`, `comms-reply-to-email` and the agents `productivity-worker` and `productivity-reviewer` (productivity), `unslop` and `unslop-deliverable` and `brand-guide` (marketing), `month-end-workstream`, `month-end-flux`, `report-tieout` and `month-end-orchestrator` (accounting or finance).
+- Uses by name from other departments: `orchestration-workstream` (software), `comms-confirm` and `portal-write-safety` (productivity), `email-drafter-method`, `comms-reply-to-email` and the agents `productivity-worker` and `productivity-reviewer` (productivity), `unslop` and `unslop-deliverable` and `brand-guide` (marketing), `month-end-workstream`, `month-end-flux`, `report-tieout` (accounting; the board package reads the close through a file contract, see accounting's README).
 
 ## Scripts
 

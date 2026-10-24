@@ -96,7 +96,7 @@ To run a workflow on a schedule, wrap it in an **automation**: a prepare step th
 
 | If you are | Start with |
 |---|---|
-| A controller or fractional CFO | [accounting](../accounting/) (`month-end-orchestrator`), [finance](../finance/) (`finance-cash-forecast`), [reporting](../reporting/) (`board-package-orchestrator`) |
+| A controller or fractional CFO | [accounting](../accounting/) (`accounting-month-end-close`), [finance](../finance/) (`finance-cash-forecast`), [reporting](../reporting/) (`board-package-orchestrator`) |
 | An operations or process consultant | [process-engineering](../process-engineering/) (`discovery-synthesis-orchestrator`, `process-flow-orchestrator`) and [projects](../projects/) (`client-delivery-orchestrator`) |
 | Running a small firm | [productivity](../productivity/), [recurring-summaries](../recurring-summaries/) and [chief-of-staff](../chief-of-staff/) (these expect the Insights Portal) |
 | An engineer | [software](../software/) (`software-developer`) and the `orchestrator-scaffold` skill, then [templates/](../templates/) to write your own |

@@ -22,7 +22,7 @@ TODAY = date(2026, 4, 3)
 
 
 def rec(root, test, item, state, **kw):
-    return record(root, PERIOD, test, item, state, "month-end-reviewer", **kw)
+    return record(root, PERIOD, test, item, state, "accounting-reviewer", **kw)
 
 
 def month(root):

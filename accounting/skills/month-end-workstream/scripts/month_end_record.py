@@ -20,7 +20,7 @@ Prints what it did and any warning (a named evidence file that does not exist, a
 review), or JSON. Exit 0 when recorded, 2 on a bad argument or folder.
 
     python3 month_end_record.py ~/close/acme --period 2026-03 --test reconciliations --item 10100 \
-        --state reconciled --evidence reconciliations/10100-cash.xlsx --amount 251,330.18 --by month-end-cash
+        --state reconciled --evidence reconciliations/10100-cash.xlsx --amount 251,330.18 --by accounting-worker
 """
 
 import argparse

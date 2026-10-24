@@ -1,124 +1,129 @@
 # Accounting
 
-The books, close to close: the month-end close run like a controller runs a close team, and the recurring accounting work around it (collections, intercompany, routine coding questions, product costing, vendor 1099s, audit support, and a small firm's own billing and books). For a controller, fractional CFO or close lead who wants agents to prepare the work and prove it, while a person still uploads every entry and sends every message.
+The books, close to close: the month-end close run like a controller runs a close team, and the recurring accounting work around it (collections, intercompany, routine coding questions, product costing, vendor 1099s, audit support, and a small firm's own billing and books). For a controller, fractional CFO or close lead who wants agents to prepare the work and prove it, while a person still uploads every journal entry, issues every invoice, sends every message and files every return.
 
-## Agents
+## The plugin
 
-| Agent | What it does | Needs |
-|---|---|---|
-| `month-end-orchestrator` | Runs a company's month-end close from its Month-End folder: dispatches the workstreams, keeper and reviewer, keeps STATUS and LOG | commands `month-end-check`, `month-end-record`, `month-end-pull`; Sage Intacct |
-| `month-end-keeper` | Sets up, curates and records learned facts in the Month-End folder | none |
-| `month-end-cash` | Bank, processor and investment cash reconciliations, cash movement, debt and leases | commands `cash-walk`, `trial-balance`, `je-import` |
-| `month-end-ar-billing-revenue` | Billing completeness, revenue and cut-off, deferred revenue, AR and the allowance | commands `ar-ap-hygiene`, `trial-balance`, `je-import` |
-| `month-end-accruals` | Card and vendor accruals, accrued expenses, AP, payroll liabilities | commands `card-export`, `cc-accrual`, `service-period-accrual`, `je-import` |
-| `month-end-reviewer` | Independent PASS or FAIL on each entry, reconciliation and finding, and the close sign-off | commands `je-import-check`, `report-tieout` |
-| `collections-orchestrator` | Prepares each AR and collections review: every past-due invoice owned with a next action | Insights Portal |
-| `collections-analyst` | Pulls the aging and works each past-due invoice into a register row | Insights Portal; Sage Intacct; command `ar-ap-hygiene` |
-| `intercompany-orchestrator` | Reconciles intercompany balances to zero each month before consolidation | none |
-| `intercompany-reconciler` | Ties each entity pair, traces differences, drafts true-ups | commands `intacct-gl-detail`, `je-import` |
-| `accounting-questions-orchestrator` | Answers routine accounting questions held as Portal tasks, with the rule cited | Insights Portal |
-| `accounting-questions-analyst` | Answers one batch of questions from the transactional definitions and ledger history | Insights Portal; command `intacct-gl-detail` |
-| `product-costing-orchestrator` | Runs a manufacturer's monthly product-costing review | none |
-| `product-costing-analyst` | Builds or refreshes the per-finished-good P&L as a controlled revision, drafts the memo | commands `fg-pl-extract`, `sap-extract-normalize`, `prodqty-check`, `routing-rollup`, `costmodel-audit` |
-| `firm-billing-orchestrator` | Drafts a small firm's monthly client invoices, each tied to its rate basis and reviewed | commands `firm-billing-pull`, `firm-billing-draft`, `firm-billing-record`, `firm-billing-check` |
-| `firm-billing-preparer` | Drafts the invoices and cover emails for its contracts | command `firm-billing-draft` |
-| `firm-billing-reviewer` | Independent PASS or FAIL on each draft invoice | command `firm-billing-draft` |
-| `firm-books-orchestrator` | Closes a small firm's own books on the month-end pattern | none |
-| `vendor-1099-orchestrator` | Works the W-9 backlog in the fall and builds the 1099 register at year end | none |
-| `vendor-1099-analyst` | Decides each vendor's 1099 state and box, drafts W-9 requests | command `intacct-gl-detail` |
-| `audit-support-orchestrator` | Works the auditor's request list (PBC) like a close checklist | Insights Portal |
-| `audit-support-preparer` | Answers one batch of requests from finished close work | none |
+This folder is a standalone Claude Code plugin named `accounting` (`.claude-plugin/plugin.json`), built the way [software](../software/README.md#the-plugin) and [productivity](../productivity/README.md) are: one short main agent per job, one `accounting-worker` and one `accounting-reviewer` for dispatched work, the know-how in the jobs' skills as `##` sections, and every script a named command in `bin/` (`python3 scripts/build_bins.py accounting`). A main agent's first instruction is to load its skills with the Skill tool.
+
+```bash
+claude --plugin-dir ~/coding-projects/automation-toolbox/accounting --agent accounting:accounting-month-end-close
+```
+
+From Sentinel, an Automation launches a main agent by name with the plugin directory; the overlay's `subagents:` lists `accounting-worker` and `accounting-reviewer`. Prepare, precheck and finish steps run the same named commands (`accounting-month-end-check`, `month-end-pull`, `accounting-firm-billing-pull`, `task-stack-apply`), which Sentinel puts on PATH for code phases.
+
+Every computed check the old agents had stays a command or a reviewer checklist: `accounting-je-import-check` on every import file, `accounting-month-end-check` and `accounting-firm-billing-check` for done, `accounting-firm-billing-draft --verify` for the billing reviewer's re-derivation, `report-tieout` and the `review-numbers` checklist for every package of figures, `accounting-costmodel-audit` for a costing revision. The reviewer is read-only (decision D5): it returns its note and the main agent writes the review file that `accounting-month-end-record --review-file` and `accounting-firm-billing-record --review-file` record.
+
+## Jobs and agents
+
+| Agent | Automation | What it does | Dispatches |
+|---|---|---|---|
+| `accounting-month-end-close` | month-end | A company's month-end close from its Month-End folder: workstreams in parallel, every item reviewed, the results memo last, STATUS and LOG kept; done is `accounting-month-end-check` | worker (Cash, AR billing and revenue, Accruals and AP, Set up and Curate a month, flux, the results memo); reviewer (Review an item, Sign off the close on fable, review-numbers on the memo) |
+| `accounting-firm-books-close` | firm-books | The firm's own close on the month-end pattern, revenue tied to the firm's billing, owner and tax items set apart | worker (the close sections); reviewer (Review an item, Sign off the close) |
+| `accounting-intercompany-reconciliation` | intercompany (one per company) | Every entity pair to zero or a dated, explained item before consolidation; true-ups drafted; a HANDOFF file for the close | worker (Reconcile a batch of pairs); reviewer (Review an item) |
+| `accounting-collections-review` | collections (one per company) | Each AR review prepared: every past-due invoice owned with a next action and date, the agenda written | worker (billing completeness, when the close has not proved it); reviewer (review-numbers) |
+| `accounting-firm-billing` | firm-billing | The firm's monthly invoices drafted, each tied to BILLING.yaml and the pull, with a cover email; nothing sent; done is `accounting-firm-billing-check` | worker (Prepare contracts); reviewer (Check a draft invoice, Sign off the period on fable) |
+| `accounting-questions` | finance-ops (one per company) | Routine coding questions held as Portal tasks answered with the rule cited, as one change set of task comments plus rule proposals | worker (Answer a batch); reviewer (Check an answer) |
+| `accounting-audit-support` | audit-support (one per company) | The auditor's request list worked like a close checklist: support indexed, schedules tied, questions by role | worker (Prepare a batch); reviewer (review-numbers, Check the support) |
+| `accounting-product-costing-review` | product-costing (one per client) | The per-product standard-versus-actual P&L as a controlled revision tied per factory, and the cost memo | reviewer (review-numbers) |
+| `accounting-vendor-1099` | vendor-1099 (one per company) | The W-9 backlog in the fall and the 1099 register at year end; TINs to the last four | worker (Work a vendor batch); reviewer (Check the register, review-numbers) |
+| `accounting-worker` | | One slice a main agent hands it, following the named section | none |
+| `accounting-reviewer` | | Independent PASS or FAIL against the named checklist section, from the sources alone; edits nothing | none |
+
+Kept separate, though alike: firm-books and the client close share the month-end sections but differ in folder, rules file and ledger source (an export, not the ERP); intercompany has its own rules file and cadence before consolidation; firm billing has its own computed check. The migration plan lists these as merge candidates for later, after the converted jobs have run.
 
 ## Skills
 
-| Skill | What it does | Needs |
+| Skill | Run by | What it holds |
 |---|---|---|
-| `month-end-workstream` | Conduct and return block shared by every month-end workstream | none |
-| `month-end-accrual-drafts` | Drafts the card and post-cutoff vendor accruals, with a missing-accrual scan | Python 3.8+; commands `card-export`, `cc-accrual`, `service-period-accrual`, `je-import`, `je-import-check` |
-| `month-end-journal-entry` | Prepares one journal entry: import file, backup, lint, booked test | commands `je-import`, `je-import-check` |
-| `month-end-reconciliation` | Reconciles one balance-sheet account | command `trial-balance` |
-| `month-end-flux` | Explains the month's variances from the GL detail | commands `trial-balance`, `gl-sweeps`, `budget-detail-diff` |
-| `month-end-expectations-brief` | Collects leadership's expectations and reconciles them to the month | none |
-| `erp-ledger-pull` | Reads what the ERP holds for a period, read only | Sage Intacct; commands `month-end-pull`, `trial-balance`, `gl-normalize` |
-| `sage-intacct-reference` | How the Sage Intacct API behaves, and the import CSV layout | none |
-| `report-tieout` | Checks a package of reports quote the same figures | command `report-tieout` |
-| `collections-workstream` | Collections: the AR register row, disputes, nudges, the review agenda | none |
-| `intercompany-workstream` | Intercompany: the pair matrix, causes of a difference, true-ups | none |
-| `accounting-questions-workstream` | Routine accounting questions: intake, answer shape, done | none |
-| `transactional-definitions` | Keeps and applies a client's coding rulebook | none |
-| `product-costing-workstream` | The monthly product-costing review: folder, pack, done | none |
-| `product-costing-variance` | Standard-versus-actual P&L per finished good, tied to the TB per factory | commands `fg-pl-extract`, `costmodel-audit` |
-| `product-costing-revision` | Re-issues a workbook the client has seen as a controlled revision | commands `costmodel-audit`, `sha256sum` |
-| `firm-billing-workstream` | Firm billing: BILLING.yaml, the pull, lines files, states (contract in `BILLING.md`) | firm-billing commands |
-| `firm-books-workstream` | What a small firm's own close adds to the month-end pattern | none |
-| `vendor-1099-workstream` | Vendor states, complete W-9s, TINs to last four, the two passes | none |
-| `audit-support-workstream` | Request states, support indexes, done for audit support | none |
+| `month-end-close` | month-end close | Steps; the folder, done computed, recording a return, questions; sections Set up a month, Curate a month, Record a learned fact |
+| `month-end-workstream` | worker, reviewer, the three close jobs | Close conduct and return block; sections Cash, AR billing and revenue, Accruals and AP; checklists Review an item, Sign off the close |
+| `month-end-results-report` | worker | The results memo: format and QA references, section Write the results memo |
+| `firm-books-workstream` | firm-books close | Steps; what a firm's own close adds; DONE |
+| `intercompany-workstream` | intercompany | Steps; the pair matrix, causes of a difference, the HANDOFF; section Reconcile a batch of pairs |
+| `collections-workstream` | collections review | Steps; the register row, disputes, nudges; section Work the aging |
+| `firm-billing-workstream` | firm billing | Steps; billing bases, the cover email; sections Prepare contracts, Check a draft invoice, Sign off the period; contract in `BILLING.md` |
+| `accounting-questions-workstream` | accounting questions | Steps; the answer shape; sections Answer a batch, Check an answer |
+| `transactional-definitions` | accounting questions, the owner | Keeping and applying a client's coding rulebook |
+| `audit-support-workstream` | audit support | Steps; request states, building support; sections Prepare a batch, Check the support |
+| `product-costing-workstream` | product costing | Steps; sections Build the month, The cost review memo |
+| `product-costing-variance`, `product-costing-revision` | product costing, the owner | The per-finished-good P&L pipeline; re-issuing a workbook as a controlled revision |
+| `vendor-1099-workstream` | vendor 1099 | Steps; vendor states, the passes; sections Work a vendor batch, Check the register |
+| `month-end-accrual-drafts`, `month-end-journal-entry`, `month-end-reconciliation`, `month-end-flux`, `month-end-expectations-brief` | worker, the owner | The close's methods: card and vendor accruals, one journal entry, one reconciliation, the flux, leadership's expectations |
+| `erp-ledger-pull` | everyone (shared copy) | Reading the ERP: the pull, trial balance, GL detail, normalizer, AR/AP hygiene, budget detail; the Sage Intacct reference and import layout in `references/` |
+| `review-numbers`, `evidence-check` | reviewer (shared copies) | The numbers checklist; the evidence checklist |
+| `orchestration-workstream`, `comms-confirm`, `office-files`, `report-tieout`, `task-stack-workstream`, `unslop`, `unslop-email` | shared copies | Worker conduct; questions to people; Excel, PDF and deck reading; the cross-report tie; the change-set contract; plain writing |
 
-Several pieces load skills from other departments by name: `orchestration-workstream` (software), `comms-confirm` and `task-stack-workstream` (productivity), `unslop-email` (marketing), `numbers-reviewer`, `month-end-results-writer` and `month-end-results-report` (reporting), `compliance-reviewer` (compliance) and `comms-client-status-update`.
+A shared copy is never edited here: its source is `shared/skills/<skill>/`, copied by `python3 scripts/build_shared.py`.
 
-## Scripts
+## Commands
 
-Each script runs by path, `python3 ~/.claude/skills/<skill>/scripts/<script>.py`, and prints `--help`. A command name used elsewhere in this README, such as `trial-balance`, is a label for the script of that name with underscores (`trial_balance.py`). Nothing is installed.
+In `bin/`, one per script, each with `--help`:
 
-**`erp-ledger-pull`**
-- `month_end_pull.py`: refreshes one month's read-only ledger pull in a Month-End folder.
-- `intacct_snapshot.py`: pulls a period and a trailing baseline from Sage Intacct into JSON snapshots.
-- `intacct_gl_detail.py`: GL detail for one account and date range from Sage Intacct, read only.
-- `trial_balance.py`: a trial balance as of a date, computed from posted GL lines.
-- `gl_normalize.py`: maps another accounting system's exports onto the standard ledger shape.
+- **Close**: `accounting-month-end-check`, `accounting-month-end-record`; `accounting-je-import`, `accounting-je-import-check`; `accounting-cash-walk`; `accounting-gl-sweeps`; `accounting-accruals`, `accounting-card-export`, `accounting-cc-accrual`, `accounting-service-period-accrual`, `accounting-recurring-je-scan`.
+- **Firm billing**: `accounting-firm-billing-pull`, `-draft`, `-record`, `-check`, `-deliver`.
+- **Product costing**: `accounting-sap-extract-normalize`, `accounting-prodqty-check`, `accounting-routing-rollup`, `accounting-fg-pl-extract`, `accounting-costmodel-audit`.
+- **Shared copies** (one unprefixed name in every department that holds the skill): `month-end-pull`, `intacct-snapshot`, `trial-balance`, `intacct-gl-detail`, `gl-normalize`, `ar-ap-hygiene`, `budget-detail-diff` (erp-ledger-pull); `report-tieout`; `confirm`, `confirm-portal`, `waiting` (comms-confirm); `excel-handle`, `pdf-handle`, `powerpoint-handler` (office-files); `task-stack-apply`, `task-stack-check`, `task-stack-queue`, `task-stack-report` (task-stack-workstream).
 
-**`month-end-workstream`**
-- `month_end_check.py`: whether the month's close is done, computed from the Month-End folder.
-- `month_end_record.py`: records one row of the close evidence file, the only writer of it.
+`accounting-firm-billing-deliver` runs only in the firm-billing Automation's finish step. It places a reviewed cover email in the owner's mail Drafts through productivity's `email_deliver.py`, which it finds in the same toolbox checkout; the session itself never delivers.
 
-**`month-end-journal-entry`**
-- `je_import.py`: builds and lints the Sage Intacct journal-entry import CSV from proposed entries.
-- `je_import_check.py`: lints an import CSV already on disk, as a person will upload it.
+Planned and named in the skills, not written yet: `ar-aging-check`, `collections-record`, `intercompany-matrix`, `intercompany-match`, `intercompany-check`, `accounting-questions-queue`, `costing-check`, `firm-books-pull`, `firm-books-check`, `billing-ledger-tie`, `vendor-1099-register`, `w9-scan`, `tin-match-file`, `audit-support-assemble`, `audit-support-check`.
 
-**`month-end-reconciliation`**
-- `cash_walk.py`: classifies a month's cash movements by the account on the other side.
+## File contracts with other departments
 
-**`month-end-flux`**
-- `gl_sweeps.py`: ten detection sweeps over the month's GL; each flags, a person confirms.
-- `budget_detail_diff.py`: compares Intacct's budget detail with the upload sheet and finds the freshest forecast.
+- **Reporting's board package reads the close.** Its close gate runs `month_end_check.py` (`accounting-month-end-check`) on the Month-End folder with `--format json` and reads `met`, `of` and `tests`; the board package's narrative reads the month's results memo in the report folder and `reporting/results-figures-{yyyy-mm}.csv` (figure, value, source). The command's options and JSON shape, the memo's location and name pattern, and the figures file's columns stay as they are; a change to any of them is a change to reporting's board package too.
+- **Finance reads the books through `erp-ledger-pull`.** Its source is `shared/skills/erp-ledger-pull`; finance takes a copy when it converts (`shared/manifest.yaml`). `ar-ap-hygiene` (from collections) and `budget-detail-diff` (from month-end-flux) moved into it so finance gets them without accounting's skills.
+- **Productivity's email delivery** is reached only by `accounting-firm-billing-deliver`, in the finish step, through the checkout.
+- **The Portal task stack**: `accounting-questions` writes `RUN/changes.json` signed `accounting-questions`; `task-stack-apply` posts the comments after the session.
 
-**`month-end-accrual-drafts`**
-- `accruals.py`: drafts the month's card and post-cutoff vendor accruals from a Month-End folder.
-- `card_export.py`: turns a bank's card download (xlsx) into the period's card CSV.
-- `cc_accrual.py`: codes a month of card transactions into a reversing accrual entry, queuing what it cannot code.
-- `service_period_accrual.py`: drafts the post-cutoff vendor accrual from next month's bills and arrears estimates.
-- `recurring_je_scan.py`: checks every ratified standard monthly entry is in the period's ledger.
+## Decisions taken in the conversion
 
-**`collections-workstream`**
-- `ar_ap_hygiene.py`: sanity checks over a folder of AR and AP snapshots, read only.
+The migration plan's open questions for this department, settled by its recommendations:
 
-**`report-tieout`**
-- `report_tieout.py`: checks a set of reports quote the same figure for the same metric and period.
+- `month-end-results-report` moved here from reporting (D10); its writer agent became the worker's section Write the results memo.
+- `erp-ledger-pull` became a shared source with `sage-intacct-reference` merged into its `references/`, and `ar_ap_hygiene.py` and `budget_detail_diff.py` moved into it.
+- The reviewer is read-only and the main agent writes every review file (D5); the numbers reviewer and the evidence checker became the copied checklists `review-numbers` and `evidence-check`.
+- `firm_billing_deliver.py` keeps calling productivity's `email_deliver.py` through the checkout, in the finish step outside the session, rather than copying it.
+- Vendor 1099s and audit support stay in accounting (the owner's nine-job list), not compliance.
+- No jobs were merged; the plan's merge candidates wait until the converted jobs have run.
 
-**`product-costing-workstream`**
-- `sap_extract_normalize.py`: turns a recurring SAP CO/PP extract into one long table with provenance.
-- `prodqty_check.py`: sanity checks on production and sales quantities before they enter a cost model.
-- `routing_rollup.py`: routing minutes per finished good, its own and its components', by factory.
-- `fg_pl_extract.py`: reads a per-finished-good P&L workbook into long tables and ties revenue to the TB.
-- `costmodel_audit.py`: audits a cost model workbook (ties, margins, month references) without editing it.
+## What was renamed
 
-**`firm-billing-workstream`**
-- `firm_billing_pull.py`: computes what each contract owes for the period from BILLING.yaml, issued invoices and time records.
-- `firm_billing_draft.py`: writes one contract's draft invoice from a lines file, or verifies a draft.
-- `firm_billing_record.py`: records one contract's billing state, the only writer of the evidence file.
-- `firm_billing_check.py`: whether the period's billing is done, computed from the files.
-- `firm_billing_deliver.py`: places reviewed cover emails in the owner's mail Drafts folder through `email_deliver.py` in `comms-reply-to-email` (productivity); never sends.
+The record of the conversion: each new name, and the old names it replaced.
 
-`excel_handle.py` and `pdf_handle.py` (`excel-handle`, `pdf-handle`) live in `office-files`, and `task_stack_apply.py` (`task-stack-apply`) in `task-stack-workstream`, both in productivity.
+| Now | Was |
+|---|---|
+| `accounting-month-end-close` (skill `month-end-close`) | `month-end-orchestrator` |
+| `accounting-firm-books-close` | `firm-books-orchestrator` |
+| `accounting-intercompany-reconciliation` | `intercompany-orchestrator` |
+| `accounting-collections-review` | `collections-orchestrator` |
+| `accounting-firm-billing` | `firm-billing-orchestrator` |
+| `accounting-questions` (change sets signed `accounting-questions`; `task-stack-apply` maps it to the old name for its markers) | `accounting-questions-orchestrator` |
+| `accounting-audit-support` | `audit-support-orchestrator` |
+| `accounting-product-costing-review` | `product-costing-orchestrator` |
+| `accounting-vendor-1099` | `vendor-1099-orchestrator` |
+| `accounting-worker`, `month-end-workstream` sections Cash, AR billing and revenue, Accruals and AP | `month-end-cash`, `month-end-ar-billing-revenue`, `month-end-accruals` |
+| `accounting-worker`, `month-end-close` sections Set up a month and Curate a month (Record a learned fact by the main agent) | `month-end-keeper` |
+| `accounting-reviewer`, `month-end-workstream` checklists Review an item and Sign off the close | `month-end-reviewer` |
+| `accounting-worker`, `month-end-results-report` section Write the results memo | `month-end-results-writer` (reporting) |
+| `accounting-worker`, `intercompany-workstream` section Reconcile a batch of pairs | `intercompany-reconciler` |
+| the main agent, `collections-workstream` section Work the aging | `collections-analyst` |
+| `accounting-worker` and `accounting-reviewer`, `firm-billing-workstream` sections Prepare contracts, Check a draft invoice, Sign off the period | `firm-billing-preparer`, `firm-billing-reviewer` |
+| `accounting-worker`, `accounting-questions-workstream` section Answer a batch | `accounting-questions-analyst` |
+| `accounting-worker`, `audit-support-workstream` section Prepare a batch | `audit-support-preparer` |
+| the main agent, `product-costing-workstream` section Build the month | `product-costing-analyst` |
+| `accounting-worker`, `vendor-1099-workstream` section Work a vendor batch | `vendor-1099-analyst` |
+| `accounting-reviewer` with `review-numbers`, `evidence-check` | `numbers-reviewer`, `compliance-evidence-checker` (as used here) |
+| `erp-ledger-pull`'s `references/sage-intacct.md` and `references/import-format.md` | skill `sage-intacct-reference` |
 
-Planned and named in the skills, not written yet: `ar-aging-check`, `collections-record`, `intercompany-matrix`, `intercompany-match`, `intercompany-check`, `accounting-questions-queue`, `costing-check`, `firm-books-pull`, `firm-books-check`, `billing-ledger-tie`, `vendor-1099-register`, `w9-scan`, `tin-match-file`, `audit-support-assemble`, `audit-support-check`, `work-record`, `work-check`.
+Old names may still appear in folders people keep (`LOG.md` headings, rules files). No check script parses them.
 
-### Settings and environment
+## Settings and environment
 
 The keys are described in [docs/settings.md](../docs/settings.md).
 
-- **Sage Intacct** (`month_end_pull.py --live`, `intacct_snapshot.py --live`, `intacct_gl_detail.py`): all four of `SAGE_INTACCT_CLIENT_ID`, `SAGE_INTACCT_CLIENT_SECRET`, `SAGE_INTACCT_COMPANY_ID` and `SAGE_INTACCT_API_USER` are required, from the environment only. The company id and API user may instead be `intacct_company_id` and `intacct_api_user` under `[erp-ledger-pull]`. A sandbox pull reads each name with `_SANDBOX` first.
-- **Product costing**: `cost_model_layout` under `[product-costing-workstream]` (or `--layout`) for `fg_pl_extract.py` and `costmodel_audit.py`; `extract_synonyms` is optional.
-- **Firm billing**: its settings live in the billing folder's `BILLING.yaml`, not the settings file. `firm_billing_deliver.py` reaches the Portal through `email_deliver.py`, which needs `portal_mcp_config` and the Portal bearer (`INSIGHTS_PORTAL_ASSISTANT_TOKEN`, or a `${VAR}` in the MCP config).
-- **Month-End folder**: the close scripts read `SYSTEMS.md` and the folder's own settings, not the settings file. `ACCRUALS_SKILLS_DIR` moves where `accruals.py` looks for the other skills' scripts (default `~/.claude/skills`).
+- **Sage Intacct** (`month-end-pull --live`, `intacct-snapshot --live`, `intacct-gl-detail`): all four of `SAGE_INTACCT_CLIENT_ID`, `SAGE_INTACCT_CLIENT_SECRET`, `SAGE_INTACCT_COMPANY_ID` and `SAGE_INTACCT_API_USER` are required, from the environment only. The company id and API user may instead be `intacct_company_id` and `intacct_api_user` under `[erp-ledger-pull]`. A sandbox pull reads each name with `_SANDBOX` first.
+- **Product costing**: `cost_model_layout` under `[product-costing-workstream]` (or `--layout`) for `accounting-fg-pl-extract` and `accounting-costmodel-audit`; `extract_synonyms` is optional.
+- **Firm billing**: its settings live in the billing folder's `BILLING.yaml`, not the settings file. `accounting-firm-billing-deliver` reaches the Portal through `email_deliver.py`, which needs `portal_mcp_config` and the Portal bearer (`INSIGHTS_PORTAL_ASSISTANT_TOKEN`, or a `${VAR}` in the MCP config).
+- **Month-End folder**: the close commands read `SYSTEMS.md` and the folder's own settings, not the settings file. `accounting-accruals` finds `je_import.py` and `je_import_check.py` in this checkout; `ACCRUALS_SKILLS_DIR` overrides that for tests.
 - Python 3.11 or later for the `erp-ledger-pull` and `product-costing-workstream` scripts, which read the settings file; 3.8 or later for the rest. `openpyxl` (Excel inputs) and `pyyaml` (BILLING.yaml, rules files), declared in each script's `# /// script` block.

@@ -2,7 +2,7 @@
 name: month-end-flux
 description: "Explain a month's results the way a CFO will be asked about them: compare each P&L line and balance-sheet account with budget or forecast and the prior month, explain every variance above the thresholds from the GL detail, and write the material ones into the month's findings file. Use near the end of a close, before the reporting package, or for \"why is X up this month\". Not for product margin against standard (product-costing-variance) or a forecast-to-forecast bridge (forecast-method)."
 argument-hint: "[Month-End folder] [period yyyy-mm]"
-allowed-tools: Read, Glob, Grep, Write, Edit, Bash(python3 ~/.claude/skills/erp-ledger-pull/scripts/trial_balance.py:*), Bash(python3 ~/.claude/skills/erp-ledger-pull/scripts/intacct_gl_detail.py:*), Bash(python3 ~/.claude/skills/month-end-flux/scripts/budget_detail_diff.py:*), Bash(python3 ~/.claude/skills/month-end-flux/scripts/gl_sweeps.py:*), Bash(python3 ~/.claude/skills/office-files/scripts/excel_handle.py:*)
+allowed-tools: Read, Glob, Grep, Write, Edit, Bash(trial-balance:*), Bash(intacct-gl-detail:*), Bash(budget-detail-diff:*), Bash(accounting-gl-sweeps:*), Bash(excel-handle:*)
 ---
 
 # Flux: explaining the month
@@ -12,7 +12,7 @@ A variance is explained when a reader could repeat the explanation to a board me
 ## Inputs
 
 - **Actuals.** The month's trial balance from the ledger pull, with its date. A PRELIMINARY pull gives preliminary flux, so say so at the top of the findings.
-- **Budget and forecast.** Where `SYSTEMS.md` says they are, such as a budget in the ERP or a forecast workbook. Use the version the rules name. If there is none, compare with the prior month and the same month last year, and say there is no budget comparison.
+- **Budget and forecast.** Where `SYSTEMS.md` says they are, such as a budget in the ERP or a forecast workbook. Use the version the rules name; for an ERP budget, `budget-detail-diff --list-budgets` (in the `erp-ledger-pull` skill) finds the freshest forecast and compares the budget detail with its upload sheet. If there is none, compare with the prior month and the same month last year, and say there is no budget comparison.
 - **Prior month.** That month's trial balance.
 
 ## Method
@@ -27,7 +27,7 @@ Every variance is provisional until it traces to ledger rows.
 
 ## Before explaining: the sweeps
 
-Run `gl-sweeps` over the month's pull (`--help` for its inputs). It catches what a variance table hides:
+Run `accounting-gl-sweeps` over the month's pull (`--help` for its inputs). It catches what a variance table hides:
 - accounts running far below their trailing level (a missing accrual looks like a saving);
 - negative expense;
 - stuck drafts;

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["pyyaml"]
+# ///
 """Draft the post-cutoff vendor accrual: next month's AP bills that belong to the closing
 period, plus estimates for arrears vendors who have not billed yet.
 

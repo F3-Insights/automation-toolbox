@@ -5,7 +5,7 @@ How recurring professional work (a month-end close, a forecast, a periodic repor
 Read this before building a new orchestration. Read it again before changing one.
 
 Two orchestrations follow it in this toolbox:
-- the month-end close (`month-end-orchestrator`), the worked example below;
+- the month-end close (`accounting-month-end-close` in the accounting plugin), the worked example below;
 - the issue loop (`software-developer`), whose shared facts are in the `software-issue-loop` skill and whose rules are the design rules' `F3-AGENT` and `F3-BRANCH` families.
 
 Where they differ is instructive. The close's system of record (the ERP) is only read, and a person posts. The issue loop keeps no folder of its own: GitHub is both its system of record and its memory, read and written directly by the lead and its workers through `gh`, each worker's tools pinned to what its job needs. The choice follows from the work: a close needs an evidence trail a person signs, while issues and pull requests already are one.
@@ -19,10 +19,10 @@ The work runs like a team, not a script. A shared **engagement folder** holds th
 | Layer | What it is | What it owns | Month-end example |
 |---|---|---|---|
 | Engagement folder | Plain markdown and data files in the client's shared folder | Facts, rules, procedures, and each period's state and evidence | `Month-End/` with `MONTH-END-RULES.md`, `MONTH-END-PROCEDURES.md`, `{yyyy}/{yyyy-mm}/` |
-| Orchestrator | An agent run as the main session | The goal, the plan, the dispatches, the records, the definition of done | `month-end-orchestrator` |
-| Workstreams | Agents dispatched by the orchestrator | A slice of the work (accounts, checklist rows) and the judgment in it | `month-end-cash`, `month-end-ar-billing-revenue`, `month-end-accruals` |
-| Reviewer | An agent, independent of the maker | Checking every result before it counts | `month-end-reviewer` |
-| Keeper | An agent for housekeeping | Setting up a period, curating the folder, recording learned facts | `month-end-keeper` |
+| Orchestrator | An agent run as the main session | The goal, the plan, the dispatches, the records, the definition of done | `accounting-month-end-close` |
+| Workstreams | Agents dispatched by the orchestrator | A slice of the work (accounts, checklist rows) and the judgment in it | `accounting-worker` briefed with `month-end-workstream`'s sections Cash, AR billing and revenue, Accruals and AP |
+| Reviewer | An agent, independent of the maker | Checking every result before it counts | `accounting-reviewer` briefed with Review an item or Sign off the close |
+| Keeper | An agent for housekeeping | Setting up a period, curating the folder, recording learned facts | `month-end-close`'s sections Set up a month and Curate a month, run by `accounting-worker` |
 | Shared skills | Skills loaded by the agents | The method and standard for a kind of work, and the conduct every workstream shares | `orchestration-workstream`, `month-end-workstream`, `month-end-reconciliation`, `month-end-journal-entry` |
 | Tools | Scripts in the owning skill's `scripts/` folder, run by path | Everything that must be exact: pulling, computing, linting, writing controlled formats, checking done | `month-end-pull`, `month-end-check`, `month-end-record`, `je-import`, `trial-balance` |
 | Launcher | A scheduled task or a person's command line, kept in the owner's private settings | Launching, refreshing data first, the permission fence, the schedule, the record of Runs | a weekday `month-end` schedule |
@@ -212,7 +212,7 @@ Give the orchestrator a dry run (read everything, report the plan, write nothing
 
 ## Naming
 
-- Agents and skills: `<work>-<role>` (`month-end-cash`, `month-end-reviewer`); a skill useful beyond one kind of work drops the prefix (`erp-ledger-pull`).
+- Agents and skills: `<work>-<role>` (`month-end-workstream`, `accounting-reviewer`); a skill useful beyond one kind of work drops the prefix (`erp-ledger-pull`).
 - Folder files: `<WORK>-RULES.md`, `<WORK>-PROCEDURES.md`, `<WORK>-PROCEDURES-{yyyy-mm}.md`, `<WORK>-FINDINGS-{yyyy-mm}.md`, `<WORK>-EVIDENCE-{yyyy-mm}.csv`.
 - Work products: say what they are and the period (`{account} {name} recon {yyyy-mm}.xlsx`), drafts end `DRAFT`.
 

@@ -17,19 +17,19 @@ from _common import COLUMNS, evidence_path, read_evidence
 SCRIPT = Path(mer.__file__)
 
 
-def rec(root, test, item, state, by="month-end-reviewer", **kw):
+def rec(root, test, item, state, by="accounting-reviewer", **kw):
     return mer.record(root, PERIOD, test, item, state, by, **kw)
 
 
 def test_creates_the_file_with_its_header(folder):
     result = rec(folder, "reconciliations", "10200", "reconciled", evidence="reconciliations/10200 cash.xlsx",
-                 amount="$80,000", pull_date="2026-04-02", note="tied  to the   statement", by="month-end-cash")
+                 amount="$80,000", pull_date="2026-04-02", note="tied  to the   statement", by="accounting-worker")
     assert result["action"] == "created" and result["id"] == "reconciliations:10200" and not result["warnings"]
     path = evidence_path(folder, PERIOD)
     assert path.read_text().splitlines()[0] == ",".join(COLUMNS)
     row = read_evidence(path)["reconciliations:10200"]
     assert (row["amount"], row["pull_date"], row["note"], row["by"]) == (
-        "80000.00", "2026-04-02", "tied to the statement", "month-end-cash")
+        "80000.00", "2026-04-02", "tied to the statement", "accounting-worker")
 
 
 def test_other_rows_keep_their_exact_text(folder):
@@ -76,7 +76,7 @@ def test_missing_evidence_file_warns(folder):
 ])
 def test_cli_rejects_bad_values(folder, change, message):
     args = {"--period": PERIOD, "--test": "reconciliations", "--item": "10200", "--state": "reconciled",
-            "--by": "month-end-cash"}
+            "--by": "accounting-worker"}
     args[change[0]] = change[1]
     run = subprocess.run([sys.executable, str(SCRIPT), str(folder), *[x for kv in args.items() for x in kv]],
                          capture_output=True, text=True)
@@ -86,6 +86,6 @@ def test_cli_rejects_bad_values(folder, change, message):
 
 def test_cli_prints_what_it_did(folder):
     run = subprocess.run([sys.executable, str(SCRIPT), str(folder), "--period", PERIOD, "--test", "entries",
-                          "--item", "card", "--state", "booked", "--evidence", "JE 301", "--by", "month-end-accruals"],
+                          "--item", "card", "--state", "booked", "--evidence", "JE 301", "--by", "accounting-worker"],
                          capture_output=True, text=True)
     assert run.returncode == 0 and "created entries:card" in run.stdout
