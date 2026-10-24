@@ -115,6 +115,6 @@ Past due is WORK only for proceed, once: the request is closed as assumed.
 
 ## External commands
 
-`confirm.py` and `confirm_portal.py` ship inside this skill's folder, and `confirm.py` runs `confirm_portal.py` beside it. `find_contact.py` and `notify_owner.py` belong to the comms-reply-to-email skill and run as `python3 ~/.claude/skills/comms-reply-to-email/scripts/<name>.py`. Nothing is on PATH. `CONFIRM_PORTAL_CMD` and `CONFIRM_NOTIFY_CMD` replace the Portal script and the notifier. Standard-library Python 3.8 or later for the scripts.
+`confirm.py` and `confirm_portal.py` ship inside this skill's folder as the commands `confirm` and `confirm-portal`, and `confirm.py` runs `confirm_portal.py` beside it. `find_contact.py` and `notify_owner.py` belong to the comms-reply-to-email skill; `confirm.py` finds `notify_owner.py` in the same toolbox checkout. `CONFIRM_PORTAL_CMD` and `CONFIRM_NOTIFY_CMD` replace the Portal script and the notifier. Standard-library Python 3.8 or later for the scripts.
 
-- `python3 scripts/confirm.py`
+- `confirm` (`confirm.py`)
