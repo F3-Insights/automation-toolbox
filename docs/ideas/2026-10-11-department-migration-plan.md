@@ -288,7 +288,7 @@ independent and can go in any order, or in parallel on separate branches.
   department on per project or for your user;
 - retire `setup/link.py`'s global linking, and make the npm installer copy `bin/`;
 - remove the name aliases;
-- clean up gaf-canon, and move the other PC onto this layout;
+- clean up the owner's private canon repo, and move the other PC onto this layout;
 - fix any of the 25 old owner fields that remain;
 - run the separate evaluation of Sentinel's own weight.
 

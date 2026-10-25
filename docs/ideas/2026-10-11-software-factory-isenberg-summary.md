@@ -1,6 +1,6 @@
 # Idea notes: "Building a Software Factory that actually works"
 
-- **Source:** "Building a Software Factory that actually works (Full Course)", Greg Isenberg's
+- **Source:** "Building a Software Factory that actually works (Full Course)", G. Isenberg's
   YouTube channel, about 31 minutes: https://www.youtube.com/watch?v=_LCeJZFIsd4
 - **Format:** Isenberg interviews a guest engineer (named in the auto-captions as "Ross Mike"),
   who shows his own setup on screen.
